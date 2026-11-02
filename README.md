@@ -31,3 +31,9 @@ El alcance de los módulos está en [`docs/MONY_FLUTTER_ROADMAP.md`](docs/MONY_F
 ## Apariencia y preferencias
 
 Desde el botón de ajustes en Inicio puedes elegir tema del sistema, claro u oscuro; cambiar los colores principal y secundario con la paleta o el selector HSV; y elegir si DOP se muestra como `RD$` o `DOP`. Los ajustes se guardan localmente. Los importes se formatean desde unidades menores enteras y usan el locale dominicano.
+
+## Categorías
+
+Las categorías se guardan localmente en SQLite mediante Drift. La primera apertura crea el catálogo inicial de 21 categorías de Mony. Se pueden crear, editar, archivar y restaurar categorías, con icono, color y límite de presupuesto opcional. Las categorías archivadas mantienen su ID para que los movimientos históricos puedan seguir apuntando a ellas; los selectores de movimientos solo ofrecen categorías activas. Los nombres se validan sin distinguir mayúsculas y se impide archivar la última categoría de ingresos activa.
+
+La versión web necesita `web/sqlite3.wasm` y `web/drift_worker.js`, incluidos en el proyecto y servidos junto con la app Flutter.

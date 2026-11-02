@@ -10,6 +10,11 @@ class HomePage extends StatelessWidget {
       title: const Text('Mony'),
       actions: [
         IconButton(
+          tooltip: 'Administrar categorías',
+          onPressed: () => context.goNamed('categories'),
+          icon: const Icon(Icons.category_outlined),
+        ),
+        IconButton(
           tooltip: 'Apariencia y preferencias',
           onPressed: () => context.goNamed('settings'),
           icon: const Icon(Icons.tune),
@@ -45,6 +50,12 @@ class HomePage extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 24),
+            FilledButton.tonalIcon(
+              onPressed: () => context.goNamed('categories'),
+              icon: const Icon(Icons.category_outlined),
+              label: const Text('Administrar categorías'),
+            ),
+            const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: () => context.goNamed('about'),
               icon: const Icon(Icons.arrow_forward),
