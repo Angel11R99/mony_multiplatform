@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "skills": {
+    "dart-flutter-patterns": {
+      "source": "affaan-m/ecc",
+      "sourceType": "github",
+      "skillPath": "skills/dart-flutter-patterns/SKILL.md",
+      "computedHash": "69d7b43fbac107c80ee69e0720651b346f39dd43c9ba890eca72f50b77d64d12"
+    },
+    "designing-flutter-architecture": {
+      "source": "vgonpa/mobile-dev-agency",
+      "sourceType": "github",
+      "skillPath": "plugins/flutter-dev-squad/.claude/skills/designing-flutter-architecture/SKILL.md",
+      "computedHash": "0bc761b813c85d4719f682367155da50a1c1b40d7a02fe829dfe8d7c1d5ff64e"
+    },
+    "flutter-drift": {
+      "source": "madteacher/mad-agents-skills",
+      "sourceType": "github",
+      "skillPath": "flutter-drift/SKILL.md",
+      "computedHash": "e6d6df0b37deb58aa1efe36f6f820d78b443f75d3173f39a7558788c02748210"
+    },
+    "flutter-navigation": {
+      "source": "thienqo/flutter-skills",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-navigation/SKILL.md",
+      "computedHash": "44ac65e6c2609b970f15f92856ea9f9c2ef7b537ca6db8c84a78a9384714b83f"
+    },
+    "flutter-state-management": {
+      "source": "thienqo/flutter-skills",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-state-management/SKILL.md",
+      "computedHash": "6f9cdbcd984700bd52bc6b890c01166b2a4c9627c8a0e527dc2d25487b96ad5c"
+    },
+    "flutter-testing": {
+      "source": "thienqo/flutter-skills",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-testing/SKILL.md",
+      "computedHash": "fce3db134a62c19b0f12f1c74748068c080fb384c8b8043b0428e3c7133d26bb"
+    },
+    "flutter-ui-design": {
+      "source": "thienqo/flutter-skills",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-ui-design/SKILL.md",
+      "computedHash": "d32c22b42eecdfbb280253e06872dc9a0201a66b3849732a026c1801a63ad09d"
+    }
+  }
+}
