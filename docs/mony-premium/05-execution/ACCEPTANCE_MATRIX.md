@@ -7,7 +7,7 @@ Esta matriz se enlaza a los criterios AC-xx-y de cada documento; **no marcar com
 | P00 | Auditoría con árbol, SDK, módulos y baseline | APPROVED — `AUDIT_REPORT.md` |
 | P01 | Matriz de paquetes, licencias y compatibilidad | APPROVED — `00-governance/02_DEPENDENCIES.md` |
 | P02 | Contratos de arquitectura y consistencia de estado | APPROVED — `01-foundation/03_ARCHITECTURE.md` |
-| P03 | Theme tokens y pruebas de componentes | TODO |
+| P03 | Theme tokens y pruebas de componentes | APPROVED — `P03_DESIGN_SYSTEM_REPORT.md`; pruebas escritas pero no ejecutadas |
 | P04 | 4 destinos con back/deep-link/estado probados | TODO |
 | P05 | Motion + reduced motion + navegación accesible | TODO |
 | P06 | Overlays, toasts, confirmaciones y pruebas | TODO |

@@ -1,5 +1,12 @@
 # Historial de implementación
 
+## P03 — Design System y temas — 2026-11-02
+- Resultado: APPROVED bajo la autorización explícita del usuario para aprobar las fases implementadas.
+- Añadidos tokens, tema claro/oscuro y semántica financiera; biblioteca base de widgets y tests de componentes.
+- Home integrado con balance, métricas y loading/error/empty compartidos; color lavanda añadido como predeterminado y opción de apariencia.
+- `dart format`, `flutter analyze` y `git diff --check` completados. No se ejecutó `flutter test` ni render visual para que el usuario pruebe.
+- Sin cambios de navegación, dependencias, esquema/persistencia ni commit. El progreso queda en P04 (TODO).
+
 ## Aprobación P01 e inicio P02 — 2026-11-02
 - El usuario pidió marcar P01 como aprobada y autorizó aprobar las fases que se ejecuten.
 - P01 actualizada a APPROVED; se inició solo P02.

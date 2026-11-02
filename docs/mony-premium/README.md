@@ -1,6 +1,6 @@
 # MONY PREMIUM — Plan maestro ejecutable
 
-**Estado:** propuesta de implementación; no se ha auditado ni modificado el código de la aplicación.  
+**Estado:** P00–P03 ejecutadas y aprobadas; P04 es la siguiente fase y aún no se ha iniciado.
 **Objetivo:** evolucionar Mony (Flutter multiplataforma) a producto financiero premium con funcionalidades reales, interacción refinada y arquitectura sostenible.  
 **Regla fundamental:** **una fase a la vez**, sin avanzar automáticamente; cada fase exige evidencia, revisión y aprobación explícita.
 
