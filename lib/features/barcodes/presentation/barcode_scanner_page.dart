@@ -35,7 +35,7 @@ class _BarcodeScannerPageState extends ConsumerState<BarcodeScannerPage> {
   );
   BarcodeLookupResult? _result;
   String? _message;
-  bool _allowNetwork = true;
+  bool _allowNetwork = false;
   bool _lookingUp = false;
   bool _adding = false;
   int _quantity = 1;
@@ -266,7 +266,7 @@ class _BarcodeScannerPageState extends ConsumerState<BarcodeScannerPage> {
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Consultar catálogo en internet'),
                 subtitle: const Text(
-                  'Si se desactiva, solo se usan productos guardados en este dispositivo.',
+                  'Desactivado inicialmente: solo se usan productos guardados en este dispositivo. Actívalo para consultar Open Food Facts.',
                 ),
                 value: _allowNetwork,
                 onChanged: (value) => setState(() => _allowNetwork = value),

@@ -21,7 +21,7 @@ class PrivacyPage extends StatelessWidget {
             const _PrivacySection(
               title: 'Datos guardados en este dispositivo',
               body:
-                  'Mony guarda movimientos, categorías, métodos de pago, presupuestos, metas, obligaciones, listas y preferencias en la base local de la app. No necesitas crear una cuenta y Mony no sincroniza esos datos con un servidor propio.',
+                  'Mony guarda movimientos, categorías, métodos de pago, presupuestos, metas, obligaciones, listas y preferencias en la base local de la app (SQLite). La base no está cifrada por Mony; la protección del dispositivo y sus copias del sistema operativo dependen de la plataforma y de tus ajustes. Android desactiva su respaldo automático en la nube. En iOS/iPadOS, el respaldo del dispositivo puede incluir los datos de la app. Mony no sincroniza tus finanzas con un servidor propio.',
             ),
             const _PrivacySection(
               title: 'Funciones que usan internet',
@@ -31,12 +31,17 @@ class PrivacyPage extends StatelessWidget {
             const _PrivacySection(
               title: 'Widgets y notificaciones',
               body:
-                  'Los widgets reciben una instantánea local de importes y resúmenes para mostrarlos en la pantalla de inicio. Los widgets pueden revelar esos datos a quien vea la pantalla; puedes quitarlos desde el sistema. Los recordatorios se programan localmente.',
+                  'Los widgets reciben una instantánea local con importes y resúmenes, compartida solo con la extensión de widgets del sistema. La vista de Mony se difumina al pasar la app a segundo plano; iOS también marca los widgets como sensibles para que el sistema pueda ocultarlos en la pantalla bloqueada. Los widgets pueden mostrar datos en la pantalla de inicio; quítalos desde el sistema si no los quieres. Los recordatorios se programan localmente.',
             ),
             const _PrivacySection(
               title: 'Copias y exportaciones',
               body:
                   'Las copias de seguridad se cifran con AES-256-GCM y una contraseña que solo tú conoces. Los archivos CSV, Excel y PDF que exportas no se cifran automáticamente: compártelos únicamente con destinos de confianza. La restauración reemplaza la base actual.',
+            ),
+            const _PrivacySection(
+              title: 'Capturas y app switcher',
+              body:
+                  'Mony oculta o difumina la vista en la lista de apps recientes en Android, iOS y Windows. Las capturas normales siguen habilitadas; evita incluir datos privados al compartir una imagen.',
             ),
             const _PrivacySection(
               title: 'Borrar o trasladar tus datos',
