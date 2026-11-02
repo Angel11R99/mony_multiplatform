@@ -4,11 +4,12 @@ import 'package:drift_flutter/drift_flutter.dart';
 import '../../features/categories/data/categories_table.dart';
 import '../../features/categories/domain/category.dart';
 import '../../features/payment_methods/data/payment_methods_table.dart';
+import '../../features/transactions/data/transactions_table.dart';
 import 'app_database.steps.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Categories, PaymentMethods])
+@DriftDatabase(tables: [Categories, PaymentMethods, Transactions])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
     : super(
@@ -50,11 +51,22 @@ class AppDatabase extends _$AppDatabase {
         await migrator.create(schema.paymentMethodsSingleDefault);
         await _seedPaymentMethods();
       },
+      from2To3: (migrator, schema) async {
+        await migrator.createTable(schema.transactions);
+        await migrator.create(schema.transactionsDateIdx);
+        await migrator.create(schema.transactionsCategoryIdx);
+        await migrator.create(schema.transactionsPaymentMethodIdx);
+        await migrator.create(schema.transactionsFixedEntryIdx);
+        await migrator.create(schema.transactionsSavingsGoalIdx);
+      },
     ),
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
+    },
   );
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 }
 
 const _initialCategories = <(String, CategoryType, String, int)>[

@@ -191,8 +191,211 @@ i1.GeneratedColumn<int> _column_9(String aliasedName) =>
       $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_default IN (0, 1))',
       defaultValue: const i1.CustomExpression('0'),
     );
+
+final class Schema3 extends i0.VersionedSchema {
+  Schema3({required super.database}) : super(version: 3);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    categories,
+    paymentMethods,
+    transactions,
+    paymentMethodsSingleDefault,
+    transactionsDateIdx,
+    transactionsCategoryIdx,
+    transactionsPaymentMethodIdx,
+    transactionsFixedEntryIdx,
+    transactionsSavingsGoalIdx,
+  ];
+  late final Shape0 categories = Shape0(
+    source: i0.VersionedTable(
+      entityName: 'categories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['UNIQUE(type, normalized_name)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape1 paymentMethods = Shape1(
+    source: i0.VersionedTable(
+      entityName: 'payment_methods',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['UNIQUE(normalized_name)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_9,
+        _column_7,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape2 transactions = Shape2(
+    source: i0.VersionedTable(
+      entityName: 'transactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_0,
+        _column_10,
+        _column_3,
+        _column_11,
+        _column_12,
+        _column_13,
+        _column_14,
+        _column_7,
+        _column_15,
+        _column_16,
+        _column_17,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index paymentMethodsSingleDefault = i1.Index(
+    'payment_methods_single_default',
+    'CREATE UNIQUE INDEX payment_methods_single_default ON payment_methods (is_default) WHERE is_default = 1',
+  );
+  final i1.Index transactionsDateIdx = i1.Index(
+    'transactions_date_idx',
+    'CREATE INDEX transactions_date_idx ON transactions (date_epoch_day)',
+  );
+  final i1.Index transactionsCategoryIdx = i1.Index(
+    'transactions_category_idx',
+    'CREATE INDEX transactions_category_idx ON transactions (category_id)',
+  );
+  final i1.Index transactionsPaymentMethodIdx = i1.Index(
+    'transactions_payment_method_idx',
+    'CREATE INDEX transactions_payment_method_idx ON transactions (payment_method_id)',
+  );
+  final i1.Index transactionsFixedEntryIdx = i1.Index(
+    'transactions_fixed_entry_idx',
+    'CREATE INDEX transactions_fixed_entry_idx ON transactions (fixed_entry_id)',
+  );
+  final i1.Index transactionsSavingsGoalIdx = i1.Index(
+    'transactions_savings_goal_idx',
+    'CREATE INDEX transactions_savings_goal_idx ON transactions (savings_goal_id)',
+  );
+}
+
+class Shape2 extends i0.VersionedTable {
+  Shape2({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<int> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get amountInCents =>
+      columnsByName['amount_in_cents']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get type =>
+      columnsByName['type']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get categoryId =>
+      columnsByName['category_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get paymentMethodId =>
+      columnsByName['payment_method_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get description =>
+      columnsByName['description']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get dateEpochDay =>
+      columnsByName['date_epoch_day']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get fixedEntryId =>
+      columnsByName['fixed_entry_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get savingsGoalId =>
+      columnsByName['savings_goal_id']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<int> _column_10(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'amount_in_cents',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL CHECK (amount_in_cents > 0)',
+    );
+i1.GeneratedColumn<int> _column_11(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'category_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints:
+          'NOT NULL REFERENCES categories(id)ON DELETE RESTRICT',
+    );
+i1.GeneratedColumn<int> _column_12(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'payment_method_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints:
+          'NOT NULL REFERENCES payment_methods(id)ON DELETE RESTRICT',
+    );
+i1.GeneratedColumn<String> _column_13(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'description',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<int> _column_14(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'date_epoch_day',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_15(
+  String aliasedName,
+) => i1.GeneratedColumn<int>(
+  'updated_at',
+  aliasedName,
+  false,
+  type: i1.DriftSqlType.int,
+  $customConstraints:
+      'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+  defaultValue: const i1.CustomExpression(
+    'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+  ),
+);
+i1.GeneratedColumn<int> _column_16(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'fixed_entry_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<int> _column_17(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'savings_goal_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
+  required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -201,6 +404,11 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from1To2(migrator, schema);
         return 2;
+      case 2:
+        final schema = Schema3(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from2To3(migrator, schema);
+        return 3;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -209,6 +417,7 @@ i0.MigrationStepWithVersion migrationSteps({
 
 i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
+  required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
 }) => i0.VersionedSchema.stepByStepHelper(
-  step: migrationSteps(from1To2: from1To2),
+  step: migrationSteps(from1To2: from1To2, from2To3: from2To3),
 );
