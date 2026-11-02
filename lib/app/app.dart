@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:toastification/toastification.dart';
 
 import '../core/config/app_config.dart';
 import '../core/routing/app_router.dart';
@@ -25,13 +27,27 @@ class MonyApp extends ConsumerWidget {
       child: ReminderAutomation(
         child: FinanceWidgetSync(
           router: router,
-          child: MaterialApp.router(
-            title: config.appName,
-            debugShowCheckedModeBanner: config.showDebugBanner,
-            theme: MonyTheme.light(preferences),
-            darkTheme: MonyTheme.dark(preferences),
-            themeMode: MonyTheme.themeMode(preferences.themeMode),
-            routerConfig: router,
+          child: ToastificationWrapper(
+            config: const ToastificationConfig(
+              alignment: Alignment.bottomCenter,
+              animationDuration: Duration(milliseconds: 120),
+              maxToastLimit: 3,
+              maxTitleLines: 3,
+            ),
+            child: MaterialApp.router(
+              title: config.appName,
+              debugShowCheckedModeBanner: config.showDebugBanner,
+              theme: MonyTheme.light(preferences),
+              darkTheme: MonyTheme.dark(preferences),
+              themeMode: MonyTheme.themeMode(preferences.themeMode),
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('es')],
+              routerConfig: router,
+            ),
           ),
         ),
       ),
