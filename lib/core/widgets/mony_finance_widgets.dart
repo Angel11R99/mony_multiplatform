@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:animations/animations.dart';
 
 import '../theme/mony_finance_colors.dart';
 import '../theme/mony_tokens.dart';
@@ -12,6 +13,7 @@ class AmountText extends StatelessWidget {
     this.emphasis = AmountEmphasis.neutral,
     this.style,
     this.maxLines = 1,
+    this.animateChanges = false,
     super.key,
   });
 
@@ -19,6 +21,7 @@ class AmountText extends StatelessWidget {
   final AmountEmphasis emphasis;
   final TextStyle? style;
   final int maxLines;
+  final bool animateChanges;
 
   @override
   Widget build(BuildContext context) {
@@ -28,16 +31,28 @@ class AmountText extends StatelessWidget {
       AmountEmphasis.income => finance.income,
       AmountEmphasis.expense => finance.expense,
     };
+    final text = Text(
+      amount,
+      key: ValueKey(amount),
+      maxLines: maxLines,
+      overflow: TextOverflow.ellipsis,
+      style: style?.copyWith(color: color) ?? TextStyle(color: color),
+    );
+    final content = animateChanges
+        ? PageTransitionSwitcher(
+            duration: MonyMotion.durationFor(context, MonyMotion.quick),
+            transitionBuilder: (child, primaryAnimation, secondaryAnimation) =>
+                FadeThroughTransition(
+                  animation: primaryAnimation,
+                  secondaryAnimation: secondaryAnimation,
+                  child: child,
+                ),
+            child: text,
+          )
+        : text;
     return Semantics(
       label: amount,
-      child: ExcludeSemantics(
-        child: Text(
-          amount,
-          maxLines: maxLines,
-          overflow: TextOverflow.ellipsis,
-          style: style?.copyWith(color: color) ?? TextStyle(color: color),
-        ),
-      ),
+      child: ExcludeSemantics(child: content),
     );
   }
 }
@@ -78,6 +93,7 @@ class BalanceCard extends StatelessWidget {
               const SizedBox(height: MonySpace.x2),
               AmountText(
                 amount,
+                animateChanges: true,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -138,6 +154,7 @@ class StatTile extends StatelessWidget {
           const SizedBox(height: MonySpace.x3),
           AmountText(
             value,
+            animateChanges: true,
             emphasis: emphasis,
             style: Theme.of(
               context,
