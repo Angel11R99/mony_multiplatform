@@ -1,12 +1,20 @@
 # Historial de implementación
 
+## P08 — Movimientos y operación financiera — 2026-11-02
+- Resultado: APPROVED bajo la autorización persistente del usuario.
+- Adoptado `flutter_slidable 4.0.3` porque la última versión 5.2.0 no cabe en Flutter 3.44/Dart 3.12; filas agrupadas por fecha y acciones de editar/duplicar/eliminar con el menú alternativo visible.
+- Corregido el estado vacío del historial y conservada una sola fuente de datos: el stream de Drift alimenta tanto lista como Home. Errores de persistencia muestran causa de dominio; fecha editada en una creación nueva protege el borrador; submit y confirmación de descarte están serializados.
+- Sin cambio de esquema ni regla monetaria; el repositorio valida importes positivos y relaciones activas.
+- `dart format`, `flutter analyze`, `git diff --check` y `flutter build web --release` completados (Wasm dry run exitoso). Pruebas existentes de repo/flujo no se ejecutaron; quedan para la verificación del usuario.
+- Commits de paquete, código y docs pendientes hasta la petición del siguiente paso; progreso en P09.
+
 ## P07 — Home Dashboard financiero — 2026-11-02
 - Resultado: APPROVED bajo la autorización persistente del usuario.
 - `fl_chart` 1.3.0 para comparar ingresos/gastos de seis meses, con descripción semántica; resumen y gráfica usan movimientos locales y una sola moneda (DOP).
 - Estado de primera instalación ahora ofrece CTA a los dos formularios sin mostrar KPIs cero; reduce accesos secundarios y aclara que el balance es el neto del mes seleccionado.
 - La falla de categorías ya no oculta el dashboard; permite reintentar nombres y mantiene los cálculos disponibles. Dashboard se deriva del stream reactivo de Drift para actualizar CRUD.
 - `dart format`, `flutter analyze` y `git diff --check` completados. No se ejecutaron pruebas automáticas ni se inspeccionó captura visual porque el host de navegador no estuvo disponible; queda prueba manual del usuario.
-- Commit de dependencia, implementación y documentación separados; progreso en P08.
+- Commits P07 separados: `c8df2f4`, `97d5a0d`, `b692604`; progreso en P08.
 
 ## P06 — Feedback, confirmaciones y sheets — 2026-11-02
 - Resultado: APPROVED bajo la autorización persistente del usuario.

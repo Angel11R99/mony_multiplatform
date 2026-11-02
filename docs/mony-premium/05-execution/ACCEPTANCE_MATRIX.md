@@ -12,7 +12,7 @@ Esta matriz se enlaza a los criterios AC-xx-y de cada documento; **no marcar com
 | P05 | Motion + reduced motion + navegación accesible | APPROVED — `P05_MOTION_REPORT.md` |
 | P06 | Overlays, toasts, confirmaciones y pruebas | APPROVED — `P06_FEEDBACK_REPORT.md`; revisión manual pendiente del usuario |
 | P07 | KPIs reales y empty/error states | APPROVED — `P07_HOME_REPORT.md`; revisión manual pendiente del usuario |
-| P08 | CRUD y coherencia entre vistas | TODO |
+| P08 | CRUD y coherencia entre vistas | APPROVED — `P08_TRANSACTIONS_REPORT.md`; pruebas no ejecutadas |
 | P09 | Filtros combinados y búsqueda estable | TODO |
 | P10 | Inclusión de fechas/locale/hora verificada | TODO |
 | P11 | Integridad referencial categorías/métodos | TODO |
