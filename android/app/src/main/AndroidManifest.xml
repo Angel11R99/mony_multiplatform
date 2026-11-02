@@ -28,7 +28,89 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <intent-filter>
+                <action android:name="es.antonborri.home_widget.action.LAUNCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="mony" />
+            </intent-filter>
         </activity>
+        <receiver
+            android:name=".widgets.FinanceWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_finance_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/finance_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.IncomeExpenseWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_income_expense_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/finance_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.BudgetProgressWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_budget_progress_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/finance_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.StatisticsWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_statistics_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/finance_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.RecentMovementsWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_recent_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/finance_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.PendingRemindersWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_pending_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/finance_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.SavingsGoalsWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_savings_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/finance_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.FixedCommitmentsWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_fixed_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/finance_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.QuickAccessWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_quick_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/finance_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.DailySpendingWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_today_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/finance_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.CategoryLimitsWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_limits_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/finance_widget_info" />
+        </receiver>
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
             android:exported="false" />
