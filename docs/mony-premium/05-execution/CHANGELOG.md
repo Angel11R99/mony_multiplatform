@@ -1,5 +1,13 @@
 # Historial de implementación
 
+## P10 — Calendario, rangos y locale — 2026-11-02
+- Resultado: APPROVED bajo la autorización persistente del usuario.
+- Adoptado `table_calendar 3.2.1`, compatible con `intl 0.20.2` que fija Flutter; 3.3.0 se excluyó por requerir `intl >=0.20.3`. Grilla mensual muestra únicamente actividad proveniente del stream real de Drift.
+- Añadidos presets Hoy/Semana/Mes/Año/Personalizado con límites inclusivos y primer día semanal del locale; calendario permite elegir un día y muestra su conteo o ausencia de movimientos.
+- Centralizado formato de fechas/meses en módulos financieros para locales `es`/`en`; inicialización de símbolos locales antes de `runApp`. Fechas financieras permanecen civiles y sin hora; no se agrega zona/selector de hora al modelo.
+- `dart format`, `flutter analyze`, `git diff --check` y `flutter build web --release` completados. Pruebas automatizadas no ejecutadas; validación visual y de interacción manual queda para el usuario.
+- Commits de dependencia, código y documentación pendientes hasta la petición del siguiente paso; progreso en P11.
+
 ## P09 — Búsqueda y filtros combinados — 2026-11-02
 - Resultado: APPROVED bajo la autorización persistente del usuario.
 - `stream_transform 2.1.2` aporta debounce de 300 ms; la consulta reactiva de Drift busca descripción, categoría y método y combina filtros AND/OR parametrizados.

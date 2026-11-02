@@ -14,7 +14,7 @@ Esta matriz se enlaza a los criterios AC-xx-y de cada documento; **no marcar com
 | P07 | KPIs reales y empty/error states | APPROVED — `P07_HOME_REPORT.md`; revisión manual pendiente del usuario |
 | P08 | CRUD y coherencia entre vistas | APPROVED — `P08_TRANSACTIONS_REPORT.md`; pruebas no ejecutadas |
 | P09 | Filtros combinados y búsqueda estable | APPROVED — `P09_SEARCH_FILTERS_REPORT.md`; análisis y build web OK; validación manual de volumen queda para el usuario |
-| P10 | Inclusión de fechas/locale/hora verificada | TODO |
+| P10 | Inclusión de fechas/locale/hora verificada | APPROVED — calendario `table_calendar` y fechas civiles centralizadas; analyze y build web OK; prueba visual manual queda para el usuario |
 | P11 | Integridad referencial categorías/métodos | TODO |
 | P12 | Fórmulas estadísticas y chart tests | TODO |
 | P13 | Privacy review y controles documentados | TODO |
