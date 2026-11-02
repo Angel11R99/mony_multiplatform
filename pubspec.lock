@@ -1109,6 +1109,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.4.3"
+  screenshot_shield:
+    dependency: "direct main"
+    description:
+      name: screenshot_shield
+      sha256: d8bdba723b4a0d99a7d962f5d036e4aa0c67e3e4e639973443fde491b4ddbf81
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0"
   share_plus:
     dependency: "direct main"
     description:
@@ -1484,4 +1492,4 @@ packages:
     version: "2.2.4"
 sdks:
   dart: ">=3.12.2 <4.0.0"
-  flutter: ">=3.44.0"
+  flutter: ">=3.44.4"

@@ -68,6 +68,7 @@ dependencies:
   flutter_slidable: 4.0.3
   stream_transform: 2.1.2
   table_calendar: 3.2.1
+  screenshot_shield: 0.2.0
 
 dev_dependencies:
   flutter_test:
