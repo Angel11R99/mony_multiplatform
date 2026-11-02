@@ -1,6 +1,12 @@
+import 'package:drift/native.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mony_multiplatform/app/app.dart';
+import 'package:mony_multiplatform/core/database/app_database.dart';
+import 'package:mony_multiplatform/core/database/app_database_provider.dart';
+import 'package:mony_multiplatform/features/transactions/data/drift_transaction_repository.dart';
+import 'package:mony_multiplatform/features/transactions/domain/transaction.dart';
 import 'package:mony_multiplatform/features/preferences/domain/app_preferences.dart';
 import 'package:mony_multiplatform/features/preferences/domain/preferences_repository.dart';
 import 'package:mony_multiplatform/features/preferences/presentation/preferences_controller.dart';
@@ -10,9 +16,12 @@ void main() {
     tester,
   ) async {
     final repository = _FakePreferencesRepository();
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          appDatabaseProvider.overrideWithValue(database),
           preferencesRepositoryProvider.overrideWithValue(repository),
         ],
         child: const MonyApp(),
@@ -34,12 +43,17 @@ void main() {
 
     expect(repository.saved.themeMode, AppThemeMode.dark);
     expect(repository.saved.primaryColorArgb, 0xFFEF4444);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets('retains the home and about example navigation', (tester) async {
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          appDatabaseProvider.overrideWithValue(database),
           preferencesRepositoryProvider.overrideWithValue(
             _FakePreferencesRepository(),
           ),
@@ -56,6 +70,93 @@ void main() {
     await tester.tap(find.text('Volver al inicio'));
     await tester.pumpAndSettle();
     expect(find.text('Tus finanzas, en un solo lugar'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('shows reactive monthly totals and starts a new income', (
+    tester,
+  ) async {
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+    final repository = DriftTransactionRepository(database);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    await repository.create(
+      FinanceTransaction(
+        amountInCents: 12345,
+        type: TransactionType.income,
+        categoryId: 1,
+        paymentMethodId: 1,
+        description: 'Nómina',
+        date: today,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    await repository.create(
+      FinanceTransaction(
+        amountInCents: 2500,
+        type: TransactionType.expense,
+        categoryId: 6,
+        paymentMethodId: 1,
+        description: 'Mercado',
+        date: today,
+        createdAt: now.add(const Duration(minutes: 1)),
+        updatedAt: now.add(const Duration(minutes: 1)),
+      ),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(database),
+          preferencesRepositoryProvider.overrideWithValue(
+            _FakePreferencesRepository(),
+          ),
+        ],
+        child: const MonyApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Balance del mes'), findsOneWidget);
+    expect(find.text('RD\$98.45'), findsOneWidget);
+    expect(find.text('RD\$123.45'), findsOneWidget);
+    expect(find.text('RD\$25.00'), findsOneWidget);
+    await repository.create(
+      FinanceTransaction(
+        amountInCents: 100,
+        type: TransactionType.income,
+        categoryId: 1,
+        paymentMethodId: 1,
+        description: 'Propina',
+        date: today,
+        createdAt: now.add(const Duration(minutes: 2)),
+        updatedAt: now.add(const Duration(minutes: 2)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('RD\$99.45'), findsOneWidget);
+    expect(find.text('RD\$124.45'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Nómina'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Nómina'), findsOneWidget);
+    expect(find.text('Mercado'), findsOneWidget);
+
+    await tester.drag(find.byType(ListView).first, const Offset(0, 1000));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nuevo ingreso'));
+    await tester.pumpAndSettle();
+    final typeControl = tester.widget<SegmentedButton<TransactionType>>(
+      find.byType(SegmentedButton<TransactionType>),
+    );
+    expect(typeControl.selected, {TransactionType.income});
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
   });
 }
 

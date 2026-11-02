@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mony_multiplatform/core/database/app_database.dart';
+import 'package:mony_multiplatform/core/database/app_database_provider.dart';
 import 'package:mony_multiplatform/core/routing/app_router.dart';
 import 'package:mony_multiplatform/features/categories/domain/categories_repository.dart';
 import 'package:mony_multiplatform/features/categories/domain/category.dart';
@@ -108,22 +111,25 @@ void main() {
   });
 
   testWidgets('opens category management from the home route', (tester) async {
+    final database = AppDatabase(NativeDatabase.memory());
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [categoriesRepositoryProvider.overrideWithValue(repository)],
+        overrides: [
+          appDatabaseProvider.overrideWithValue(database),
+          categoriesRepositoryProvider.overrideWithValue(repository),
+        ],
         child: MaterialApp.router(routerConfig: createAppRouter()),
       ),
     );
     await tester.pumpAndSettle();
-    addTearDown(() async {
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-    });
+    addTearDown(database.close);
 
     await tester.tap(find.byTooltip('Administrar categorías'));
     await tester.pumpAndSettle();
     expect(find.text('Categorías'), findsOneWidget);
     expect(find.text('Alimentación'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
   });
 }
 

@@ -15,15 +15,23 @@ import '../domain/transaction_validator.dart';
 import 'transactions_providers.dart';
 
 class TransactionEditorPage extends ConsumerWidget {
-  const TransactionEditorPage({this.transactionId, super.key});
+  const TransactionEditorPage({
+    this.transactionId,
+    this.initialType = TransactionType.expense,
+    super.key,
+  });
 
   final int? transactionId;
+  final TransactionType initialType;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final id = transactionId;
     if (id == null) {
-      return const _TransactionForm(key: ValueKey('new_transaction'));
+      return _TransactionForm(
+        key: const ValueKey('new_transaction'),
+        initialType: initialType,
+      );
     }
     return ref
         .watch(transactionByIdProvider(id))
@@ -48,8 +56,13 @@ class TransactionEditorPage extends ConsumerWidget {
 }
 
 class _TransactionForm extends ConsumerStatefulWidget {
-  const _TransactionForm({this.existing, super.key});
+  const _TransactionForm({
+    this.existing,
+    this.initialType = TransactionType.expense,
+    super.key,
+  });
   final FinanceTransaction? existing;
+  final TransactionType initialType;
 
   @override
   ConsumerState<_TransactionForm> createState() => _TransactionFormState();
@@ -75,7 +88,7 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
           : MoneyFormatter.toDopInput(existing.amountInCents),
     );
     _description = TextEditingController(text: existing?.description ?? '');
-    _type = existing?.type ?? TransactionType.expense;
+    _type = existing?.type ?? widget.initialType;
     _date = existing?.date ?? DateTime.now();
     _categoryId = existing?.categoryId;
     _paymentMethodId = existing?.paymentMethodId;

@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mony_multiplatform/core/database/app_database.dart';
+import 'package:mony_multiplatform/core/database/app_database_provider.dart';
 import 'package:mony_multiplatform/core/routing/app_router.dart';
 import 'package:mony_multiplatform/features/payment_methods/domain/payment_method.dart';
 import 'package:mony_multiplatform/features/payment_methods/domain/payment_methods_repository.dart';
@@ -73,24 +76,25 @@ void main() {
   });
 
   testWidgets('opens payment methods from the home route', (tester) async {
+    final database = AppDatabase(NativeDatabase.memory());
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          appDatabaseProvider.overrideWithValue(database),
           paymentMethodsRepositoryProvider.overrideWithValue(repository),
         ],
         child: MaterialApp.router(routerConfig: createAppRouter()),
       ),
     );
     await tester.pumpAndSettle();
-    addTearDown(() async {
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-    });
+    addTearDown(database.close);
 
     await tester.tap(find.byTooltip('Métodos de pago'));
     await tester.pumpAndSettle();
     expect(find.text('Métodos de pago'), findsOneWidget);
     expect(find.text('Efectivo'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets(

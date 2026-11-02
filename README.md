@@ -49,3 +49,7 @@ En Movimientos puedes registrar ingresos y gastos con importe en centavos exacto
 ## Historial, búsqueda y filtros
 
 El historial muestra movimientos en páginas de 20 y permite cargar más resultados. La búsqueda encuentra texto de la nota o de la categoría; se pueden combinar tipo, categoría (incluidas las archivadas), rango de fechas y orden por fecha o importe. Cada fila abre el detalle del movimiento, desde donde también se edita, duplica o elimina. Los filtros se aplican a los movimientos locales y se actualizan al cambiar los datos.
+
+## Dashboard financiero
+
+Inicio muestra el resumen del mes seleccionado: ingresos, gastos y balance neto calculados en centavos, junto con los cinco movimientos más recientes. Puedes recorrer los meses y abrir el detalle de cada movimiento. Los accesos rápidos inician directamente el formulario de ingreso o gasto; los importes respetan el formato de moneda configurado. El resumen se deriva del stream local de movimientos y se actualiza al crear, editar o eliminar.
