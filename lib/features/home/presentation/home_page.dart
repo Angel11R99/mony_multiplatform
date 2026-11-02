@@ -225,6 +225,11 @@ class _DashboardContent extends StatelessWidget {
                       icon: const Icon(Icons.shopping_cart_outlined),
                       label: const Text('Listas de compras'),
                     ),
+                    TextButton.icon(
+                      onPressed: () => context.goNamed('obligations'),
+                      icon: const Icon(Icons.event_note_outlined),
+                      label: const Text('Pagos y cobros pendientes'),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),

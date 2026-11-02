@@ -69,3 +69,7 @@ Estadísticas resume ingresos, gastos, balance y actividad para el ciclo actual,
 ## Listas de compras
 
 Las listas guardan productos con cantidad y precios estimados y reales, permiten marcar lo comprado y registrar descuentos, cupones, impuestos y recargos. El total actual usa solo productos marcados como comprados; finalizar requiere precios reales, registra el gasto con categoría, fecha y método de pago, o deja el pago a crédito pendiente. Las listas se pueden duplicar y reabrir; los productos se conservan al reabrir.
+
+## Pagos y cobros pendientes
+
+Las obligaciones registran cuentas por pagar o cobrar, contraparte, categoría, fecha de vencimiento y saldo. Admiten abonos y liquidaciones parciales: cada abono crea un único movimiento vinculado, y eliminarlo revierte ese movimiento y el saldo en una sola operación. Los pagos a crédito de listas de compras aparecen aquí; su saldo no se contabiliza como gasto hasta registrar cada pago.

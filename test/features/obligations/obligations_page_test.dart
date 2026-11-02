@@ -1,0 +1,188 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mony_multiplatform/features/categories/domain/category.dart';
+import 'package:mony_multiplatform/features/categories/presentation/categories_providers.dart';
+import 'package:mony_multiplatform/features/obligations/domain/obligation.dart';
+import 'package:mony_multiplatform/features/obligations/domain/obligation_repository.dart';
+import 'package:mony_multiplatform/features/obligations/presentation/obligation_detail_page.dart';
+import 'package:mony_multiplatform/features/obligations/presentation/obligations_page.dart';
+import 'package:mony_multiplatform/features/obligations/presentation/obligations_providers.dart';
+import 'package:mony_multiplatform/features/payment_methods/domain/payment_method.dart';
+import 'package:mony_multiplatform/features/payment_methods/presentation/payment_methods_providers.dart';
+import 'package:mony_multiplatform/features/preferences/domain/app_preferences.dart';
+import 'package:mony_multiplatform/features/preferences/domain/preferences_repository.dart';
+import 'package:mony_multiplatform/features/preferences/presentation/preferences_controller.dart';
+
+class _MemoryPreferencesRepository implements PreferencesRepository {
+  @override
+  Future<AppPreferences> load() async => AppPreferences.defaults;
+
+  @override
+  Future<void> save(AppPreferences preferences) async {}
+}
+
+class _ObligationRepositoryFake implements ObligationRepository {
+  final _updates = StreamController<List<Obligation>>.broadcast();
+  final _obligations = <int, Obligation>{};
+  var _nextId = 1;
+
+  Future<void> dispose() => _updates.close();
+
+  @override
+  Stream<List<Obligation>> watchAll() => Stream.multi((sink) {
+    sink.add(_obligations.values.toList(growable: false));
+    final subscription = _updates.stream.listen(
+      sink.add,
+      onError: sink.addError,
+    );
+    sink.onCancel = subscription.cancel;
+  });
+
+  @override
+  Stream<ObligationDetails?> watchDetails(int obligationId) =>
+      Stream.value(_details(obligationId));
+
+  @override
+  Future<ObligationDetails?> getDetails(int obligationId) async =>
+      _details(obligationId);
+
+  ObligationDetails? _details(int id) {
+    final obligation = _obligations[id];
+    return obligation == null
+        ? null
+        : ObligationDetails(obligation: obligation, payments: const []);
+  }
+
+  @override
+  Future<int> create(Obligation obligation) async {
+    final id = _nextId++;
+    _obligations[id] = Obligation(
+      id: id,
+      direction: obligation.direction,
+      title: obligation.title,
+      counterparty: obligation.counterparty,
+      amountInCents: obligation.amountInCents,
+      dueDate: obligation.dueDate,
+      categoryId: obligation.categoryId,
+      defaultPaymentMethodId: obligation.defaultPaymentMethodId,
+      notes: obligation.notes,
+      createdAt: obligation.createdAt,
+      updatedAt: obligation.updatedAt,
+    );
+    _updates.add(_obligations.values.toList(growable: false));
+    return id;
+  }
+
+  @override
+  Future<void> update(Obligation obligation) => throw UnimplementedError();
+
+  @override
+  Future<void> cancel(int obligationId) => throw UnimplementedError();
+
+  @override
+  Future<int> recordPayment({
+    required int obligationId,
+    required int amountInCents,
+    required DateTime date,
+    required int paymentMethodId,
+    String? note,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> deletePayment(int paymentId) => throw UnimplementedError();
+}
+
+void main() {
+  testWidgets('creates a payable and opens its obligation details', (
+    tester,
+  ) async {
+    final repository = _ObligationRepositoryFake();
+    final router = GoRouter(
+      initialLocation: '/obligations',
+      routes: [
+        GoRoute(
+          path: '/obligations',
+          builder: (context, state) => const ObligationsPage(),
+          routes: [
+            GoRoute(
+              path: ':id',
+              name: 'obligationDetail',
+              builder: (context, state) => ObligationDetailPage(
+                obligationId: int.parse(state.pathParameters['id']!),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+    final categories = [
+      Category(
+        id: 1,
+        name: 'Salario',
+        type: CategoryType.income,
+        icon: 'payments',
+        colorArgb: 0xFF16A34A,
+        isActive: true,
+        createdAt: DateTime(2026),
+      ),
+      Category(
+        id: 6,
+        name: 'Alimentación',
+        type: CategoryType.expense,
+        icon: 'restaurant',
+        colorArgb: 0xFFEA580C,
+        isActive: true,
+        createdAt: DateTime(2026),
+      ),
+    ];
+    final methods = [
+      PaymentMethod(
+        id: 1,
+        name: 'Efectivo',
+        icon: 'cash',
+        colorArgb: 0xFF16A34A,
+        isActive: true,
+        isDefault: true,
+        createdAt: DateTime(2026),
+      ),
+    ];
+    addTearDown(() async {
+      router.dispose();
+      await repository.dispose();
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          obligationRepositoryProvider.overrideWithValue(repository),
+          categoriesProvider.overrideWith((ref) => Stream.value(categories)),
+          activePaymentMethodsProvider.overrideWith(
+            (ref) => Stream.value(methods),
+          ),
+          preferencesRepositoryProvider.overrideWithValue(
+            _MemoryPreferencesRepository(),
+          ),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nueva obligación'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).at(0), 'Factura de luz');
+    await tester.enterText(find.byType(TextField).at(1), 'Edesur');
+    await tester.enterText(find.byType(TextField).at(2), '50.00');
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Factura de luz'), findsOneWidget);
+    expect(find.text('Sin abonos todavía'), findsOneWidget);
+    expect(find.text('Edesur'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+}

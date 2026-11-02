@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/dialog_helpers.dart';
 import '../../../core/money/money_formatter.dart';
@@ -269,11 +270,16 @@ class _ShoppingListContent extends ConsumerWidget {
               if (completed && list.payableId != null)
                 Card(
                   color: Theme.of(context).colorScheme.tertiaryContainer,
-                  child: const ListTile(
+                  child: ListTile(
                     leading: Icon(Icons.schedule),
-                    title: Text('Compra a crédito pendiente'),
-                    subtitle: Text(
-                      'Quedó registrada para integrarse con pagos pendientes.',
+                    title: const Text('Compra a crédito pendiente'),
+                    subtitle: const Text(
+                      'Consulta el saldo y registra abonos en pagos pendientes.',
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () => context.pushNamed(
+                      'obligationDetail',
+                      pathParameters: {'id': '${list.payableId}'},
                     ),
                   ),
                 ),

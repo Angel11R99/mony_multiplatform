@@ -14,6 +14,8 @@ import '../../features/preferences/presentation/settings_page.dart';
 import '../../features/statistics/presentation/statistics_page.dart';
 import '../../features/shopping_lists/presentation/shopping_list_page.dart';
 import '../../features/shopping_lists/presentation/shopping_lists_page.dart';
+import '../../features/obligations/presentation/obligation_detail_page.dart';
+import '../../features/obligations/presentation/obligations_page.dart';
 
 GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
   initialLocation: initialLocation,
@@ -71,6 +73,23 @@ GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
             return id == null
                 ? UnknownRoutePage(location: state.uri.path)
                 : ShoppingListPage(listId: id);
+          },
+        ),
+      ],
+    ),
+    GoRoute(
+      path: '/obligations',
+      name: 'obligations',
+      builder: (context, state) => const ObligationsPage(),
+      routes: [
+        GoRoute(
+          path: ':id',
+          name: 'obligationDetail',
+          builder: (context, state) {
+            final id = int.tryParse(state.pathParameters['id'] ?? '');
+            return id == null
+                ? UnknownRoutePage(location: state.uri.path)
+                : ObligationDetailPage(obligationId: id);
           },
         ),
       ],
