@@ -1,11 +1,18 @@
 # Historial de implementación
 
+## P05 — Motion, haptics y lenguaje nativo — 2026-11-02
+- Resultado: APPROVED bajo la autorización persistente del usuario.
+- `MonyMotion` aplica movimiento reducido; barra circular con movimiento corto; `animations` 3.0.0 provee Fade Through para importes de resumen solo al cambiar.
+- Navegación móvil ahora ofrece foco visible, activación por teclado/tacto y estado seleccionado semántico.
+- `dart format`, `flutter analyze` y `git diff --check` completados. Tests de motion añadidos, no ejecutados; el usuario hará la prueba.
+- Se agrega `animations` 3.0.0. Sin haptics añadidos. Commits P05 pendientes hasta que el usuario pida P06; progreso en P06 (TODO).
+
 ## P04 — App Shell, bottom nav y rutas — 2026-11-02
 - Resultado: APPROVED bajo la autorización explícita del usuario para aprobar las fases implementadas.
 - `StatefulShellRoute.indexedStack` con Inicio, Movimientos, Categorías y Métodos; `circle_nav_bar` compacto y NavigationRail ancho.
 - Preservación de stack/filtros; rutas de detalle y edición cubren el shell; formulario con confirmación para descartar cambios. Acciones secundarias de Home agrupadas en menú compacto.
 - Tests de routing y viewport añadidos; `dart format`, `flutter analyze` y `git diff --check` completados. No se ejecutaron pruebas de Flutter/browser/device para que el usuario pruebe.
-- Se agrega `circle_nav_bar` 2.2.0; commits P04 pendientes para cuando el usuario pida avanzar. El progreso queda en P05 (TODO).
+- Se agrega `circle_nav_bar` 2.2.0; commits P04 `07b828c` y `437acd0`. El progreso queda en P05.
 
 ## P03 — Design System y temas — 2026-11-02
 - Resultado: APPROVED bajo la autorización explícita del usuario para aprobar las fases implementadas.

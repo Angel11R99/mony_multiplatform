@@ -32,7 +32,7 @@
 - No se ejecutaron `flutter test`, pruebas en navegador ni pruebas en dispositivo. El usuario hará la prueba funcional/visual; esas salidas no se declaran como evidencia ejecutada.
 - Se agrega `circle_nav_bar` 2.2.0, compatible con los targets declarados del proyecto. Pub.dev indica publicación hace 22 meses y uploader no verificado; se registra el riesgo de mantenimiento. Sin cambios de persistencia ni de esquema Drift.
 - Se explicitó el origen de cada API en `02-experience/05_NAVIGATION.md` para distinguir widgets del SDK de dependencias pub.dev.
-- P04 aprobado bajo autorización persistente del usuario. Sin commit todavía; se harán commits por categoría cuando el usuario pida avanzar a P05.
+- P04 aprobado bajo autorización persistente del usuario y cerrado en `07b828c` (integración/código) y `437acd0` (documentación), al solicitar el usuario avanzar a P05.
 
 ## Archivos principales
 
