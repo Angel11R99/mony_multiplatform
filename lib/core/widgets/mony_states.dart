@@ -1,0 +1,120 @@
+import 'package:flutter/material.dart';
+
+import '../theme/mony_tokens.dart';
+import 'mony_controls.dart';
+
+class EmptyState extends StatelessWidget {
+  const EmptyState({
+    required this.title,
+    required this.message,
+    this.icon = Icons.inbox_outlined,
+    this.actionLabel,
+    this.onAction,
+    super.key,
+  });
+
+  final String title;
+  final String message;
+  final IconData icon;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    liveRegion: true,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: MonySpace.x6),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppIcon(
+            icon: icon,
+            size: 44,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(height: MonySpace.x2),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: MonySpace.x1),
+          Text(message, textAlign: TextAlign.center),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: MonySpace.x3),
+            MonyButton(
+              label: actionLabel!,
+              onPressed: onAction,
+              style: MonyButtonStyle.secondary,
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
+}
+
+class ErrorState extends StatelessWidget {
+  const ErrorState({
+    required this.message,
+    required this.retryLabel,
+    required this.onRetry,
+    super.key,
+  });
+
+  final String message;
+  final String retryLabel;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    liveRegion: true,
+    child: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(MonySpace.x6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppIcon(icon: Icons.error_outline, size: 40),
+            const SizedBox(height: MonySpace.x3),
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: MonySpace.x3),
+            MonyButton(
+              label: retryLabel,
+              icon: Icons.refresh,
+              onPressed: onRetry,
+              style: MonyButtonStyle.secondary,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class LoadingPlaceholder extends StatelessWidget {
+  const LoadingPlaceholder({this.message = 'Cargando', super.key});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    liveRegion: true,
+    label: message,
+    child: ExcludeSemantics(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(MonySpace.x6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: MonySpace.x3),
+              Text(message),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
