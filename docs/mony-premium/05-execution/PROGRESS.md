@@ -2,9 +2,9 @@
 
 > Fuente de verdad del avance de las fases ejecutadas en este repositorio.
 
-**Fase actual:** P06 (TODO — pendiente de inicio)
-**Última fase aprobada por el usuario:** P05 — motion centralizado, movimiento reducido, cambios discretos de KPI y navegación accesible, 2026-11-02
-**Siguiente acción autorizada:** iniciar P06 cuando el usuario lo solicite; commits P05 pendientes hasta esa petición
+**Fase actual:** P07 (TODO)
+**Última fase aprobada por el usuario:** P06 — feedback, confirmaciones y sheets con paquetes pub.dev, 2026-11-02
+**Siguiente acción autorizada:** iniciar P07 cuando el usuario diga `next`
 **Bloqueos:** `flutter test` no corre directamente desde el checkout porque Flutter no puede borrar `build/native_assets/windows/sqlite3.dll`; suite ejecutada con éxito en copia temporal limpia. Build Windows sin componentes C++ requeridos en Visual Studio.
 
 | Fase | Estado | Evidencia / reporte | Aprobación del usuario |
@@ -15,7 +15,7 @@
 | P03 | APPROVED | Refactor con `flex_color_scheme` 8.4.0; reporte `P03_DESIGN_SYSTEM_REPORT.md` | SÍ — autorización persistente, 2026-11-02 |
 | P04 | APPROVED | `P04_NAVIGATION_REPORT.md`; `circle_nav_bar` móvil y `NavigationRail` escritorio; analyzer OK; prueba de navegación actualizada, no ejecutada | SÍ — autorización persistente, 2026-11-02 |
 | P05 | APPROVED | `P05_MOTION_REPORT.md`; analyzer OK; tests de motion escritos, no ejecutados | SÍ — autorización persistente, 2026-11-02 |
-| P06 | TODO | — | NO |
+| P06 | APPROVED | `P06_FEEDBACK_REPORT.md`; analyze OK; verificación manual en dispositivo queda para el usuario | SÍ — autorización persistente, 2026-11-02 |
 | P07 | TODO | — | NO |
 | P08 | TODO | — | NO |
 | P09 | TODO | — | NO |
