@@ -3,14 +3,14 @@
 **Fecha:** 2026-11-02  
 **Base:** rama `main`, P02 aprobada  
 **Estado:** APPROVED por autorización explícita del usuario de aprobar las fases implementadas.  
-**Siguiente fase:** P04, todavía sin iniciar.
+**Siguiente fase:** P04, reabierta para cambiar la barra móvil por `circle_nav_bar`.
 
 ## Entrega
 
-- `MonyTheme` conserva modo claro, oscuro y sistema; define superficies, texto, bordes y estados de controles para ambos brillos, con el morado lavanda como color predeterminado.
+- `MonyTheme` conserva modo claro, oscuro y sistema; `flex_color_scheme` 8.4.0 construye el `ThemeData` y sus subtemas Material. Paleta, tokens Mony y colores financieros siguen propios del producto.
 - `MonyFinanceColors` expone colores semánticos de ingresos, gastos y avisos mediante `ThemeExtension`.
 - `MonySpace`, `MonyRadius`, `MonyMotion`, `MonyBreakpoints` y `MonyPalette` centralizan ritmo, formas, movimiento, anchos y paleta.
-- La biblioteca `lib/core/widgets/` incluye `MonyScaffold`, `MonyCard`, `ResponsiveContainer`, `SectionHeader`, `BalanceCard`, `AmountText`, `StatTile`, `MonyButton`, `MonyIconButton`, `SearchField`, `MonyFilterChip`, `AppIcon`, `EmptyState`, `ErrorState` y `LoadingPlaceholder`.
+- Se eliminaron `MonyScaffold` y los wrappers genéricos de botones, iconos, búsqueda, chips e iconos semánticos. Se usan `Scaffold`/`SafeArea` y controles Material directamente; se mantienen los widgets Mony con presentación financiera o estructura compartida.
 - Home ya usa los componentes compartidos para estructura, balance, ingresos/gastos, encabezados y estados asíncronos. No se alteró persistencia, esquema Drift ni rutas.
 - Se añadió la opción lavanda al selector de apariencia, conservando los colores personalizados que ya tengan guardados los usuarios.
 
@@ -39,11 +39,12 @@ La razón se calculó para los colores semánticos de texto sobre los fondos de 
 
 ## Verificación y límites
 
-- `dart format` aplicado a los archivos de Dart de P03.
-- `flutter analyze` pasó después de corregir los dos avisos iniciales.
+- `dart format` aplicado a los archivos Dart modificados.
+- `flutter analyze` pasó sin issues tras el refactor con FlexColorScheme 8.4.0.
 - `git diff --check` pasó.
 - No se ejecutaron pruebas automatizadas ni renderizado/capturas; los tests de widgets quedan para que el usuario haga la prueba solicitada. Por tanto, el test de escala y la revisión visual en dispositivos/plataformas no se reportan como ejecutados.
-- No se creó commit, según la instrucción de agrupar commits cuando el usuario pida iniciar la fase siguiente.
+- Commit P03 creado antes de iniciar cambios de P04, según instrucción del usuario.
+- La versión 9 de flex_color_scheme continúa incompatible con el SDK del proyecto; P03 usa 8.4.0, cuya resolución sí pasó.
 
 ## Archivos principales
 
