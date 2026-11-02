@@ -9,6 +9,7 @@ import '../features/budgets/presentation/budget_cycle_automation.dart';
 import '../features/notifications/presentation/reminder_automation.dart';
 import '../features/preferences/domain/app_preferences.dart';
 import '../features/preferences/presentation/preferences_controller.dart';
+import '../features/widgets/presentation/finance_widget_sync.dart';
 
 class MonyApp extends ConsumerWidget {
   const MonyApp({super.key});
@@ -22,13 +23,16 @@ class MonyApp extends ConsumerWidget {
 
     return BudgetCycleAutomation(
       child: ReminderAutomation(
-        child: MaterialApp.router(
-          title: config.appName,
-          debugShowCheckedModeBanner: config.showDebugBanner,
-          theme: MonyTheme.light(preferences),
-          darkTheme: MonyTheme.dark(preferences),
-          themeMode: MonyTheme.themeMode(preferences.themeMode),
-          routerConfig: router,
+        child: FinanceWidgetSync(
+          router: router,
+          child: MaterialApp.router(
+            title: config.appName,
+            debugShowCheckedModeBanner: config.showDebugBanner,
+            theme: MonyTheme.light(preferences),
+            darkTheme: MonyTheme.dark(preferences),
+            themeMode: MonyTheme.themeMode(preferences.themeMode),
+            routerConfig: router,
+          ),
         ),
       ),
     );
