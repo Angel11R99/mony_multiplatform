@@ -92,16 +92,62 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
     _date = existing?.date ?? DateTime.now();
     _categoryId = existing?.categoryId;
     _paymentMethodId = existing?.paymentMethodId;
+    _amount.addListener(_onDraftChanged);
+    _description.addListener(_onDraftChanged);
+  }
+
+  void _onDraftChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _amount.removeListener(_onDraftChanged);
+    _description.removeListener(_onDraftChanged);
     _amount.dispose();
     _description.dispose();
     super.dispose();
   }
 
   CategoryType get _categoryType => CategoryType.values.byName(_type.name);
+
+  bool get _hasUnsavedChanges {
+    final existing = widget.existing;
+    if (existing == null) {
+      return _amount.text.trim().isNotEmpty ||
+          _description.text.trim().isNotEmpty ||
+          _type != widget.initialType ||
+          _categoryId != null ||
+          _paymentMethodId != null;
+    }
+    return _amount.text != MoneyFormatter.toDopInput(existing.amountInCents) ||
+        _description.text != (existing.description ?? '') ||
+        _type != existing.type ||
+        !DateUtils.isSameDay(_date, existing.date) ||
+        _categoryId != existing.categoryId ||
+        _paymentMethodId != existing.paymentMethodId;
+  }
+
+  Future<void> _confirmDiscard() async {
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Descartar cambios'),
+        content: const Text('Hay cambios sin guardar en este movimiento.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Seguir editando'),
+          ),
+          FilledButton.tonal(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Descartar'),
+          ),
+        ],
+      ),
+    );
+    if (discard == true && mounted) Navigator.of(context).pop();
+  }
 
   Future<void> _chooseDate() async {
     final picked = await showDatePicker(
@@ -229,144 +275,153 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
                 false) ==
             false;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.existing == null ? 'Nuevo movimiento' : 'Editar movimiento',
+    return PopScope(
+      canPop: !_hasUnsavedChanges && !_saving,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && !_saving && _hasUnsavedChanges) _confirmDiscard();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.existing == null ? 'Nuevo movimiento' : 'Editar movimiento',
+          ),
         ),
-      ),
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 112),
-            children: [
-              SegmentedButton<TransactionType>(
-                segments: [
-                  ButtonSegment(
-                    value: TransactionType.expense,
-                    label: const Text('Gasto'),
-                    icon: const Icon(Icons.south_west),
-                  ),
-                  ButtonSegment(
-                    value: TransactionType.income,
-                    label: const Text('Ingreso'),
-                    icon: const Icon(Icons.north_east),
-                    enabled: !isSavingsContribution,
-                  ),
-                ],
-                selected: {_type},
-                onSelectionChanged: (selection) => setState(() {
-                  _type = selection.first;
-                  _categoryId = null;
-                }),
-              ),
-              if (isSavingsContribution) ...[
-                const SizedBox(height: 6),
-                Text(
-                  'Este movimiento es un aporte vinculado a una meta y debe conservarse como gasto.',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _amount,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                  signed: true,
-                ),
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Importe',
-                  hintText: '0.00',
-                  prefixText: 'RD\$ ',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  final amount = MoneyFormatter.parseDopMinorUnits(value ?? '');
-                  return TransactionValidator.validateAmount(amount);
-                },
-              ),
-              const SizedBox(height: 18),
-              CategoryPicker(
-                type: _categoryType,
-                value:
-                    categoryItems?.any((item) => item.id == _categoryId) == true
-                    ? _categoryId
-                    : null,
-                onChanged: (category) =>
-                    setState(() => _categoryId = category?.id),
-              ),
-              if (existingCategoryIsArchived) ...[
-                const SizedBox(height: 6),
-                Text(
-                  'La categoría original está archivada. Elige una categoría activa para guardar los cambios.',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-              const SizedBox(height: 18),
-              PaymentMethodPicker(
-                value: selectedMethodId,
-                onChanged: (method) =>
-                    setState(() => _paymentMethodId = method?.id),
-              ),
-              if (existingMethodIsArchived && defaultMethod != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  'El método original está archivado. Si no eliges otro, se usará ${defaultMethod.name}.',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-              const SizedBox(height: 18),
-              InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Fecha',
-                  border: OutlineInputBorder(),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(child: Text(_dateLabel(_date))),
-                    IconButton(
-                      tooltip: 'Seleccionar fecha',
-                      onPressed: _chooseDate,
-                      icon: const Icon(Icons.calendar_month_outlined),
+        body: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 112),
+              children: [
+                SegmentedButton<TransactionType>(
+                  segments: [
+                    ButtonSegment(
+                      value: TransactionType.expense,
+                      label: const Text('Gasto'),
+                      icon: const Icon(Icons.south_west),
+                    ),
+                    ButtonSegment(
+                      value: TransactionType.income,
+                      label: const Text('Ingreso'),
+                      icon: const Icon(Icons.north_east),
+                      enabled: !isSavingsContribution,
                     ),
                   ],
+                  selected: {_type},
+                  onSelectionChanged: (selection) => setState(() {
+                    _type = selection.first;
+                    _categoryId = null;
+                  }),
                 ),
-              ),
-              const SizedBox(height: 18),
-              TextFormField(
-                controller: _description,
-                textCapitalization: TextCapitalization.sentences,
-                textInputAction: TextInputAction.newline,
-                minLines: 2,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Nota (opcional)',
-                  hintText: 'Añade un detalle para recordar este movimiento',
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
+                if (isSavingsContribution) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    'Este movimiento es un aporte vinculado a una meta y debe conservarse como gasto.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _amount,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
+                  ),
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Importe',
+                    hintText: '0.00',
+                    prefixText: 'RD\$ ',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    final amount = MoneyFormatter.parseDopMinorUnits(
+                      value ?? '',
+                    );
+                    return TransactionValidator.validateAmount(amount);
+                  },
                 ),
-              ),
-              const SizedBox(height: 20),
-              FilledButton.icon(
-                onPressed:
-                    _saving || categoryItems == null || methodItems == null
-                    ? null
-                    : () => _save(categoryItems, methodItems, defaultMethod),
-                icon: _saving
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.check),
-                label: Text(
-                  widget.existing == null
-                      ? 'Guardar movimiento'
-                      : 'Guardar cambios',
+                const SizedBox(height: 18),
+                CategoryPicker(
+                  type: _categoryType,
+                  value:
+                      categoryItems?.any((item) => item.id == _categoryId) ==
+                          true
+                      ? _categoryId
+                      : null,
+                  onChanged: (category) =>
+                      setState(() => _categoryId = category?.id),
                 ),
-              ),
-            ],
+                if (existingCategoryIsArchived) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    'La categoría original está archivada. Elige una categoría activa para guardar los cambios.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+                const SizedBox(height: 18),
+                PaymentMethodPicker(
+                  value: selectedMethodId,
+                  onChanged: (method) =>
+                      setState(() => _paymentMethodId = method?.id),
+                ),
+                if (existingMethodIsArchived && defaultMethod != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    'El método original está archivado. Si no eliges otro, se usará ${defaultMethod.name}.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+                const SizedBox(height: 18),
+                InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Fecha',
+                    border: OutlineInputBorder(),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text(_dateLabel(_date))),
+                      IconButton(
+                        tooltip: 'Seleccionar fecha',
+                        onPressed: _chooseDate,
+                        icon: const Icon(Icons.calendar_month_outlined),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                TextFormField(
+                  controller: _description,
+                  textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.newline,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Nota (opcional)',
+                    hintText: 'Añade un detalle para recordar este movimiento',
+                    border: OutlineInputBorder(),
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                FilledButton.icon(
+                  onPressed:
+                      _saving || categoryItems == null || methodItems == null
+                      ? null
+                      : () => _save(categoryItems, methodItems, defaultMethod),
+                  icon: _saving
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.check),
+                  label: Text(
+                    widget.existing == null
+                        ? 'Guardar movimiento'
+                        : 'Guardar cambios',
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
