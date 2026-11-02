@@ -124,9 +124,9 @@ void main() {
     await tester.pumpAndSettle();
     addTearDown(database.close);
 
-    await tester.tap(find.byTooltip('Administrar categorías'));
+    await tester.tap(find.byIcon(Icons.category_outlined));
     await tester.pumpAndSettle();
-    expect(find.text('Categorías'), findsOneWidget);
+    expect(find.byType(CategoriesPage), findsOneWidget);
     expect(find.text('Alimentación'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));

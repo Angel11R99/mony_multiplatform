@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mony_multiplatform/core/database/app_database.dart';
 import 'package:mony_multiplatform/core/database/app_database_provider.dart';
 import 'package:mony_multiplatform/core/routing/app_router.dart';
+import 'package:mony_multiplatform/features/transactions/presentation/transactions_page.dart';
 
 void main() {
   testWidgets('creates an income and returns to the persisted movement list', (
@@ -36,7 +37,7 @@ void main() {
     await tester.tap(find.text('Guardar movimiento'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Movimientos'), findsOneWidget);
+    expect(find.byType(TransactionsPage), findsOneWidget);
     expect(find.text('Pago de nómina'), findsOneWidget);
     expect(find.textContaining('+RD\$1,234.50'), findsOneWidget);
 

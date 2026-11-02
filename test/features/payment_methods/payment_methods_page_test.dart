@@ -89,9 +89,9 @@ void main() {
     await tester.pumpAndSettle();
     addTearDown(database.close);
 
-    await tester.tap(find.byTooltip('Métodos de pago'));
+    await tester.tap(find.byIcon(Icons.payment_outlined));
     await tester.pumpAndSettle();
-    expect(find.text('Métodos de pago'), findsOneWidget);
+    expect(find.byType(PaymentMethodsPage), findsOneWidget);
     expect(find.text('Efectivo'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));
