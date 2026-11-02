@@ -11,6 +11,16 @@ import '../../payment_methods/domain/payment_method.dart';
 import '../../payment_methods/presentation/payment_methods_providers.dart';
 import '../../transactions/domain/transaction.dart';
 import '../../transactions/presentation/transactions_providers.dart';
+import '../../budgets/domain/budget.dart';
+import '../../budgets/presentation/budgets_providers.dart';
+import '../../obligations/domain/obligation.dart';
+import '../../obligations/presentation/obligations_providers.dart';
+import '../../recurring/domain/recurring_entry.dart';
+import '../../recurring/presentation/recurring_providers.dart';
+import '../../savings/domain/savings_goal.dart';
+import '../../savings/presentation/savings_providers.dart';
+import '../../shopping_lists/domain/shopping_list.dart';
+import '../../shopping_lists/presentation/shopping_lists_providers.dart';
 import '../domain/export_document.dart';
 
 class ExportsPage extends ConsumerStatefulWidget {
@@ -27,6 +37,11 @@ class _ExportsPageState extends ConsumerState<ExportsPage> {
   bool _transactions = true;
   bool _categories = true;
   bool _paymentMethods = true;
+  bool _budgets = true;
+  bool _savingsGoals = true;
+  bool _obligations = true;
+  bool _shoppingLists = true;
+  bool _recurringEntries = true;
   bool _busy = false;
 
   @override
@@ -41,6 +56,11 @@ class _ExportsPageState extends ConsumerState<ExportsPage> {
     transactions: _transactions,
     categories: _categories,
     paymentMethods: _paymentMethods,
+    budgets: _budgets,
+    savingsGoals: _savingsGoals,
+    obligations: _obligations,
+    shoppingLists: _shoppingLists,
+    recurringEntries: _recurringEntries,
   );
 
   Future<void> _chooseDate({required bool start}) async {
@@ -68,6 +88,12 @@ class _ExportsPageState extends ConsumerState<ExportsPage> {
     required List<FinanceTransaction> transactions,
     required List<Category> categories,
     required List<PaymentMethod> methods,
+    required BudgetConfig? budget,
+    required List<BudgetCycle> budgetHistory,
+    required List<SavingsGoalProgress> savingsGoals,
+    required List<Obligation> obligations,
+    required List<ShoppingListOverview> shoppingLists,
+    required List<RecurringEntry> recurringEntries,
   }) async {
     if (!_selection.hasAny) return;
     setState(() => _busy = true);
@@ -79,6 +105,12 @@ class _ExportsPageState extends ConsumerState<ExportsPage> {
         transactions: transactions,
         categories: categories,
         paymentMethods: methods,
+        budget: budget,
+        budgetHistory: budgetHistory,
+        savingsGoals: savingsGoals,
+        obligations: obligations,
+        shoppingLists: shoppingLists,
+        recurringEntries: recurringEntries,
       );
       final bytes = await _bytes(document);
       final extension = _format.name;
@@ -143,10 +175,25 @@ class _ExportsPageState extends ConsumerState<ExportsPage> {
     final transactions = ref.watch(transactionsProvider);
     final categories = ref.watch(categoriesProvider);
     final methods = ref.watch(paymentMethodsProvider);
-    final loading =
-        transactions.isLoading || categories.isLoading || methods.isLoading;
-    final error =
-        transactions.hasError || categories.hasError || methods.hasError;
+    final budget = ref.watch(budgetConfigProvider);
+    final budgetHistory = ref.watch(budgetHistoryProvider);
+    final savingsGoals = ref.watch(savingsGoalsProvider);
+    final obligations = ref.watch(obligationsProvider);
+    final shoppingLists = ref.watch(shoppingListOverviewsProvider);
+    final recurringEntries = ref.watch(recurringEntriesProvider);
+    final all = [
+      transactions,
+      categories,
+      methods,
+      budget,
+      budgetHistory,
+      savingsGoals,
+      obligations,
+      shoppingLists,
+      recurringEntries,
+    ];
+    final loading = all.any((value) => value.isLoading);
+    final error = all.any((value) => value.hasError);
     return Scaffold(
       appBar: AppBar(title: const Text('Exportar datos')),
       body: Center(
@@ -161,7 +208,7 @@ class _ExportsPageState extends ConsumerState<ExportsPage> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Los movimientos se filtran por fecha. Las categorías y métodos incluyen el catálogo completo.',
+                'El período filtra los movimientos. Catálogos, presupuestos, metas, obligaciones, compras y recurrencias se exportan completos.',
               ),
               const SizedBox(height: 18),
               Card.outlined(
@@ -203,6 +250,37 @@ class _ExportsPageState extends ConsumerState<ExportsPage> {
                 value: _paymentMethods,
                 onChanged: (v) => setState(() => _paymentMethods = v ?? false),
                 title: const Text('Métodos de pago'),
+                contentPadding: EdgeInsets.zero,
+              ),
+              CheckboxListTile(
+                value: _budgets,
+                onChanged: (v) => setState(() => _budgets = v ?? false),
+                title: const Text('Presupuestos e historial'),
+                contentPadding: EdgeInsets.zero,
+              ),
+              CheckboxListTile(
+                value: _savingsGoals,
+                onChanged: (v) => setState(() => _savingsGoals = v ?? false),
+                title: const Text('Metas de ahorro'),
+                contentPadding: EdgeInsets.zero,
+              ),
+              CheckboxListTile(
+                value: _obligations,
+                onChanged: (v) => setState(() => _obligations = v ?? false),
+                title: const Text('Pagos y cobros pendientes'),
+                contentPadding: EdgeInsets.zero,
+              ),
+              CheckboxListTile(
+                value: _shoppingLists,
+                onChanged: (v) => setState(() => _shoppingLists = v ?? false),
+                title: const Text('Listas de compras'),
+                contentPadding: EdgeInsets.zero,
+              ),
+              CheckboxListTile(
+                value: _recurringEntries,
+                onChanged: (v) =>
+                    setState(() => _recurringEntries = v ?? false),
+                title: const Text('Movimientos recurrentes'),
                 contentPadding: EdgeInsets.zero,
               ),
               const SizedBox(height: 8),
@@ -253,6 +331,12 @@ class _ExportsPageState extends ConsumerState<ExportsPage> {
                         transactions: transactions.value ?? const [],
                         categories: categories.value ?? const [],
                         methods: methods.value ?? const [],
+                        budget: budget.value,
+                        budgetHistory: budgetHistory.value ?? const [],
+                        savingsGoals: savingsGoals.value ?? const [],
+                        obligations: obligations.value ?? const [],
+                        shoppingLists: shoppingLists.value ?? const [],
+                        recurringEntries: recurringEntries.value ?? const [],
                       ),
                 icon: _busy
                     ? const SizedBox.square(
@@ -271,6 +355,12 @@ class _ExportsPageState extends ConsumerState<ExportsPage> {
                         transactions: transactions.value ?? const [],
                         categories: categories.value ?? const [],
                         methods: methods.value ?? const [],
+                        budget: budget.value,
+                        budgetHistory: budgetHistory.value ?? const [],
+                        savingsGoals: savingsGoals.value ?? const [],
+                        obligations: obligations.value ?? const [],
+                        shoppingLists: shoppingLists.value ?? const [],
+                        recurringEntries: recurringEntries.value ?? const [],
                       ),
                 icon: const Icon(Icons.ios_share),
                 label: const Text('Compartir archivo'),

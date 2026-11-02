@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
+import 'package:excel_plus/excel_plus.dart';
 import 'package:mony_multiplatform/features/categories/domain/category.dart';
 import 'package:mony_multiplatform/features/exports/domain/export_document.dart';
 import 'package:mony_multiplatform/features/payment_methods/domain/payment_method.dart';
@@ -92,6 +93,20 @@ void main() {
     final bytes = document.toXlsx();
     expect(bytes, isNotEmpty);
     expect(bytes.take(2), [0x50, 0x4B]);
+    final workbook = Excel.decodeBytes(bytes);
+    expect(
+      workbook.tables.keys,
+      containsAll([
+        'Movimientos',
+        'Categorías',
+        'Métodos de pago',
+        'Presupuestos',
+        'Metas de ahorro',
+        'Obligaciones',
+        'Listas de compras',
+        'Recurrentes',
+      ]),
+    );
   });
 
   test('el PDF se genera con firma PDF', () async {

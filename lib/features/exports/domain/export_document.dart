@@ -8,6 +8,11 @@ import 'package:pdf/widgets.dart' as pw;
 import '../../categories/domain/category.dart';
 import '../../payment_methods/domain/payment_method.dart';
 import '../../transactions/domain/transaction.dart';
+import '../../budgets/domain/budget.dart';
+import '../../obligations/domain/obligation.dart';
+import '../../recurring/domain/recurring_entry.dart';
+import '../../savings/domain/savings_goal.dart';
+import '../../shopping_lists/domain/shopping_list.dart';
 
 enum ExportFormat { csv, xlsx, pdf }
 
@@ -16,13 +21,31 @@ class ExportSelection {
     this.transactions = true,
     this.categories = true,
     this.paymentMethods = true,
+    this.budgets = true,
+    this.savingsGoals = true,
+    this.obligations = true,
+    this.shoppingLists = true,
+    this.recurringEntries = true,
   });
 
   final bool transactions;
   final bool categories;
   final bool paymentMethods;
+  final bool budgets;
+  final bool savingsGoals;
+  final bool obligations;
+  final bool shoppingLists;
+  final bool recurringEntries;
 
-  bool get hasAny => transactions || categories || paymentMethods;
+  bool get hasAny =>
+      transactions ||
+      categories ||
+      paymentMethods ||
+      budgets ||
+      savingsGoals ||
+      obligations ||
+      shoppingLists ||
+      recurringEntries;
 }
 
 class ExportDocument {
@@ -33,6 +56,12 @@ class ExportDocument {
     required this.transactions,
     required this.categories,
     required this.paymentMethods,
+    this.budget,
+    this.budgetHistory = const [],
+    this.savingsGoals = const [],
+    this.obligations = const [],
+    this.shoppingLists = const [],
+    this.recurringEntries = const [],
   });
 
   final DateTime from;
@@ -41,6 +70,12 @@ class ExportDocument {
   final List<FinanceTransaction> transactions;
   final List<Category> categories;
   final List<PaymentMethod> paymentMethods;
+  final BudgetConfig? budget;
+  final List<BudgetCycle> budgetHistory;
+  final List<SavingsGoalProgress> savingsGoals;
+  final List<Obligation> obligations;
+  final List<ShoppingListOverview> shoppingLists;
+  final List<RecurringEntry> recurringEntries;
 
   List<FinanceTransaction> get filteredTransactions =>
       transactions
@@ -86,6 +121,94 @@ class ExportDocument {
     ];
   }
 
+  List<List<String>> get _budgetRows => [
+    [
+      'Tipo',
+      'Desde',
+      'Hasta',
+      'Presupuesto (DOP)',
+      'Ingresos (DOP)',
+      'Gastos (DOP)',
+    ],
+    if (budget != null)
+      [
+        'Presupuesto actual',
+        budget!.cycleStart == null ? '' : _iso(budget!.cycleStart!),
+        '',
+        _amount(budget!.amountInCents),
+        '',
+        '',
+      ],
+    for (final cycle in budgetHistory)
+      [
+        'Ciclo',
+        _iso(cycle.startDate),
+        _iso(cycle.endDate),
+        _amount(cycle.budgetAmountInCents),
+        _amount(cycle.incomeInCents),
+        _amount(cycle.expenseInCents),
+      ],
+  ];
+
+  List<List<String>> get _savingsRows => [
+    ['Nombre', 'Objetivo (DOP)', 'Ahorrado (DOP)', 'Restante (DOP)', 'Estado'],
+    for (final item in savingsGoals)
+      [
+        item.goal.name,
+        _amount(item.goal.targetAmountInCents),
+        _amount(item.savedInCents),
+        _amount(item.remainingInCents),
+        item.isCompleted ? 'Completada' : 'Activa',
+      ],
+  ];
+
+  List<List<String>> get _obligationRows => [
+    [
+      'Título',
+      'Dirección',
+      'Contraparte',
+      'Vencimiento',
+      'Monto (DOP)',
+      'Pagado (DOP)',
+      'Estado',
+    ],
+    for (final item in obligations)
+      [
+        item.title,
+        item.direction.name,
+        item.counterparty ?? '',
+        item.dueDate == null ? '' : _iso(item.dueDate!),
+        _amount(item.amountInCents),
+        _amount(item.paidAmountInCents),
+        item.statusAt(DateTime.now()).name,
+      ],
+  ];
+
+  List<List<String>> get _shoppingRows => [
+    ['Nombre', 'Estado', 'Artículos', 'Total (DOP)', 'Fecha de compra'],
+    for (final item in shoppingLists)
+      [
+        item.list.name,
+        item.list.status.name,
+        item.itemCount.toString(),
+        _amount(item.totalInCents),
+        item.list.purchaseDate == null ? '' : _iso(item.list.purchaseDate!),
+      ],
+  ];
+
+  List<List<String>> get _recurringRows => [
+    ['Nombre', 'Tipo', 'Monto (DOP)', 'Frecuencia', 'Próxima fecha', 'Activo'],
+    for (final item in recurringEntries)
+      [
+        item.title,
+        item.type.name,
+        _amount(item.amountInCents),
+        item.frequency.name,
+        _iso(item.nextDate),
+        item.isActive ? 'Sí' : 'No',
+      ],
+  ];
+
   List<List<String>> get csvRows {
     final rows = <List<String>>[];
     if (selection.transactions) rows.addAll(_transactionRows());
@@ -115,7 +238,32 @@ class ExportDocument {
           ],
       ]);
     }
+    if (selection.budgets) {
+      _addSection(rows, 'Presupuestos', _budgetRows);
+    }
+    if (selection.savingsGoals) {
+      _addSection(rows, 'Metas de ahorro', _savingsRows);
+    }
+    if (selection.obligations) {
+      _addSection(rows, 'Obligaciones', _obligationRows);
+    }
+    if (selection.shoppingLists) {
+      _addSection(rows, 'Listas de compras', _shoppingRows);
+    }
+    if (selection.recurringEntries) {
+      _addSection(rows, 'Movimientos recurrentes', _recurringRows);
+    }
     return rows;
+  }
+
+  static void _addSection(
+    List<List<String>> rows,
+    String title,
+    List<List<String>> data,
+  ) {
+    if (rows.isNotEmpty) rows.add([]);
+    rows.add([title]);
+    rows.addAll(data);
   }
 
   Uint8List toCsv() {
@@ -153,6 +301,21 @@ class ExportDocument {
             item.isDefault ? 'Sí' : 'No',
           ],
       ]);
+    }
+    if (selection.budgets) {
+      _writeSheet(workbook, 'Presupuestos', _budgetRows);
+    }
+    if (selection.savingsGoals) {
+      _writeSheet(workbook, 'Metas de ahorro', _savingsRows);
+    }
+    if (selection.obligations) {
+      _writeSheet(workbook, 'Obligaciones', _obligationRows);
+    }
+    if (selection.shoppingLists) {
+      _writeSheet(workbook, 'Listas de compras', _shoppingRows);
+    }
+    if (selection.recurringEntries) {
+      _writeSheet(workbook, 'Recurrentes', _recurringRows);
     }
     return Uint8List.fromList(workbook.encode() ?? const <int>[]);
   }
@@ -207,6 +370,41 @@ class ExportDocument {
         ),
       );
     }
+    if (selection.budgets) {
+      sections.add(
+        pw.Text(
+          'Presupuestos: ${budgetHistory.length} ciclos registrados${budget == null ? '' : ' · límite actual ${_amount(budget!.amountInCents)} DOP'}',
+        ),
+      );
+    }
+    if (selection.savingsGoals) {
+      sections.add(
+        pw.Text(
+          'Metas de ahorro: ${savingsGoals.map((item) => '${item.goal.name} (${_amount(item.savedInCents)} / ${_amount(item.goal.targetAmountInCents)} DOP)').join('; ')}',
+        ),
+      );
+    }
+    if (selection.obligations) {
+      sections.add(
+        pw.Text(
+          'Obligaciones: ${obligations.map((item) => '${item.title} (${item.direction.name}, pendiente ${_amount(item.remainingAmountInCents)} DOP)').join('; ')}',
+        ),
+      );
+    }
+    if (selection.shoppingLists) {
+      sections.add(
+        pw.Text(
+          'Listas de compras: ${shoppingLists.map((item) => '${item.list.name} (${item.itemCount} artículos, ${_amount(item.totalInCents)} DOP)').join('; ')}',
+        ),
+      );
+    }
+    if (selection.recurringEntries) {
+      sections.add(
+        pw.Text(
+          'Movimientos recurrentes: ${recurringEntries.map((item) => '${item.title} (${item.frequency.name}, próximo ${_iso(item.nextDate)})').join('; ')}',
+        ),
+      );
+    }
     pdf.addPage(pw.MultiPage(theme: theme, build: (_) => sections));
     return pdf.save();
   }
@@ -239,6 +437,8 @@ String _escapeCsv(String value) {
   if (!value.contains(RegExp('[,"\r\n]'))) return value;
   return '"${value.replaceAll('"', '""')}"';
 }
+
+String _amount(int minorUnits) => (minorUnits / 100).toStringAsFixed(2);
 
 String _iso(DateTime value) =>
     '${value.year.toString().padLeft(4, '0')}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
