@@ -45,3 +45,7 @@ El catálogo local inicia con efectivo, débito y crédito. Se pueden crear, edi
 ## Ingresos y gastos
 
 En Movimientos puedes registrar ingresos y gastos con importe en centavos exactos, fecha calendario, categoría activa, método de pago y nota opcional. Las filas se ordenan por fecha y hora de creación; se pueden editar, duplicar (con fecha de hoy) y eliminar. Las referencias a categorías y métodos se conservan por ID, por lo que archivar un elemento mantiene legible el historial. Las bases v2 se migran a v3 sin alterar los catálogos. Los resúmenes financieros y filtros se completarán en sus módulos correspondientes.
+
+## Historial, búsqueda y filtros
+
+El historial muestra movimientos en páginas de 20 y permite cargar más resultados. La búsqueda encuentra texto de la nota o de la categoría; se pueden combinar tipo, categoría (incluidas las archivadas), rango de fechas y orden por fecha o importe. Cada fila abre el detalle del movimiento, desde donde también se edita, duplica o elimina. Los filtros se aplican a los movimientos locales y se actualizan al cambiar los datos.
