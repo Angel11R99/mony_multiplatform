@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'dart:async';
 import 'package:stream_transform/stream_transform.dart';
+import 'package:table_calendar/table_calendar.dart';
 
+import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -107,6 +109,25 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     }
   }
 
+  Future<void> _openActivityCalendar() async {
+    final initialDate = _startDate ?? DateTime.now();
+    final selected = await showModalBottomSheet<DateTime>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.78,
+        child: _TransactionActivityCalendar(initialDate: initialDate),
+      ),
+    );
+    if (selected != null && mounted) {
+      _updateFilter(() {
+        _startDate = DateTime(selected.year, selected.month, selected.day);
+        _endDate = _startDate;
+      });
+    }
+  }
+
   Future<Set<int>?> _selectIds({
     required String title,
     required List<(int, String)> values,
@@ -184,6 +205,39 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     });
   }
 
+  void _applyDatePreset(_DateRangePreset preset) {
+    if (preset == _DateRangePreset.custom) {
+      _chooseRange();
+      return;
+    }
+    final today = DateTime.now();
+    final end = DateTime(today.year, today.month, today.day);
+    final start = switch (preset) {
+      _DateRangePreset.today => end,
+      _DateRangePreset.week => _startOfLocaleWeek(end),
+      _DateRangePreset.month => DateTime(end.year, end.month),
+      _DateRangePreset.year => DateTime(end.year),
+      _DateRangePreset.custom => end,
+    };
+    _updateFilter(() {
+      _startDate = start;
+      _endDate = end;
+    });
+  }
+
+  DateTime _startOfLocaleWeek(DateTime date) {
+    final sundayBasedIndex = MaterialLocalizations.of(
+      context,
+    ).firstDayOfWeekIndex;
+    final firstWeekday = sundayBasedIndex == 0
+        ? DateTime.sunday
+        : sundayBasedIndex;
+    final offset =
+        (date.weekday - firstWeekday + DateTime.daysPerWeek) %
+        DateTime.daysPerWeek;
+    return DateTime(date.year, date.month, date.day - offset);
+  }
+
   Future<void> _delete(
     BuildContext context,
     FinanceTransaction transaction,
@@ -246,7 +300,16 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     final methods = ref.watch(paymentMethodsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Movimientos')),
+      appBar: AppBar(
+        title: const Text('Movimientos'),
+        actions: [
+          IconButton(
+            tooltip: 'Calendario de actividad',
+            onPressed: _openActivityCalendar,
+            icon: const Icon(Icons.calendar_month_outlined),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.pushNamed('transactionNew'),
         icon: const Icon(Icons.add),
@@ -419,10 +482,45 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       onSubmitted: (_) => _applyAmountRange(),
                     ),
                   ),
-                  OutlinedButton.icon(
-                    onPressed: _chooseRange,
-                    icon: const Icon(Icons.date_range),
-                    label: Text(_rangeLabel),
+                  PopupMenuButton<_DateRangePreset>(
+                    tooltip: 'Filtrar fechas: $_rangeLabel',
+                    onSelected: _applyDatePreset,
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(
+                        value: _DateRangePreset.today,
+                        child: Text('Hoy'),
+                      ),
+                      PopupMenuItem(
+                        value: _DateRangePreset.week,
+                        child: Text('Esta semana'),
+                      ),
+                      PopupMenuItem(
+                        value: _DateRangePreset.month,
+                        child: Text('Este mes'),
+                      ),
+                      PopupMenuItem(
+                        value: _DateRangePreset.year,
+                        child: Text('Este año'),
+                      ),
+                      PopupMenuDivider(),
+                      PopupMenuItem(
+                        value: _DateRangePreset.custom,
+                        child: Text('Personalizado…'),
+                      ),
+                    ],
+                    child: Semantics(
+                      button: true,
+                      label: 'Filtrar por fecha: $_rangeLabel',
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.date_range),
+                          const SizedBox(width: 8),
+                          Text(_rangeLabel),
+                          const Icon(Icons.arrow_drop_down),
+                        ],
+                      ),
+                    ),
                   ),
                   SizedBox(
                     width: 190,
@@ -644,6 +742,160 @@ class _TypeFilter extends StatelessWidget {
     showSelectedIcon: false,
     onSelectionChanged: (values) => onChanged(values.first),
   );
+}
+
+enum _DateRangePreset { today, week, month, year, custom }
+
+class _TransactionActivityCalendar extends ConsumerStatefulWidget {
+  const _TransactionActivityCalendar({required this.initialDate});
+
+  final DateTime initialDate;
+
+  @override
+  ConsumerState<_TransactionActivityCalendar> createState() =>
+      _TransactionActivityCalendarState();
+}
+
+class _TransactionActivityCalendarState
+    extends ConsumerState<_TransactionActivityCalendar> {
+  late DateTime _focusedDay;
+  late DateTime _selectedDay;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusedDay = DateTime(
+      widget.initialDate.year,
+      widget.initialDate.month,
+      widget.initialDate.day,
+    );
+    _selectedDay = _focusedDay;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final transactions = ref.watch(transactionsProvider);
+    return transactions.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('No pudimos cargar la actividad.'),
+            TextButton(
+              onPressed: () => ref.invalidate(transactionsProvider),
+              child: const Text('Reintentar'),
+            ),
+          ],
+        ),
+      ),
+      data: _buildCalendar,
+    );
+  }
+
+  Widget _buildCalendar(List<FinanceTransaction> transactions) {
+    final eventsByDay = <int, List<FinanceTransaction>>{};
+    for (final transaction in transactions) {
+      eventsByDay
+          .putIfAbsent(dateToEpochDay(transaction.date), () => [])
+          .add(transaction);
+    }
+    final dayTransactions =
+        eventsByDay[dateToEpochDay(_selectedDay)] ?? const [];
+    final firstDayOfWeekIndex = MaterialLocalizations.of(
+      context,
+    ).firstDayOfWeekIndex;
+    final startingDay = StartingDayOfWeek
+        .values[(firstDayOfWeekIndex + 6) % StartingDayOfWeek.values.length];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      child: Column(
+        children: [
+          Text(
+            'Actividad financiera',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: TableCalendar<FinanceTransaction>(
+              locale: Localizations.localeOf(context).toString(),
+              firstDay: DateTime(1900),
+              lastDay: DateTime(2100),
+              focusedDay: _focusedDay,
+              startingDayOfWeek: startingDay,
+              calendarFormat: CalendarFormat.month,
+              availableCalendarFormats: {
+                CalendarFormat.month:
+                    Localizations.localeOf(context).languageCode == 'en'
+                    ? 'Month'
+                    : 'Mes',
+              },
+              headerStyle: const HeaderStyle(
+                titleCentered: true,
+                formatButtonVisible: false,
+              ),
+              selectedDayPredicate: (day) =>
+                  DateUtils.isSameDay(day, _selectedDay),
+              eventLoader: (day) =>
+                  eventsByDay[dateToEpochDay(day)] ?? const [],
+              onDaySelected: (selectedDay, focusedDay) => setState(() {
+                _selectedDay = DateTime(
+                  selectedDay.year,
+                  selectedDay.month,
+                  selectedDay.day,
+                );
+                _focusedDay = DateTime(
+                  focusedDay.year,
+                  focusedDay.month,
+                  focusedDay.day,
+                );
+              }),
+              onPageChanged: (focusedDay) => _focusedDay = focusedDay,
+              calendarStyle: CalendarStyle(
+                outsideDaysVisible: true,
+                markersMaxCount: 3,
+                markerDecoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  shape: BoxShape.circle,
+                ),
+                selectedDecoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  shape: BoxShape.circle,
+                ),
+                todayDecoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                todayTextStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSecondaryContainer,
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              dayTransactions.isEmpty
+                  ? 'Sin movimientos para ${_dateLabel(_selectedDay)}'
+                  : '${dayTransactions.length} ${dayTransactions.length == 1 ? 'movimiento' : 'movimientos'} para ${_dateLabel(_selectedDay)}',
+              semanticsLabel: dayTransactions.isEmpty
+                  ? 'Sin movimientos para ${_dateLabel(_selectedDay)}'
+                  : '${dayTransactions.length} ${dayTransactions.length == 1 ? 'movimiento' : 'movimientos'} para ${_dateLabel(_selectedDay)}',
+            ),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => Navigator.of(context).pop(_selectedDay),
+              icon: const Icon(Icons.filter_alt),
+              label: const Text('Ver este día'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _TransactionCard extends StatelessWidget {
@@ -891,8 +1143,7 @@ class _TransactionsError extends StatelessWidget {
   );
 }
 
-String _dateLabel(DateTime date) =>
-    '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+String _dateLabel(DateTime date) => MonyDateFormatter.formatDate(date);
 
 T? _firstWhereOrNull<T>(Iterable<T> values, bool Function(T) test) {
   for (final value in values) {

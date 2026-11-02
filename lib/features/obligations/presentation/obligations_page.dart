@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/money/money_formatter.dart';
 import '../../../core/widgets/dialog_helpers.dart';
 import '../../categories/domain/category.dart';
@@ -587,5 +588,4 @@ Future<void> editObligation(
   }
 }
 
-String _dateLabel(DateTime date) =>
-    '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+String _dateLabel(DateTime date) => MonyDateFormatter.formatDate(date);

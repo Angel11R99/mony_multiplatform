@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -442,5 +443,4 @@ class _TransactionNotFound extends StatelessWidget {
   );
 }
 
-String _dateLabel(DateTime date) =>
-    '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+String _dateLabel(DateTime date) => MonyDateFormatter.formatDate(date);

@@ -56,10 +56,12 @@ class FinanceTransaction {
   );
 }
 
+/// Encodes civil year/month/day fields without applying a timezone offset.
 int dateToEpochDay(DateTime date) =>
     DateTime.utc(date.year, date.month, date.day).millisecondsSinceEpoch ~/
     Duration.millisecondsPerDay;
 
+/// Decodes an epoch day to a local civil date at midnight.
 DateTime dateFromEpochDay(int epochDay) {
   final utcDate = DateTime.fromMillisecondsSinceEpoch(
     epochDay * Duration.millisecondsPerDay,

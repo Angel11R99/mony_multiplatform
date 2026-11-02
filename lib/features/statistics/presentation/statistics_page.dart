@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/money/money_formatter.dart';
 import '../../budgets/domain/budget.dart';
 import '../../budgets/presentation/budgets_providers.dart';
@@ -372,23 +373,9 @@ String _periodLabel(
   return '${_dateLabel(period.start!)} – ${_dateLabel(period.endInclusive!)}';
 }
 
-String _dateLabel(DateTime date) =>
-    '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+String _dateLabel(DateTime date) => MonyDateFormatter.formatDate(date);
 
-String _monthLabel(DateTime date) => const [
-  'Ene',
-  'Feb',
-  'Mar',
-  'Abr',
-  'May',
-  'Jun',
-  'Jul',
-  'Ago',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dic',
-][date.month - 1];
+String _monthLabel(DateTime date) => MonyDateFormatter.formatMonthYear(date);
 
 String _money(int amount, CurrencyFormatStyle style) =>
     MoneyFormatter.formatDopMinorUnits(amount, style: style);

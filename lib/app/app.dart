@@ -45,7 +45,7 @@ class MonyApp extends ConsumerWidget {
                 GlobalWidgetsLocalizations.delegate,
                 GlobalCupertinoLocalizations.delegate,
               ],
-              supportedLocales: const [Locale('es')],
+              supportedLocales: const [Locale('es'), Locale('en')],
               routerConfig: router,
             ),
           ),

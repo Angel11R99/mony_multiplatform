@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1253,6 +1254,5 @@ Future<void> _duplicate(BuildContext context, WidgetRef ref, int id) async {
 
 String _money(int amount, CurrencyFormatStyle style) =>
     MoneyFormatter.formatDopMinorUnits(amount, style: style);
-String _dateLabel(DateTime? date) => date == null
-    ? 'Sin fecha'
-    : '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+String _dateLabel(DateTime? date) =>
+    date == null ? 'Sin fecha' : MonyDateFormatter.formatDate(date);

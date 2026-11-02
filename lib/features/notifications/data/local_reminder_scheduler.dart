@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../../core/date_time/mony_date_formatter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../obligations/domain/obligation.dart';
@@ -211,8 +212,7 @@ class LocalReminderScheduler {
 
   DateTime _atNine(DateTime day) => DateTime(day.year, day.month, day.day, 9);
 
-  String _dateLabel(DateTime date) =>
-      '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  String _dateLabel(DateTime date) => MonyDateFormatter.formatDate(date);
 }
 
 class _ReminderCandidate {

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/money/money_formatter.dart';
 import '../../../core/theme/mony_tokens.dart';
 import '../../../core/theme/mony_finance_colors.dart';
@@ -638,26 +639,9 @@ class _RecentTransactionTile extends StatelessWidget {
   }
 }
 
-String _monthName(DateTime date) {
-  const months = [
-    'Enero',
-    'Febrero',
-    'Marzo',
-    'Abril',
-    'Mayo',
-    'Junio',
-    'Julio',
-    'Agosto',
-    'Septiembre',
-    'Octubre',
-    'Noviembre',
-    'Diciembre',
-  ];
-  return '${months[date.month - 1]} ${date.year}';
-}
+String _monthName(DateTime date) => MonyDateFormatter.formatMonthYear(date);
 
-String _dateLabel(DateTime date) =>
-    '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+String _dateLabel(DateTime date) => MonyDateFormatter.formatDate(date);
 
 enum _HomeAction {
   paymentMethods,
