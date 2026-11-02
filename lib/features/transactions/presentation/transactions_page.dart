@@ -362,6 +362,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       ),
                       onDuplicate: () => _duplicate(context, item),
                       onDelete: () => _delete(context, item),
+                      onManageSeries: () => context.goNamed('recurringEntries'),
                     );
                   },
                 ),
@@ -403,6 +404,7 @@ class _TransactionCard extends StatelessWidget {
     required this.onEdit,
     required this.onDuplicate,
     required this.onDelete,
+    required this.onManageSeries,
   });
 
   final FinanceTransaction transaction;
@@ -412,6 +414,7 @@ class _TransactionCard extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDuplicate;
   final VoidCallback onDelete;
+  final VoidCallback onManageSeries;
 
   @override
   Widget build(BuildContext context) {
@@ -455,6 +458,8 @@ class _TransactionCard extends StatelessWidget {
                   'Acciones para ${transaction.description ?? categoryName}',
               onSelected: (action) {
                 switch (action) {
+                  case 'series':
+                    onManageSeries();
                   case 'edit':
                     onEdit();
                   case 'duplicate':
@@ -463,29 +468,39 @@ class _TransactionCard extends StatelessWidget {
                     onDelete();
                 }
               },
-              itemBuilder: (context) => const [
-                PopupMenuItem(
-                  value: 'edit',
-                  child: ListTile(
-                    leading: Icon(Icons.edit_outlined),
-                    title: Text('Editar'),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'duplicate',
-                  child: ListTile(
-                    leading: Icon(Icons.copy_outlined),
-                    title: Text('Duplicar'),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: ListTile(
-                    leading: Icon(Icons.delete_outline),
-                    title: Text('Eliminar'),
-                  ),
-                ),
-              ],
+              itemBuilder: (context) => transaction.fixedEntryId != null
+                  ? const [
+                      PopupMenuItem(
+                        value: 'series',
+                        child: ListTile(
+                          leading: Icon(Icons.repeat),
+                          title: Text('Administrar series'),
+                        ),
+                      ),
+                    ]
+                  : const [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: ListTile(
+                          leading: Icon(Icons.edit_outlined),
+                          title: Text('Editar'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'duplicate',
+                        child: ListTile(
+                          leading: Icon(Icons.copy_outlined),
+                          title: Text('Duplicar'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: ListTile(
+                          leading: Icon(Icons.delete_outline),
+                          title: Text('Eliminar'),
+                        ),
+                      ),
+                    ],
             ),
           ],
         ),

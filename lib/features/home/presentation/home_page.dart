@@ -230,6 +230,11 @@ class _DashboardContent extends StatelessWidget {
                       icon: const Icon(Icons.event_note_outlined),
                       label: const Text('Pagos y cobros pendientes'),
                     ),
+                    TextButton.icon(
+                      onPressed: () => context.goNamed('recurringEntries'),
+                      icon: const Icon(Icons.repeat),
+                      label: const Text('Movimientos recurrentes'),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),

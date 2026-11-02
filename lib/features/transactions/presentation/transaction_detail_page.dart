@@ -75,16 +75,18 @@ class TransactionDetailPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle del movimiento'),
-        actions: [
-          IconButton(
-            tooltip: 'Editar movimiento',
-            onPressed: () => context.pushNamed(
-              'transactionEdit',
-              pathParameters: {'id': transaction.id.toString()},
-            ),
-            icon: const Icon(Icons.edit_outlined),
-          ),
-        ],
+        actions: transaction.fixedEntryId == null
+            ? [
+                IconButton(
+                  tooltip: 'Editar movimiento',
+                  onPressed: () => context.pushNamed(
+                    'transactionEdit',
+                    pathParameters: {'id': transaction.id.toString()},
+                  ),
+                  icon: const Icon(Icons.edit_outlined),
+                ),
+              ]
+            : const [],
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -121,88 +123,102 @@ class TransactionDetailPage extends ConsumerWidget {
             label: 'Nota',
             value: note == null || note.isEmpty ? 'Sin nota' : note,
           ),
-          const SizedBox(height: 20),
-          FilledButton.icon(
-            onPressed: () => context.pushNamed(
-              'transactionEdit',
-              pathParameters: {'id': transaction.id.toString()},
+          if (transaction.fixedEntryId != null) ...[
+            const ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.repeat),
+              title: Text('Movimiento generado por una serie recurrente'),
             ),
-            icon: const Icon(Icons.edit_outlined),
-            label: const Text('Editar movimiento'),
-          ),
-          OutlinedButton.icon(
-            onPressed: () async {
-              try {
-                final id = await ref
-                    .read(transactionRepositoryProvider)
-                    .duplicate(transaction.id);
-                if (context.mounted && id != null) {
-                  context.goNamed('transactions');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Movimiento duplicado con la fecha de hoy.',
+            FilledButton.icon(
+              onPressed: () => context.goNamed('recurringEntries'),
+              icon: const Icon(Icons.settings_outlined),
+              label: const Text('Administrar series'),
+            ),
+          ],
+          if (transaction.fixedEntryId == null) ...[
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: () => context.pushNamed(
+                'transactionEdit',
+                pathParameters: {'id': transaction.id.toString()},
+              ),
+              icon: const Icon(Icons.edit_outlined),
+              label: const Text('Editar movimiento'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () async {
+                try {
+                  final id = await ref
+                      .read(transactionRepositoryProvider)
+                      .duplicate(transaction.id);
+                  if (context.mounted && id != null) {
+                    context.goNamed('transactions');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Movimiento duplicado con la fecha de hoy.',
+                        ),
                       ),
-                    ),
-                  );
-                } else if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('No encontramos el movimiento.'),
-                    ),
-                  );
+                    );
+                  } else if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('No encontramos el movimiento.'),
+                      ),
+                    );
+                  }
+                } catch (_) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('No se pudo duplicar el movimiento.'),
+                      ),
+                    );
+                  }
                 }
-              } catch (_) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('No se pudo duplicar el movimiento.'),
-                    ),
-                  );
+              },
+              icon: const Icon(Icons.copy_outlined),
+              label: const Text('Duplicar movimiento'),
+            ),
+            TextButton.icon(
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Eliminar movimiento'),
+                    content: const Text('Esta acción no se puede deshacer.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancelar'),
+                      ),
+                      FilledButton.tonal(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Eliminar'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed != true || !context.mounted) return;
+                try {
+                  await ref
+                      .read(transactionRepositoryProvider)
+                      .delete(transaction.id);
+                  if (context.mounted) context.goNamed('transactions');
+                } catch (_) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('No se pudo eliminar el movimiento.'),
+                      ),
+                    );
+                  }
                 }
-              }
-            },
-            icon: const Icon(Icons.copy_outlined),
-            label: const Text('Duplicar movimiento'),
-          ),
-          TextButton.icon(
-            onPressed: () async {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Eliminar movimiento'),
-                  content: const Text('Esta acción no se puede deshacer.'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancelar'),
-                    ),
-                    FilledButton.tonal(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Eliminar'),
-                    ),
-                  ],
-                ),
-              );
-              if (confirmed != true || !context.mounted) return;
-              try {
-                await ref
-                    .read(transactionRepositoryProvider)
-                    .delete(transaction.id);
-                if (context.mounted) context.goNamed('transactions');
-              } catch (_) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('No se pudo eliminar el movimiento.'),
-                    ),
-                  );
-                }
-              }
-            },
-            icon: const Icon(Icons.delete_outline),
-            label: const Text('Eliminar movimiento'),
-          ),
+              },
+              icon: const Icon(Icons.delete_outline),
+              label: const Text('Eliminar movimiento'),
+            ),
+          ],
         ],
       ),
     );

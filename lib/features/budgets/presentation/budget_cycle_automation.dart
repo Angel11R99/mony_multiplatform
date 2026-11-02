@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'budgets_providers.dart';
+import '../../recurring/presentation/recurring_providers.dart';
 
 /// Checks for due budget cycles while the app is running and when it resumes.
 /// If the OS suspends the app, overdue cycles are caught up on the next resume.
@@ -47,6 +48,13 @@ class _BudgetCycleAutomationState extends ConsumerState<BudgetCycleAutomation>
           .closeDueCycles(now: DateTime.now());
     } catch (_) {
       // A later periodic tick or app resume retries an automatic close.
+    }
+    try {
+      await ref
+          .read(recurringRepositoryProvider)
+          .processDue(now: DateTime.now());
+    } catch (_) {
+      // A later periodic tick or app resume retries overdue occurrences.
     } finally {
       _checking = false;
     }
