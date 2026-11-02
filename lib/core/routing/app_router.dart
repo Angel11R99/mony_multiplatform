@@ -19,6 +19,7 @@ import '../../features/obligations/presentation/obligations_page.dart';
 import '../../features/recurring/presentation/recurring_entries_page.dart';
 import '../../features/exports/presentation/exports_page.dart';
 import '../../features/barcodes/presentation/barcode_scanner_page.dart';
+import '../../features/receipts/presentation/receipt_scanner_page.dart';
 
 GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
   initialLocation: initialLocation,
@@ -49,6 +50,11 @@ GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
       builder: (context, state) => BarcodeScannerPage(
         shoppingListId: int.tryParse(state.uri.queryParameters['listId'] ?? ''),
       ),
+    ),
+    GoRoute(
+      path: '/receipt-scan',
+      name: 'receiptScan',
+      builder: (context, state) => const ReceiptScannerPage(),
     ),
     GoRoute(
       path: '/categories',
