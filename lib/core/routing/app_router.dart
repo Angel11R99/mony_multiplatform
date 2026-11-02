@@ -17,6 +17,7 @@ import '../../features/shopping_lists/presentation/shopping_lists_page.dart';
 import '../../features/obligations/presentation/obligation_detail_page.dart';
 import '../../features/obligations/presentation/obligations_page.dart';
 import '../../features/recurring/presentation/recurring_entries_page.dart';
+import '../../features/exports/presentation/exports_page.dart';
 
 GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
   initialLocation: initialLocation,
@@ -35,6 +36,11 @@ GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
       path: '/settings',
       name: 'settings',
       builder: (context, state) => const SettingsPage(),
+    ),
+    GoRoute(
+      path: '/exports',
+      name: 'exports',
+      builder: (context, state) => const ExportsPage(),
     ),
     GoRoute(
       path: '/categories',

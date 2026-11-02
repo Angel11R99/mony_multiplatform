@@ -59,6 +59,11 @@ class _HomePageState extends ConsumerState<HomePage> {
             icon: const Icon(Icons.tune),
           ),
           IconButton(
+            tooltip: 'Exportar datos',
+            onPressed: () => context.goNamed('exports'),
+            icon: const Icon(Icons.file_download_outlined),
+          ),
+          IconButton(
             tooltip: 'Acerca de Mony',
             onPressed: () => context.goNamed('about'),
             icon: const Icon(Icons.info_outline),
@@ -219,6 +224,11 @@ class _DashboardContent extends StatelessWidget {
                       onPressed: () => context.goNamed('statistics'),
                       icon: const Icon(Icons.query_stats_outlined),
                       label: const Text('Estadísticas'),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => context.goNamed('exports'),
+                      icon: const Icon(Icons.file_download_outlined),
+                      label: const Text('Exportar datos'),
                     ),
                     TextButton.icon(
                       onPressed: () => context.goNamed('shoppingLists'),
