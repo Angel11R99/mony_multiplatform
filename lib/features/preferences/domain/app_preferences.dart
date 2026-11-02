@@ -9,6 +9,7 @@ class AppPreferences {
     this.accentColorArgb = 0xFFFF6B73,
     this.currencyCode = 'DOP',
     this.currencyFormatStyle = CurrencyFormatStyle.symbol,
+    this.notificationsEnabled = false,
   });
 
   static const defaults = AppPreferences();
@@ -18,6 +19,7 @@ class AppPreferences {
   final int accentColorArgb;
   final String currencyCode;
   final CurrencyFormatStyle currencyFormatStyle;
+  final bool notificationsEnabled;
 
   AppPreferences copyWith({
     AppThemeMode? themeMode,
@@ -25,12 +27,14 @@ class AppPreferences {
     int? accentColorArgb,
     String? currencyCode,
     CurrencyFormatStyle? currencyFormatStyle,
+    bool? notificationsEnabled,
   }) => AppPreferences(
     themeMode: themeMode ?? this.themeMode,
     primaryColorArgb: primaryColorArgb ?? this.primaryColorArgb,
     accentColorArgb: accentColorArgb ?? this.accentColorArgb,
     currencyCode: currencyCode ?? this.currencyCode,
     currencyFormatStyle: currencyFormatStyle ?? this.currencyFormatStyle,
+    notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
   );
 
   @override
@@ -41,7 +45,8 @@ class AppPreferences {
           primaryColorArgb == other.primaryColorArgb &&
           accentColorArgb == other.accentColorArgb &&
           currencyCode == other.currencyCode &&
-          currencyFormatStyle == other.currencyFormatStyle;
+          currencyFormatStyle == other.currencyFormatStyle &&
+          notificationsEnabled == other.notificationsEnabled;
 
   @override
   int get hashCode => Object.hash(
@@ -50,5 +55,6 @@ class AppPreferences {
     accentColorArgb,
     currencyCode,
     currencyFormatStyle,
+    notificationsEnabled,
   );
 }

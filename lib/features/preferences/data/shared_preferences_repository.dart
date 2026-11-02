@@ -47,6 +47,7 @@ class SharedPreferencesRepository implements PreferencesRepository {
               decoded['currencyFormatStyle'],
             ) ??
             AppPreferences.defaults.currencyFormatStyle,
+        notificationsEnabled: decoded['notificationsEnabled'] == true,
       );
     } on FormatException {
       return AppPreferences.defaults;
@@ -64,6 +65,7 @@ class SharedPreferencesRepository implements PreferencesRepository {
         'accentColorArgb': preferences.accentColorArgb,
         'currencyCode': preferences.currencyCode,
         'currencyFormatStyle': preferences.currencyFormatStyle.name,
+        'notificationsEnabled': preferences.notificationsEnabled,
       }),
     );
     if (!saved) throw StateError('Preferences could not be persisted.');

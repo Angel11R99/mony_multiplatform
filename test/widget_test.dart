@@ -10,8 +10,45 @@ import 'package:mony_multiplatform/features/transactions/domain/transaction.dart
 import 'package:mony_multiplatform/features/preferences/domain/app_preferences.dart';
 import 'package:mony_multiplatform/features/preferences/domain/preferences_repository.dart';
 import 'package:mony_multiplatform/features/preferences/presentation/preferences_controller.dart';
+import 'package:mony_multiplatform/features/notifications/domain/reminder_plan.dart';
+import 'package:mony_multiplatform/features/notifications/presentation/notifications_providers.dart';
 
 void main() {
+  testWidgets('requests notification permission before saving the switch', (
+    tester,
+  ) async {
+    addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
+    final repository = _FakePreferencesRepository();
+    final client = _FakeReminderNotificationClient();
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(database),
+          preferencesRepositoryProvider.overrideWithValue(repository),
+          notificationClientProvider.overrideWithValue(client),
+        ],
+        child: const MonyApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Apariencia y preferencias'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Activar notificaciones'),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Activar notificaciones'));
+    await tester.pumpAndSettle();
+
+    expect(client.permissionRequests, 1);
+    expect(repository.saved.notificationsEnabled, isTrue);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('opens appearance settings and persists selections', (
     tester,
   ) async {
@@ -170,4 +207,35 @@ class _FakePreferencesRepository implements PreferencesRepository {
   Future<void> save(AppPreferences preferences) async {
     saved = preferences;
   }
+}
+
+class _FakeReminderNotificationClient implements ReminderNotificationClient {
+  int permissionRequests = 0;
+
+  @override
+  bool get supportsScheduling => false;
+
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  Future<bool> requestPermission() async {
+    permissionRequests++;
+    return true;
+  }
+
+  @override
+  Future<bool> notificationsEnabled() async => true;
+
+  @override
+  Future<List<ReminderRequest>> pendingRequests() async => const [];
+
+  @override
+  Future<void> schedule(ReminderPlan plan) async {}
+
+  @override
+  Future<void> show(ReminderPlan plan) async {}
+
+  @override
+  Future<void> cancel(int id) async {}
 }

@@ -18,6 +18,7 @@ void main() {
       primaryColorArgb: 0xFF16A34A,
       accentColorArgb: 0xFF3B82F6,
       currencyFormatStyle: CurrencyFormatStyle.code,
+      notificationsEnabled: true,
     );
     await repository.save(changed);
 

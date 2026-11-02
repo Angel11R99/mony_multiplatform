@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/money/money_formatter.dart';
 import '../domain/app_preferences.dart';
 import 'preferences_controller.dart';
+import '../../notifications/presentation/notifications_providers.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -49,9 +50,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final shouldReset = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Restaurar apariencia'),
+        title: const Text('Restaurar preferencias'),
         content: const Text(
-          'Se restablecerán el tema, los colores y el formato de moneda.',
+          'Se restablecerán el tema, los colores, el formato de moneda y los recordatorios.',
         ),
         actions: [
           TextButton(
@@ -68,6 +69,31 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
     if (!mounted || shouldReset != true) return;
     _save(() => ref.read(appPreferencesProvider.notifier).reset());
+  }
+
+  Future<void> _setNotificationsEnabled(bool enabled) async {
+    try {
+      if (enabled &&
+          !await ref.read(notificationClientProvider).requestPermission()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No se concedió el permiso para mostrar avisos.'),
+            ),
+          );
+        }
+        return;
+      }
+      await ref
+          .read(appPreferencesProvider.notifier)
+          .setNotificationsEnabled(enabled);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo actualizar este ajuste.')),
+        );
+      }
+    }
   }
 
   @override
@@ -107,6 +133,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 .read(appPreferencesProvider.notifier)
                 .setCurrencyFormatStyle(style),
           ),
+          onNotificationsChanged: _setNotificationsEnabled,
           onReset: _resetPreferences,
         ),
       ),
@@ -122,6 +149,7 @@ class _SettingsContent extends StatelessWidget {
     required this.onPrimaryColorChanged,
     required this.onAccentColorChanged,
     required this.onCurrencyFormatChanged,
+    required this.onNotificationsChanged,
     required this.onReset,
   });
 
@@ -131,6 +159,7 @@ class _SettingsContent extends StatelessWidget {
   final ValueChanged<int> onPrimaryColorChanged;
   final ValueChanged<int> onAccentColorChanged;
   final ValueChanged<CurrencyFormatStyle> onCurrencyFormatChanged;
+  final ValueChanged<bool> onNotificationsChanged;
   final VoidCallback onReset;
 
   @override
@@ -299,10 +328,28 @@ class _SettingsContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 30),
+            const _SectionHeading(
+              title: 'RECORDATORIOS',
+              subtitle:
+                  'Recibe avisos locales de vencimientos y movimientos recurrentes.',
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: SwitchListTile.adaptive(
+                secondary: const Icon(Icons.notifications_active_outlined),
+                title: const Text('Activar notificaciones'),
+                subtitle: const Text(
+                  'Obligaciones: el día del vencimiento a las 9:00. Recurrentes: el día anterior a las 9:00.',
+                ),
+                value: preferences.notificationsEnabled,
+                onChanged: onNotificationsChanged,
+              ),
+            ),
+            const SizedBox(height: 30),
             OutlinedButton.icon(
               onPressed: onReset,
               icon: const Icon(Icons.restart_alt),
-              label: const Text('Restaurar apariencia original'),
+              label: const Text('Restaurar preferencias originales'),
             ),
           ],
         ),

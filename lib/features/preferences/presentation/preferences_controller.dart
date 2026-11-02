@@ -35,6 +35,9 @@ class AppPreferencesController extends AsyncNotifier<AppPreferences> {
   Future<void> setCurrencyFormatStyle(CurrencyFormatStyle value) =>
       _update((current) => current.copyWith(currencyFormatStyle: value));
 
+  Future<void> setNotificationsEnabled(bool value) =>
+      _update((current) => current.copyWith(notificationsEnabled: value));
+
   Future<void> reset() => _update((_) => AppPreferences.defaults);
 
   Future<void> _update(
