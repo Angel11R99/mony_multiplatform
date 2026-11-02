@@ -1,4 +1,5 @@
 import 'package:drift/native.dart';
+import 'package:circle_nav_bar/circle_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -32,7 +33,8 @@ void main() {
 
     await _pumpApp(tester, router, database);
     expect(find.text('Tus finanzas, en un solo lugar'), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(CircleNavBar), findsOneWidget);
+    expect(find.bySemanticsLabel('Inicio'), findsOneWidget);
     expect(find.byType(MonyNavigationShell), findsOneWidget);
     expect(tester.takeException(), isNull);
 
@@ -70,7 +72,7 @@ void main() {
 
     await _pumpApp(tester, router, database);
     expect(find.byType(CategoriesPage), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(CircleNavBar), findsOneWidget);
   });
 
   testWidgets('uses a navigation rail on a wide viewport', (tester) async {
@@ -88,7 +90,7 @@ void main() {
 
     await _pumpApp(tester, router, database);
     expect(find.byType(NavigationRail), findsOneWidget);
-    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.byType(CircleNavBar), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -106,12 +108,12 @@ void main() {
     router.push('/transactions/not-a-number');
     await tester.pumpAndSettle();
     expect(find.text('Página no encontrada'), findsOneWidget);
-    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.byType(CircleNavBar), findsNothing);
 
     router.pop();
     await tester.pumpAndSettle();
     expect(find.text('Tus finanzas, en un solo lugar'), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(CircleNavBar), findsOneWidget);
   });
 
   testWidgets('warns before discarding an edited transaction form', (

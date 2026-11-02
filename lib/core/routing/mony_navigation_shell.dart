@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:circle_nav_bar/circle_nav_bar.dart';
 import 'package:go_router/go_router.dart';
 
 import '../theme/mony_tokens.dart';
@@ -40,35 +41,76 @@ class MonyNavigationShell extends StatelessWidget {
 
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: _selectBranch,
-        destinations: _destinations,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 70,
+          child: Stack(
+            children: [
+              ExcludeSemantics(
+                child: CircleNavBar(
+                  activeIndex: navigationShell.currentIndex,
+                  onTap: _selectBranch,
+                  activeIcons: _activeIcons,
+                  inactiveIcons: _inactiveIcons,
+                  levels: _labels,
+                  activeLevelsStyle: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                  inactiveLevelsStyle: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                  height: 70,
+                  circleWidth: 56,
+                  color: Theme.of(context).colorScheme.surfaceContainer,
+                  circleColor: Theme.of(context).colorScheme.primaryContainer,
+                  cornerRadius: const BorderRadius.vertical(
+                    top: Radius.circular(22),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+              ),
+              Positioned.fill(
+                child: Row(
+                  children: [
+                    for (var index = 0; index < _labels.length; index++)
+                      Expanded(
+                        child: Semantics(
+                          label: _labels[index],
+                          button: true,
+                          selected: navigationShell.currentIndex == index,
+                          onTap: () => _selectBranch(index),
+                          child: const ExcludeSemantics(
+                            child: SizedBox.expand(),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  static const _destinations = <NavigationDestination>[
-    NavigationDestination(
-      icon: Icon(Icons.home_outlined),
-      selectedIcon: Icon(Icons.home),
-      label: 'Inicio',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.receipt_long_outlined),
-      selectedIcon: Icon(Icons.receipt_long),
-      label: 'Movimientos',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.category_outlined),
-      selectedIcon: Icon(Icons.category),
-      label: 'Categorías',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.payment_outlined),
-      selectedIcon: Icon(Icons.payment),
-      label: 'Métodos',
-    ),
+  static const _labels = ['Inicio', 'Movimientos', 'Categorías', 'Métodos'];
+
+  static const _activeIcons = <Widget>[
+    Icon(Icons.home, size: 26),
+    Icon(Icons.receipt_long, size: 26),
+    Icon(Icons.category, size: 26),
+    Icon(Icons.payment, size: 26),
+  ];
+
+  static const _inactiveIcons = <Widget>[
+    Icon(Icons.home_outlined, size: 24),
+    Icon(Icons.receipt_long_outlined, size: 24),
+    Icon(Icons.category_outlined, size: 24),
+    Icon(Icons.payment_outlined, size: 24),
   ];
 
   static const _railDestinations = <NavigationRailDestination>[
