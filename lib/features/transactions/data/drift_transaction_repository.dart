@@ -50,6 +50,11 @@ class DriftTransactionRepository implements TransactionRepository {
     if (existing == null) {
       throw const InvalidTransactionException('No encontramos el movimiento.');
     }
+    if (await _isObligationPayment(transaction.id)) {
+      throw const InvalidTransactionException(
+        'Este movimiento pertenece a un abono. Edítalo desde la obligación.',
+      );
+    }
     final normalized = TransactionValidator.normalize(transaction);
     if (existing.savingsGoalId != null &&
         normalized.type != TransactionType.expense) {
@@ -80,6 +85,11 @@ class DriftTransactionRepository implements TransactionRepository {
       _database.transactions,
     )..where((row) => row.id.equals(id))).getSingleOrNull();
     if (original == null) return null;
+    if (await _isObligationPayment(id)) {
+      throw const InvalidTransactionException(
+        'Este movimiento pertenece a un abono y no se puede duplicar por separado.',
+      );
+    }
     final now = DateTime.now();
     final originalModel = _fromRow(original);
     final duplicate = FinanceTransaction(
@@ -99,10 +109,21 @@ class DriftTransactionRepository implements TransactionRepository {
 
   @override
   Future<void> delete(int id) async {
+    if (await _isObligationPayment(id)) {
+      throw const InvalidTransactionException(
+        'Elimina el abono desde su obligación para revertir este movimiento.',
+      );
+    }
     await (_database.delete(
       _database.transactions,
     )..where((row) => row.id.equals(id))).go();
   }
+
+  Future<bool> _isObligationPayment(int transactionId) async =>
+      await (_database.select(_database.obligationPayments)
+            ..where((payment) => payment.transactionId.equals(transactionId)))
+          .getSingleOrNull() !=
+      null;
 
   void _validateAmount(FinanceTransaction transaction) {
     final message = TransactionValidator.validateAmount(

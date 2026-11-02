@@ -1,6 +1,7 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mony_multiplatform/core/database/app_database.dart';
+import 'package:mony_multiplatform/features/obligations/data/drift_obligation_repository.dart';
 import 'package:mony_multiplatform/features/shopping_lists/data/drift_shopping_list_repository.dart';
 import 'package:mony_multiplatform/features/shopping_lists/domain/shopping_list.dart';
 import 'package:mony_multiplatform/features/shopping_lists/domain/shopping_list_repository.dart';
@@ -94,7 +95,7 @@ void main() {
   );
 
   test(
-    'credit checkout creates one pending payable without booking an expense',
+    'credit checkout creates an obligation without booking an expense',
     () async {
       final listId = await createList(name: 'Compra a crédito');
       await addPurchasedItem(listId);
@@ -106,14 +107,46 @@ void main() {
       );
 
       final payable = await (database.select(
-        database.shoppingPayables,
+        database.obligations,
       )..where((row) => row.id.equals(payableId))).getSingle();
       expect(payable.amountInCents, 2500);
-      expect(payable.isSettled, isFalse);
+      expect(payable.direction, 'payable');
+      expect(payable.sourceShoppingListId, listId);
+      expect(payable.isCancelled, isFalse);
       expect(await database.select(database.transactions).get(), isEmpty);
 
       await repository.reopen(listId);
-      expect(await database.select(database.shoppingPayables).get(), isEmpty);
+      expect(await database.select(database.obligations).get(), isEmpty);
+    },
+  );
+
+  test(
+    'reopening a credit purchase waits until its abonos are removed',
+    () async {
+      final listId = await createList(name: 'Compra con abonos');
+      await addPurchasedItem(listId);
+      final obligationId = await repository.finalizePurchase(
+        listId: listId,
+        categoryId: 6,
+        purchaseDate: now,
+        paymentMethodId: 3,
+      );
+      final obligations = DriftObligationRepository(database);
+      final paymentId = await obligations.recordPayment(
+        obligationId: obligationId,
+        amountInCents: 1000,
+        date: now,
+        paymentMethodId: 1,
+      );
+
+      await expectLater(
+        repository.reopen(listId),
+        throwsA(isA<ShoppingListException>()),
+      );
+      await obligations.deletePayment(paymentId);
+      await repository.reopen(listId);
+      expect(await database.select(database.obligations).get(), isEmpty);
+      expect(await database.select(database.transactions).get(), isEmpty);
     },
   );
 

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../categories/domain/category.dart';
+import '../../obligations/domain/obligation.dart';
 import '../../transactions/domain/transaction.dart';
 import '../domain/shopping_list.dart';
 import '../domain/shopping_list_repository.dart';
@@ -478,19 +479,38 @@ class DriftShoppingListRepository implements ShoppingListRepository {
     if (list.status != ShoppingListStatus.completed.name) {
       throw const ShoppingListException('La lista no está finalizada.');
     }
-    final payable = await (_database.select(
+    final legacyPayable = await (_database.select(
       _database.shoppingPayables,
     )..where((row) => row.shoppingListId.equals(listId))).getSingleOrNull();
-    final transactionId = payable?.transactionId ?? list.expenseTransactionId;
+    final obligation =
+        await (_database.select(_database.obligations)
+              ..where((row) => row.sourceShoppingListId.equals(listId)))
+            .getSingleOrNull();
+    if (obligation != null &&
+        await (_database.select(_database.obligationPayments)
+              ..where((row) => row.obligationId.equals(obligation.id)))
+            .get()
+            .then((payments) => payments.isNotEmpty)) {
+      throw const ShoppingListException(
+        'Elimina los abonos de la obligación antes de reabrir la compra.',
+      );
+    }
+    final transactionId =
+        legacyPayable?.transactionId ?? list.expenseTransactionId;
     if (transactionId != null) {
       await (_database.delete(
         _database.transactions,
       )..where((row) => row.id.equals(transactionId))).go();
     }
-    if (payable != null) {
+    if (obligation != null) {
+      await (_database.delete(
+        _database.obligations,
+      )..where((row) => row.id.equals(obligation.id))).go();
+    }
+    if (legacyPayable != null) {
       await (_database.delete(
         _database.shoppingPayables,
-      )..where((row) => row.id.equals(payable.id))).go();
+      )..where((row) => row.id.equals(legacyPayable.id))).go();
     }
     await (_database.update(
       _database.shoppingLists,
@@ -545,27 +565,60 @@ class DriftShoppingListRepository implements ShoppingListRepository {
           _database.transactions,
         )..where((row) => row.id.equals(list.expenseTransactionId!))).go();
       }
-      final existing = await (_database.select(
-        _database.shoppingPayables,
-      )..where((row) => row.shoppingListId.equals(listId))).getSingleOrNull();
-      final values = ShoppingPayablesCompanion(
-        shoppingListId: Value(listId),
-        amountInCents: Value(total),
-        categoryId: Value(categoryId),
-        paymentMethodId: Value(methodId),
-        dateEpochDay: Value(dateEpoch),
-        description: Value(list.name),
-        updatedAt: Value(now),
-      );
+      final existing =
+          await (_database.select(_database.obligations)
+                ..where((row) => row.sourceShoppingListId.equals(listId)))
+              .getSingleOrNull();
+      final paidAmount = existing == null
+          ? 0
+          : (await (_database.select(
+                  _database.obligationPayments,
+                )..where((row) => row.obligationId.equals(existing.id))).get())
+                .fold<int>(
+                  0,
+                  (total, payment) => total + payment.amountInCents,
+                );
+      if (existing != null &&
+          paidAmount > 0 &&
+          (existing.amountInCents != total ||
+              existing.categoryId != categoryId)) {
+        throw const ShoppingListException(
+          'El importe y la categoría no se pueden cambiar después de registrar abonos.',
+        );
+      }
+      if (paidAmount > total) {
+        throw const ShoppingListException(
+          'El nuevo total no puede quedar por debajo de los abonos registrados.',
+        );
+      }
       final payableId = existing == null
           ? await _database
-                .into(_database.shoppingPayables)
-                .insert(values.copyWith(createdAt: Value(now)))
+                .into(_database.obligations)
+                .insert(
+                  ObligationsCompanion.insert(
+                    direction: ObligationDirection.payable.name,
+                    title: list.name,
+                    amountInCents: total,
+                    categoryId: categoryId,
+                    defaultPaymentMethodId: Value(methodId),
+                    sourceShoppingListId: Value(listId),
+                    createdAt: Value(now),
+                    updatedAt: Value(now),
+                  ),
+                )
           : existing.id;
       if (existing != null) {
         await (_database.update(
-          _database.shoppingPayables,
-        )..where((row) => row.id.equals(existing.id))).write(values);
+          _database.obligations,
+        )..where((row) => row.id.equals(existing.id))).write(
+          ObligationsCompanion(
+            title: Value(list.name),
+            amountInCents: Value(total),
+            categoryId: Value(categoryId),
+            defaultPaymentMethodId: Value(methodId),
+            updatedAt: Value(now),
+          ),
+        );
       }
       await (_database.update(
         _database.shoppingLists,
@@ -583,6 +636,31 @@ class DriftShoppingListRepository implements ShoppingListRepository {
         : await (_database.select(_database.transactions)
                 ..where((row) => row.id.equals(list.expenseTransactionId!)))
               .getSingleOrNull();
+    final linkedObligation =
+        await (_database.select(_database.obligations)
+              ..where((row) => row.sourceShoppingListId.equals(listId)))
+            .getSingleOrNull();
+    if (linkedObligation != null) {
+      final payments = await (_database.select(
+        _database.obligationPayments,
+      )..where((row) => row.obligationId.equals(linkedObligation.id))).get();
+      if (payments.isNotEmpty) {
+        throw const ShoppingListException(
+          'Elimina los abonos de la obligación antes de cambiar el método de pago.',
+        );
+      }
+      await (_database.delete(
+        _database.obligations,
+      )..where((row) => row.id.equals(linkedObligation.id))).go();
+    }
+    final legacyPayable = await (_database.select(
+      _database.shoppingPayables,
+    )..where((row) => row.shoppingListId.equals(listId))).getSingleOrNull();
+    if (legacyPayable != null) {
+      await (_database.delete(
+        _database.shoppingPayables,
+      )..where((row) => row.id.equals(legacyPayable.id))).go();
+    }
     final transactionValues = TransactionsCompanion(
       amountInCents: Value(total),
       type: const Value('expense'),
