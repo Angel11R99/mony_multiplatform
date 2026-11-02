@@ -1,0 +1,24 @@
+# Matriz consolidada de aceptación
+
+Esta matriz se enlaza a los criterios AC-xx-y de cada documento; **no marcar como aprobados desde la documentación sola**.
+
+| Fase | Evidencia mínima | Estado inicial |
+|---|---|---|
+| P00 | Auditoría con árbol, SDK, módulos y baseline | TODO |
+| P01 | Matriz de paquetes, licencias y compatibilidad | TODO |
+| P02 | Contratos de arquitectura y consistencia de estado | TODO |
+| P03 | Theme tokens y pruebas de componentes | TODO |
+| P04 | 4 destinos con back/deep-link/estado probados | TODO |
+| P05 | Motion + reduced motion + navegación accesible | TODO |
+| P06 | Overlays, toasts, confirmaciones y pruebas | TODO |
+| P07 | KPIs reales y empty/error states | TODO |
+| P08 | CRUD y coherencia entre vistas | TODO |
+| P09 | Filtros combinados y búsqueda estable | TODO |
+| P10 | Inclusión de fechas/locale/hora verificada | TODO |
+| P11 | Integridad referencial categorías/métodos | TODO |
+| P12 | Fórmulas estadísticas y chart tests | TODO |
+| P13 | Privacy review y controles documentados | TODO |
+| P14 | Pruebas, perf, accesibilidad y plataformas | TODO |
+| P15 | Release checklist, UAT y rollback | TODO |
+
+Cada test debe registrar referencia a AC en el reporte de fase. Las evidencias pueden ser test automatizado, captura, salida de comando o checklist manual explicando pasos y resultado.
