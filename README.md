@@ -61,3 +61,7 @@ Metas de ahorro permite crear, editar, completar, reabrir y eliminar objetivos, 
 ## Presupuestos
 
 Los presupuestos aplican un límite mensual o quincenal y muestran ingresos, gastos, saldo disponible y alertas visuales al llegar al 75 % o excederlo. Cada categoría de gasto puede tener su propio límite por período, y su consumo se calcula usando la fecha del movimiento. Los ciclos cerrados quedan en un historial y los movimientos se conservan. El cierre puede hacerse manualmente al final del ciclo o automáticamente a la hora elegida mientras la app está activa; si el sistema suspende la app, se procesan los ciclos vencidos al volver a abrirla. El ingreso del presupuesto se registra como un movimiento de ingreso asociado y se actualiza al cambiar el monto. La base v4 migra a v5 conservando metas y movimientos.
+
+## Estadísticas
+
+Estadísticas resume ingresos, gastos, balance y actividad para el ciclo actual, el mes, el año, todo el historial o un rango personalizado. Compara períodos, muestra la distribución por categoría y la evolución mensual de ingresos y gastos; también presenta avisos visuales al acercarse o superar los límites de categoría del ciclo actual. Los cálculos usan movimientos locales y cantidades enteras en centavos.

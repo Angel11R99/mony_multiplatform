@@ -11,6 +11,7 @@ import '../../features/transactions/presentation/transaction_detail_page.dart';
 import '../../features/transactions/presentation/transaction_editor_page.dart';
 import '../../features/transactions/presentation/transactions_page.dart';
 import '../../features/preferences/presentation/settings_page.dart';
+import '../../features/statistics/presentation/statistics_page.dart';
 
 GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
   initialLocation: initialLocation,
@@ -49,6 +50,11 @@ GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
       path: '/budgets',
       name: 'budgets',
       builder: (context, state) => const BudgetsPage(),
+    ),
+    GoRoute(
+      path: '/statistics',
+      name: 'statistics',
+      builder: (context, state) => const StatisticsPage(),
     ),
     GoRoute(
       path: '/transactions',
