@@ -2,17 +2,17 @@
 
 ## P04 — App Shell, bottom nav y rutas — 2026-11-02
 - Resultado: APPROVED bajo la autorización explícita del usuario para aprobar las fases implementadas.
-- `StatefulShellRoute.indexedStack` con Inicio, Movimientos, Categorías y Métodos; NavigationBar compacto y NavigationRail ancho.
+- `StatefulShellRoute.indexedStack` con Inicio, Movimientos, Categorías y Métodos; `circle_nav_bar` compacto y NavigationRail ancho.
 - Preservación de stack/filtros; rutas de detalle y edición cubren el shell; formulario con confirmación para descartar cambios. Acciones secundarias de Home agrupadas en menú compacto.
 - Tests de routing y viewport añadidos; `dart format`, `flutter analyze` y `git diff --check` completados. No se ejecutaron pruebas de Flutter/browser/device para que el usuario pruebe.
-- Sin paquetes, cambios de DB ni commit P04. El progreso queda en P05 (TODO).
+- Se agrega `circle_nav_bar` 2.2.0; commits P04 pendientes para cuando el usuario pida avanzar. El progreso queda en P05 (TODO).
 
 ## P03 — Design System y temas — 2026-11-02
 - Resultado: APPROVED bajo la autorización explícita del usuario para aprobar las fases implementadas.
-- Añadidos tokens, tema claro/oscuro y semántica financiera; biblioteca base de widgets y tests de componentes.
+- Añadidos tokens, tema claro/oscuro y semántica financiera; `flex_color_scheme` 8.4.0 genera el tema y subtemas Material. Eliminados wrappers genéricos que solo delegaban en controles nativos.
 - Home integrado con balance, métricas y loading/error/empty compartidos; color lavanda añadido como predeterminado y opción de apariencia.
-- `dart format`, `flutter analyze` y `git diff --check` completados. No se ejecutó `flutter test` ni render visual para que el usuario pruebe.
-- Sin cambios de navegación, dependencias, esquema/persistencia ni commit. El progreso queda en P04 (TODO).
+- `dart format` y `flutter analyze` completados. No se ejecutó `flutter test` ni render visual para que el usuario pruebe.
+- Tres commits P03 separados por tema, controles compartidos y documentación. El progreso queda en P04.
 
 ## Aprobación P01 e inicio P02 — 2026-11-02
 - El usuario pidió marcar P01 como aprobada y autorizó aprobar las fases que se ejecuten.
