@@ -2155,6 +2155,1134 @@ class SavingsGoalsCompanion extends UpdateCompanion<SavingsGoalRow> {
   }
 }
 
+class $BudgetsTable extends Budgets
+    with TableInfo<$BudgetsTable, BudgetConfigRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BudgetsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _amountInCentsMeta = const VerificationMeta(
+    'amountInCents',
+  );
+  @override
+  late final GeneratedColumn<int> amountInCents = GeneratedColumn<int>(
+    'amount_in_cents',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(amountInCents).isBiggerThanValue(0),
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _periodMeta = const VerificationMeta('period');
+  @override
+  late final GeneratedColumn<String> period = GeneratedColumn<String>(
+    'period',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 20,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cycleStartEpochDayMeta =
+      const VerificationMeta('cycleStartEpochDay');
+  @override
+  late final GeneratedColumn<int> cycleStartEpochDay = GeneratedColumn<int>(
+    'cycle_start_epoch_day',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cycleStartedAtMeta = const VerificationMeta(
+    'cycleStartedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> cycleStartedAt =
+      GeneratedColumn<DateTime>(
+        'cycle_started_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _incomeTransactionIdMeta =
+      const VerificationMeta('incomeTransactionId');
+  @override
+  late final GeneratedColumn<int> incomeTransactionId = GeneratedColumn<int>(
+    'income_transaction_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cycleSchedulesJsonMeta =
+      const VerificationMeta('cycleSchedulesJson');
+  @override
+  late final GeneratedColumn<String> cycleSchedulesJson =
+      GeneratedColumn<String>(
+        'cycle_schedules_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _autoCloseEnabledMeta = const VerificationMeta(
+    'autoCloseEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> autoCloseEnabled = GeneratedColumn<bool>(
+    'auto_close_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("auto_close_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _autoCloseMinuteOfDayMeta =
+      const VerificationMeta('autoCloseMinuteOfDay');
+  @override
+  late final GeneratedColumn<int> autoCloseMinuteOfDay = GeneratedColumn<int>(
+    'auto_close_minute_of_day',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(autoCloseMinuteOfDay).isBetweenValues(0, 1439),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1260),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    amountInCents,
+    period,
+    cycleStartEpochDay,
+    cycleStartedAt,
+    incomeTransactionId,
+    cycleSchedulesJson,
+    autoCloseEnabled,
+    autoCloseMinuteOfDay,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'budgets';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BudgetConfigRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('amount_in_cents')) {
+      context.handle(
+        _amountInCentsMeta,
+        amountInCents.isAcceptableOrUnknown(
+          data['amount_in_cents']!,
+          _amountInCentsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_amountInCentsMeta);
+    }
+    if (data.containsKey('period')) {
+      context.handle(
+        _periodMeta,
+        period.isAcceptableOrUnknown(data['period']!, _periodMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_periodMeta);
+    }
+    if (data.containsKey('cycle_start_epoch_day')) {
+      context.handle(
+        _cycleStartEpochDayMeta,
+        cycleStartEpochDay.isAcceptableOrUnknown(
+          data['cycle_start_epoch_day']!,
+          _cycleStartEpochDayMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_cycleStartEpochDayMeta);
+    }
+    if (data.containsKey('cycle_started_at')) {
+      context.handle(
+        _cycleStartedAtMeta,
+        cycleStartedAt.isAcceptableOrUnknown(
+          data['cycle_started_at']!,
+          _cycleStartedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_cycleStartedAtMeta);
+    }
+    if (data.containsKey('income_transaction_id')) {
+      context.handle(
+        _incomeTransactionIdMeta,
+        incomeTransactionId.isAcceptableOrUnknown(
+          data['income_transaction_id']!,
+          _incomeTransactionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cycle_schedules_json')) {
+      context.handle(
+        _cycleSchedulesJsonMeta,
+        cycleSchedulesJson.isAcceptableOrUnknown(
+          data['cycle_schedules_json']!,
+          _cycleSchedulesJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_cycleSchedulesJsonMeta);
+    }
+    if (data.containsKey('auto_close_enabled')) {
+      context.handle(
+        _autoCloseEnabledMeta,
+        autoCloseEnabled.isAcceptableOrUnknown(
+          data['auto_close_enabled']!,
+          _autoCloseEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('auto_close_minute_of_day')) {
+      context.handle(
+        _autoCloseMinuteOfDayMeta,
+        autoCloseMinuteOfDay.isAcceptableOrUnknown(
+          data['auto_close_minute_of_day']!,
+          _autoCloseMinuteOfDayMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  BudgetConfigRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BudgetConfigRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      amountInCents: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_in_cents'],
+      )!,
+      period: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period'],
+      )!,
+      cycleStartEpochDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cycle_start_epoch_day'],
+      )!,
+      cycleStartedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}cycle_started_at'],
+      )!,
+      incomeTransactionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}income_transaction_id'],
+      ),
+      cycleSchedulesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cycle_schedules_json'],
+      )!,
+      autoCloseEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}auto_close_enabled'],
+      )!,
+      autoCloseMinuteOfDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}auto_close_minute_of_day'],
+      )!,
+    );
+  }
+
+  @override
+  $BudgetsTable createAlias(String alias) {
+    return $BudgetsTable(attachedDatabase, alias);
+  }
+}
+
+class BudgetConfigRow extends DataClass implements Insertable<BudgetConfigRow> {
+  final int id;
+  final int amountInCents;
+  final String period;
+  final int cycleStartEpochDay;
+  final DateTime cycleStartedAt;
+  final int? incomeTransactionId;
+  final String cycleSchedulesJson;
+  final bool autoCloseEnabled;
+  final int autoCloseMinuteOfDay;
+  const BudgetConfigRow({
+    required this.id,
+    required this.amountInCents,
+    required this.period,
+    required this.cycleStartEpochDay,
+    required this.cycleStartedAt,
+    this.incomeTransactionId,
+    required this.cycleSchedulesJson,
+    required this.autoCloseEnabled,
+    required this.autoCloseMinuteOfDay,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['amount_in_cents'] = Variable<int>(amountInCents);
+    map['period'] = Variable<String>(period);
+    map['cycle_start_epoch_day'] = Variable<int>(cycleStartEpochDay);
+    map['cycle_started_at'] = Variable<DateTime>(cycleStartedAt);
+    if (!nullToAbsent || incomeTransactionId != null) {
+      map['income_transaction_id'] = Variable<int>(incomeTransactionId);
+    }
+    map['cycle_schedules_json'] = Variable<String>(cycleSchedulesJson);
+    map['auto_close_enabled'] = Variable<bool>(autoCloseEnabled);
+    map['auto_close_minute_of_day'] = Variable<int>(autoCloseMinuteOfDay);
+    return map;
+  }
+
+  BudgetsCompanion toCompanion(bool nullToAbsent) {
+    return BudgetsCompanion(
+      id: Value(id),
+      amountInCents: Value(amountInCents),
+      period: Value(period),
+      cycleStartEpochDay: Value(cycleStartEpochDay),
+      cycleStartedAt: Value(cycleStartedAt),
+      incomeTransactionId: incomeTransactionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(incomeTransactionId),
+      cycleSchedulesJson: Value(cycleSchedulesJson),
+      autoCloseEnabled: Value(autoCloseEnabled),
+      autoCloseMinuteOfDay: Value(autoCloseMinuteOfDay),
+    );
+  }
+
+  factory BudgetConfigRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BudgetConfigRow(
+      id: serializer.fromJson<int>(json['id']),
+      amountInCents: serializer.fromJson<int>(json['amountInCents']),
+      period: serializer.fromJson<String>(json['period']),
+      cycleStartEpochDay: serializer.fromJson<int>(json['cycleStartEpochDay']),
+      cycleStartedAt: serializer.fromJson<DateTime>(json['cycleStartedAt']),
+      incomeTransactionId: serializer.fromJson<int?>(
+        json['incomeTransactionId'],
+      ),
+      cycleSchedulesJson: serializer.fromJson<String>(
+        json['cycleSchedulesJson'],
+      ),
+      autoCloseEnabled: serializer.fromJson<bool>(json['autoCloseEnabled']),
+      autoCloseMinuteOfDay: serializer.fromJson<int>(
+        json['autoCloseMinuteOfDay'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'amountInCents': serializer.toJson<int>(amountInCents),
+      'period': serializer.toJson<String>(period),
+      'cycleStartEpochDay': serializer.toJson<int>(cycleStartEpochDay),
+      'cycleStartedAt': serializer.toJson<DateTime>(cycleStartedAt),
+      'incomeTransactionId': serializer.toJson<int?>(incomeTransactionId),
+      'cycleSchedulesJson': serializer.toJson<String>(cycleSchedulesJson),
+      'autoCloseEnabled': serializer.toJson<bool>(autoCloseEnabled),
+      'autoCloseMinuteOfDay': serializer.toJson<int>(autoCloseMinuteOfDay),
+    };
+  }
+
+  BudgetConfigRow copyWith({
+    int? id,
+    int? amountInCents,
+    String? period,
+    int? cycleStartEpochDay,
+    DateTime? cycleStartedAt,
+    Value<int?> incomeTransactionId = const Value.absent(),
+    String? cycleSchedulesJson,
+    bool? autoCloseEnabled,
+    int? autoCloseMinuteOfDay,
+  }) => BudgetConfigRow(
+    id: id ?? this.id,
+    amountInCents: amountInCents ?? this.amountInCents,
+    period: period ?? this.period,
+    cycleStartEpochDay: cycleStartEpochDay ?? this.cycleStartEpochDay,
+    cycleStartedAt: cycleStartedAt ?? this.cycleStartedAt,
+    incomeTransactionId: incomeTransactionId.present
+        ? incomeTransactionId.value
+        : this.incomeTransactionId,
+    cycleSchedulesJson: cycleSchedulesJson ?? this.cycleSchedulesJson,
+    autoCloseEnabled: autoCloseEnabled ?? this.autoCloseEnabled,
+    autoCloseMinuteOfDay: autoCloseMinuteOfDay ?? this.autoCloseMinuteOfDay,
+  );
+  BudgetConfigRow copyWithCompanion(BudgetsCompanion data) {
+    return BudgetConfigRow(
+      id: data.id.present ? data.id.value : this.id,
+      amountInCents: data.amountInCents.present
+          ? data.amountInCents.value
+          : this.amountInCents,
+      period: data.period.present ? data.period.value : this.period,
+      cycleStartEpochDay: data.cycleStartEpochDay.present
+          ? data.cycleStartEpochDay.value
+          : this.cycleStartEpochDay,
+      cycleStartedAt: data.cycleStartedAt.present
+          ? data.cycleStartedAt.value
+          : this.cycleStartedAt,
+      incomeTransactionId: data.incomeTransactionId.present
+          ? data.incomeTransactionId.value
+          : this.incomeTransactionId,
+      cycleSchedulesJson: data.cycleSchedulesJson.present
+          ? data.cycleSchedulesJson.value
+          : this.cycleSchedulesJson,
+      autoCloseEnabled: data.autoCloseEnabled.present
+          ? data.autoCloseEnabled.value
+          : this.autoCloseEnabled,
+      autoCloseMinuteOfDay: data.autoCloseMinuteOfDay.present
+          ? data.autoCloseMinuteOfDay.value
+          : this.autoCloseMinuteOfDay,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BudgetConfigRow(')
+          ..write('id: $id, ')
+          ..write('amountInCents: $amountInCents, ')
+          ..write('period: $period, ')
+          ..write('cycleStartEpochDay: $cycleStartEpochDay, ')
+          ..write('cycleStartedAt: $cycleStartedAt, ')
+          ..write('incomeTransactionId: $incomeTransactionId, ')
+          ..write('cycleSchedulesJson: $cycleSchedulesJson, ')
+          ..write('autoCloseEnabled: $autoCloseEnabled, ')
+          ..write('autoCloseMinuteOfDay: $autoCloseMinuteOfDay')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    amountInCents,
+    period,
+    cycleStartEpochDay,
+    cycleStartedAt,
+    incomeTransactionId,
+    cycleSchedulesJson,
+    autoCloseEnabled,
+    autoCloseMinuteOfDay,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BudgetConfigRow &&
+          other.id == this.id &&
+          other.amountInCents == this.amountInCents &&
+          other.period == this.period &&
+          other.cycleStartEpochDay == this.cycleStartEpochDay &&
+          other.cycleStartedAt == this.cycleStartedAt &&
+          other.incomeTransactionId == this.incomeTransactionId &&
+          other.cycleSchedulesJson == this.cycleSchedulesJson &&
+          other.autoCloseEnabled == this.autoCloseEnabled &&
+          other.autoCloseMinuteOfDay == this.autoCloseMinuteOfDay);
+}
+
+class BudgetsCompanion extends UpdateCompanion<BudgetConfigRow> {
+  final Value<int> id;
+  final Value<int> amountInCents;
+  final Value<String> period;
+  final Value<int> cycleStartEpochDay;
+  final Value<DateTime> cycleStartedAt;
+  final Value<int?> incomeTransactionId;
+  final Value<String> cycleSchedulesJson;
+  final Value<bool> autoCloseEnabled;
+  final Value<int> autoCloseMinuteOfDay;
+  const BudgetsCompanion({
+    this.id = const Value.absent(),
+    this.amountInCents = const Value.absent(),
+    this.period = const Value.absent(),
+    this.cycleStartEpochDay = const Value.absent(),
+    this.cycleStartedAt = const Value.absent(),
+    this.incomeTransactionId = const Value.absent(),
+    this.cycleSchedulesJson = const Value.absent(),
+    this.autoCloseEnabled = const Value.absent(),
+    this.autoCloseMinuteOfDay = const Value.absent(),
+  });
+  BudgetsCompanion.insert({
+    this.id = const Value.absent(),
+    required int amountInCents,
+    required String period,
+    required int cycleStartEpochDay,
+    required DateTime cycleStartedAt,
+    this.incomeTransactionId = const Value.absent(),
+    required String cycleSchedulesJson,
+    this.autoCloseEnabled = const Value.absent(),
+    this.autoCloseMinuteOfDay = const Value.absent(),
+  }) : amountInCents = Value(amountInCents),
+       period = Value(period),
+       cycleStartEpochDay = Value(cycleStartEpochDay),
+       cycleStartedAt = Value(cycleStartedAt),
+       cycleSchedulesJson = Value(cycleSchedulesJson);
+  static Insertable<BudgetConfigRow> custom({
+    Expression<int>? id,
+    Expression<int>? amountInCents,
+    Expression<String>? period,
+    Expression<int>? cycleStartEpochDay,
+    Expression<DateTime>? cycleStartedAt,
+    Expression<int>? incomeTransactionId,
+    Expression<String>? cycleSchedulesJson,
+    Expression<bool>? autoCloseEnabled,
+    Expression<int>? autoCloseMinuteOfDay,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (amountInCents != null) 'amount_in_cents': amountInCents,
+      if (period != null) 'period': period,
+      if (cycleStartEpochDay != null)
+        'cycle_start_epoch_day': cycleStartEpochDay,
+      if (cycleStartedAt != null) 'cycle_started_at': cycleStartedAt,
+      if (incomeTransactionId != null)
+        'income_transaction_id': incomeTransactionId,
+      if (cycleSchedulesJson != null)
+        'cycle_schedules_json': cycleSchedulesJson,
+      if (autoCloseEnabled != null) 'auto_close_enabled': autoCloseEnabled,
+      if (autoCloseMinuteOfDay != null)
+        'auto_close_minute_of_day': autoCloseMinuteOfDay,
+    });
+  }
+
+  BudgetsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? amountInCents,
+    Value<String>? period,
+    Value<int>? cycleStartEpochDay,
+    Value<DateTime>? cycleStartedAt,
+    Value<int?>? incomeTransactionId,
+    Value<String>? cycleSchedulesJson,
+    Value<bool>? autoCloseEnabled,
+    Value<int>? autoCloseMinuteOfDay,
+  }) {
+    return BudgetsCompanion(
+      id: id ?? this.id,
+      amountInCents: amountInCents ?? this.amountInCents,
+      period: period ?? this.period,
+      cycleStartEpochDay: cycleStartEpochDay ?? this.cycleStartEpochDay,
+      cycleStartedAt: cycleStartedAt ?? this.cycleStartedAt,
+      incomeTransactionId: incomeTransactionId ?? this.incomeTransactionId,
+      cycleSchedulesJson: cycleSchedulesJson ?? this.cycleSchedulesJson,
+      autoCloseEnabled: autoCloseEnabled ?? this.autoCloseEnabled,
+      autoCloseMinuteOfDay: autoCloseMinuteOfDay ?? this.autoCloseMinuteOfDay,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (amountInCents.present) {
+      map['amount_in_cents'] = Variable<int>(amountInCents.value);
+    }
+    if (period.present) {
+      map['period'] = Variable<String>(period.value);
+    }
+    if (cycleStartEpochDay.present) {
+      map['cycle_start_epoch_day'] = Variable<int>(cycleStartEpochDay.value);
+    }
+    if (cycleStartedAt.present) {
+      map['cycle_started_at'] = Variable<DateTime>(cycleStartedAt.value);
+    }
+    if (incomeTransactionId.present) {
+      map['income_transaction_id'] = Variable<int>(incomeTransactionId.value);
+    }
+    if (cycleSchedulesJson.present) {
+      map['cycle_schedules_json'] = Variable<String>(cycleSchedulesJson.value);
+    }
+    if (autoCloseEnabled.present) {
+      map['auto_close_enabled'] = Variable<bool>(autoCloseEnabled.value);
+    }
+    if (autoCloseMinuteOfDay.present) {
+      map['auto_close_minute_of_day'] = Variable<int>(
+        autoCloseMinuteOfDay.value,
+      );
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BudgetsCompanion(')
+          ..write('id: $id, ')
+          ..write('amountInCents: $amountInCents, ')
+          ..write('period: $period, ')
+          ..write('cycleStartEpochDay: $cycleStartEpochDay, ')
+          ..write('cycleStartedAt: $cycleStartedAt, ')
+          ..write('incomeTransactionId: $incomeTransactionId, ')
+          ..write('cycleSchedulesJson: $cycleSchedulesJson, ')
+          ..write('autoCloseEnabled: $autoCloseEnabled, ')
+          ..write('autoCloseMinuteOfDay: $autoCloseMinuteOfDay')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $BudgetCyclesTable extends BudgetCycles
+    with TableInfo<$BudgetCyclesTable, BudgetCycleRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BudgetCyclesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _periodMeta = const VerificationMeta('period');
+  @override
+  late final GeneratedColumn<String> period = GeneratedColumn<String>(
+    'period',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 20,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _budgetAmountInCentsMeta =
+      const VerificationMeta('budgetAmountInCents');
+  @override
+  late final GeneratedColumn<int> budgetAmountInCents = GeneratedColumn<int>(
+    'budget_amount_in_cents',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _incomeInCentsMeta = const VerificationMeta(
+    'incomeInCents',
+  );
+  @override
+  late final GeneratedColumn<int> incomeInCents = GeneratedColumn<int>(
+    'income_in_cents',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _expenseInCentsMeta = const VerificationMeta(
+    'expenseInCents',
+  );
+  @override
+  late final GeneratedColumn<int> expenseInCents = GeneratedColumn<int>(
+    'expense_in_cents',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startDateEpochDayMeta = const VerificationMeta(
+    'startDateEpochDay',
+  );
+  @override
+  late final GeneratedColumn<int> startDateEpochDay = GeneratedColumn<int>(
+    'start_date_epoch_day',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endDateEpochDayMeta = const VerificationMeta(
+    'endDateEpochDay',
+  );
+  @override
+  late final GeneratedColumn<int> endDateEpochDay = GeneratedColumn<int>(
+    'end_date_epoch_day',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _closedAtMeta = const VerificationMeta(
+    'closedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> closedAt = GeneratedColumn<DateTime>(
+    'closed_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    period,
+    budgetAmountInCents,
+    incomeInCents,
+    expenseInCents,
+    startDateEpochDay,
+    endDateEpochDay,
+    closedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'budget_cycles';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BudgetCycleRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('period')) {
+      context.handle(
+        _periodMeta,
+        period.isAcceptableOrUnknown(data['period']!, _periodMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_periodMeta);
+    }
+    if (data.containsKey('budget_amount_in_cents')) {
+      context.handle(
+        _budgetAmountInCentsMeta,
+        budgetAmountInCents.isAcceptableOrUnknown(
+          data['budget_amount_in_cents']!,
+          _budgetAmountInCentsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_budgetAmountInCentsMeta);
+    }
+    if (data.containsKey('income_in_cents')) {
+      context.handle(
+        _incomeInCentsMeta,
+        incomeInCents.isAcceptableOrUnknown(
+          data['income_in_cents']!,
+          _incomeInCentsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_incomeInCentsMeta);
+    }
+    if (data.containsKey('expense_in_cents')) {
+      context.handle(
+        _expenseInCentsMeta,
+        expenseInCents.isAcceptableOrUnknown(
+          data['expense_in_cents']!,
+          _expenseInCentsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_expenseInCentsMeta);
+    }
+    if (data.containsKey('start_date_epoch_day')) {
+      context.handle(
+        _startDateEpochDayMeta,
+        startDateEpochDay.isAcceptableOrUnknown(
+          data['start_date_epoch_day']!,
+          _startDateEpochDayMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_startDateEpochDayMeta);
+    }
+    if (data.containsKey('end_date_epoch_day')) {
+      context.handle(
+        _endDateEpochDayMeta,
+        endDateEpochDay.isAcceptableOrUnknown(
+          data['end_date_epoch_day']!,
+          _endDateEpochDayMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_endDateEpochDayMeta);
+    }
+    if (data.containsKey('closed_at')) {
+      context.handle(
+        _closedAtMeta,
+        closedAt.isAcceptableOrUnknown(data['closed_at']!, _closedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_closedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  BudgetCycleRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BudgetCycleRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      period: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period'],
+      )!,
+      budgetAmountInCents: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}budget_amount_in_cents'],
+      )!,
+      incomeInCents: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}income_in_cents'],
+      )!,
+      expenseInCents: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}expense_in_cents'],
+      )!,
+      startDateEpochDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_date_epoch_day'],
+      )!,
+      endDateEpochDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_date_epoch_day'],
+      )!,
+      closedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}closed_at'],
+      )!,
+    );
+  }
+
+  @override
+  $BudgetCyclesTable createAlias(String alias) {
+    return $BudgetCyclesTable(attachedDatabase, alias);
+  }
+}
+
+class BudgetCycleRow extends DataClass implements Insertable<BudgetCycleRow> {
+  final int id;
+  final String period;
+  final int budgetAmountInCents;
+  final int incomeInCents;
+  final int expenseInCents;
+  final int startDateEpochDay;
+  final int endDateEpochDay;
+  final DateTime closedAt;
+  const BudgetCycleRow({
+    required this.id,
+    required this.period,
+    required this.budgetAmountInCents,
+    required this.incomeInCents,
+    required this.expenseInCents,
+    required this.startDateEpochDay,
+    required this.endDateEpochDay,
+    required this.closedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['period'] = Variable<String>(period);
+    map['budget_amount_in_cents'] = Variable<int>(budgetAmountInCents);
+    map['income_in_cents'] = Variable<int>(incomeInCents);
+    map['expense_in_cents'] = Variable<int>(expenseInCents);
+    map['start_date_epoch_day'] = Variable<int>(startDateEpochDay);
+    map['end_date_epoch_day'] = Variable<int>(endDateEpochDay);
+    map['closed_at'] = Variable<DateTime>(closedAt);
+    return map;
+  }
+
+  BudgetCyclesCompanion toCompanion(bool nullToAbsent) {
+    return BudgetCyclesCompanion(
+      id: Value(id),
+      period: Value(period),
+      budgetAmountInCents: Value(budgetAmountInCents),
+      incomeInCents: Value(incomeInCents),
+      expenseInCents: Value(expenseInCents),
+      startDateEpochDay: Value(startDateEpochDay),
+      endDateEpochDay: Value(endDateEpochDay),
+      closedAt: Value(closedAt),
+    );
+  }
+
+  factory BudgetCycleRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BudgetCycleRow(
+      id: serializer.fromJson<int>(json['id']),
+      period: serializer.fromJson<String>(json['period']),
+      budgetAmountInCents: serializer.fromJson<int>(
+        json['budgetAmountInCents'],
+      ),
+      incomeInCents: serializer.fromJson<int>(json['incomeInCents']),
+      expenseInCents: serializer.fromJson<int>(json['expenseInCents']),
+      startDateEpochDay: serializer.fromJson<int>(json['startDateEpochDay']),
+      endDateEpochDay: serializer.fromJson<int>(json['endDateEpochDay']),
+      closedAt: serializer.fromJson<DateTime>(json['closedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'period': serializer.toJson<String>(period),
+      'budgetAmountInCents': serializer.toJson<int>(budgetAmountInCents),
+      'incomeInCents': serializer.toJson<int>(incomeInCents),
+      'expenseInCents': serializer.toJson<int>(expenseInCents),
+      'startDateEpochDay': serializer.toJson<int>(startDateEpochDay),
+      'endDateEpochDay': serializer.toJson<int>(endDateEpochDay),
+      'closedAt': serializer.toJson<DateTime>(closedAt),
+    };
+  }
+
+  BudgetCycleRow copyWith({
+    int? id,
+    String? period,
+    int? budgetAmountInCents,
+    int? incomeInCents,
+    int? expenseInCents,
+    int? startDateEpochDay,
+    int? endDateEpochDay,
+    DateTime? closedAt,
+  }) => BudgetCycleRow(
+    id: id ?? this.id,
+    period: period ?? this.period,
+    budgetAmountInCents: budgetAmountInCents ?? this.budgetAmountInCents,
+    incomeInCents: incomeInCents ?? this.incomeInCents,
+    expenseInCents: expenseInCents ?? this.expenseInCents,
+    startDateEpochDay: startDateEpochDay ?? this.startDateEpochDay,
+    endDateEpochDay: endDateEpochDay ?? this.endDateEpochDay,
+    closedAt: closedAt ?? this.closedAt,
+  );
+  BudgetCycleRow copyWithCompanion(BudgetCyclesCompanion data) {
+    return BudgetCycleRow(
+      id: data.id.present ? data.id.value : this.id,
+      period: data.period.present ? data.period.value : this.period,
+      budgetAmountInCents: data.budgetAmountInCents.present
+          ? data.budgetAmountInCents.value
+          : this.budgetAmountInCents,
+      incomeInCents: data.incomeInCents.present
+          ? data.incomeInCents.value
+          : this.incomeInCents,
+      expenseInCents: data.expenseInCents.present
+          ? data.expenseInCents.value
+          : this.expenseInCents,
+      startDateEpochDay: data.startDateEpochDay.present
+          ? data.startDateEpochDay.value
+          : this.startDateEpochDay,
+      endDateEpochDay: data.endDateEpochDay.present
+          ? data.endDateEpochDay.value
+          : this.endDateEpochDay,
+      closedAt: data.closedAt.present ? data.closedAt.value : this.closedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BudgetCycleRow(')
+          ..write('id: $id, ')
+          ..write('period: $period, ')
+          ..write('budgetAmountInCents: $budgetAmountInCents, ')
+          ..write('incomeInCents: $incomeInCents, ')
+          ..write('expenseInCents: $expenseInCents, ')
+          ..write('startDateEpochDay: $startDateEpochDay, ')
+          ..write('endDateEpochDay: $endDateEpochDay, ')
+          ..write('closedAt: $closedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    period,
+    budgetAmountInCents,
+    incomeInCents,
+    expenseInCents,
+    startDateEpochDay,
+    endDateEpochDay,
+    closedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BudgetCycleRow &&
+          other.id == this.id &&
+          other.period == this.period &&
+          other.budgetAmountInCents == this.budgetAmountInCents &&
+          other.incomeInCents == this.incomeInCents &&
+          other.expenseInCents == this.expenseInCents &&
+          other.startDateEpochDay == this.startDateEpochDay &&
+          other.endDateEpochDay == this.endDateEpochDay &&
+          other.closedAt == this.closedAt);
+}
+
+class BudgetCyclesCompanion extends UpdateCompanion<BudgetCycleRow> {
+  final Value<int> id;
+  final Value<String> period;
+  final Value<int> budgetAmountInCents;
+  final Value<int> incomeInCents;
+  final Value<int> expenseInCents;
+  final Value<int> startDateEpochDay;
+  final Value<int> endDateEpochDay;
+  final Value<DateTime> closedAt;
+  const BudgetCyclesCompanion({
+    this.id = const Value.absent(),
+    this.period = const Value.absent(),
+    this.budgetAmountInCents = const Value.absent(),
+    this.incomeInCents = const Value.absent(),
+    this.expenseInCents = const Value.absent(),
+    this.startDateEpochDay = const Value.absent(),
+    this.endDateEpochDay = const Value.absent(),
+    this.closedAt = const Value.absent(),
+  });
+  BudgetCyclesCompanion.insert({
+    this.id = const Value.absent(),
+    required String period,
+    required int budgetAmountInCents,
+    required int incomeInCents,
+    required int expenseInCents,
+    required int startDateEpochDay,
+    required int endDateEpochDay,
+    required DateTime closedAt,
+  }) : period = Value(period),
+       budgetAmountInCents = Value(budgetAmountInCents),
+       incomeInCents = Value(incomeInCents),
+       expenseInCents = Value(expenseInCents),
+       startDateEpochDay = Value(startDateEpochDay),
+       endDateEpochDay = Value(endDateEpochDay),
+       closedAt = Value(closedAt);
+  static Insertable<BudgetCycleRow> custom({
+    Expression<int>? id,
+    Expression<String>? period,
+    Expression<int>? budgetAmountInCents,
+    Expression<int>? incomeInCents,
+    Expression<int>? expenseInCents,
+    Expression<int>? startDateEpochDay,
+    Expression<int>? endDateEpochDay,
+    Expression<DateTime>? closedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (period != null) 'period': period,
+      if (budgetAmountInCents != null)
+        'budget_amount_in_cents': budgetAmountInCents,
+      if (incomeInCents != null) 'income_in_cents': incomeInCents,
+      if (expenseInCents != null) 'expense_in_cents': expenseInCents,
+      if (startDateEpochDay != null) 'start_date_epoch_day': startDateEpochDay,
+      if (endDateEpochDay != null) 'end_date_epoch_day': endDateEpochDay,
+      if (closedAt != null) 'closed_at': closedAt,
+    });
+  }
+
+  BudgetCyclesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? period,
+    Value<int>? budgetAmountInCents,
+    Value<int>? incomeInCents,
+    Value<int>? expenseInCents,
+    Value<int>? startDateEpochDay,
+    Value<int>? endDateEpochDay,
+    Value<DateTime>? closedAt,
+  }) {
+    return BudgetCyclesCompanion(
+      id: id ?? this.id,
+      period: period ?? this.period,
+      budgetAmountInCents: budgetAmountInCents ?? this.budgetAmountInCents,
+      incomeInCents: incomeInCents ?? this.incomeInCents,
+      expenseInCents: expenseInCents ?? this.expenseInCents,
+      startDateEpochDay: startDateEpochDay ?? this.startDateEpochDay,
+      endDateEpochDay: endDateEpochDay ?? this.endDateEpochDay,
+      closedAt: closedAt ?? this.closedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (period.present) {
+      map['period'] = Variable<String>(period.value);
+    }
+    if (budgetAmountInCents.present) {
+      map['budget_amount_in_cents'] = Variable<int>(budgetAmountInCents.value);
+    }
+    if (incomeInCents.present) {
+      map['income_in_cents'] = Variable<int>(incomeInCents.value);
+    }
+    if (expenseInCents.present) {
+      map['expense_in_cents'] = Variable<int>(expenseInCents.value);
+    }
+    if (startDateEpochDay.present) {
+      map['start_date_epoch_day'] = Variable<int>(startDateEpochDay.value);
+    }
+    if (endDateEpochDay.present) {
+      map['end_date_epoch_day'] = Variable<int>(endDateEpochDay.value);
+    }
+    if (closedAt.present) {
+      map['closed_at'] = Variable<DateTime>(closedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BudgetCyclesCompanion(')
+          ..write('id: $id, ')
+          ..write('period: $period, ')
+          ..write('budgetAmountInCents: $budgetAmountInCents, ')
+          ..write('incomeInCents: $incomeInCents, ')
+          ..write('expenseInCents: $expenseInCents, ')
+          ..write('startDateEpochDay: $startDateEpochDay, ')
+          ..write('endDateEpochDay: $endDateEpochDay, ')
+          ..write('closedAt: $closedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2162,6 +3290,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PaymentMethodsTable paymentMethods = $PaymentMethodsTable(this);
   late final $TransactionsTable transactions = $TransactionsTable(this);
   late final $SavingsGoalsTable savingsGoals = $SavingsGoalsTable(this);
+  late final $BudgetsTable budgets = $BudgetsTable(this);
+  late final $BudgetCyclesTable budgetCycles = $BudgetCyclesTable(this);
   late final Index paymentMethodsSingleDefault = Index(
     'payment_methods_single_default',
     'CREATE UNIQUE INDEX payment_methods_single_default ON payment_methods (is_default) WHERE is_default = 1',
@@ -2190,6 +3320,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'savings_goals_completed_idx',
     'CREATE INDEX savings_goals_completed_idx ON savings_goals (completed_at)',
   );
+  late final Index budgetCyclesStartEndIdx = Index(
+    'budget_cycles_start_end_idx',
+    'CREATE INDEX budget_cycles_start_end_idx ON budget_cycles (start_date_epoch_day, end_date_epoch_day)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2199,6 +3333,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     paymentMethods,
     transactions,
     savingsGoals,
+    budgets,
+    budgetCycles,
     paymentMethodsSingleDefault,
     transactionsDateIdx,
     transactionsCategoryIdx,
@@ -2206,6 +3342,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     transactionsFixedEntryIdx,
     transactionsSavingsGoalIdx,
     savingsGoalsCompletedIdx,
+    budgetCyclesStartEndIdx,
   ];
 }
 
@@ -3686,6 +4823,569 @@ typedef $$SavingsGoalsTableProcessedTableManager =
       SavingsGoalRow,
       PrefetchHooks Function()
     >;
+typedef $$BudgetsTableCreateCompanionBuilder =
+    BudgetsCompanion Function({
+      Value<int> id,
+      required int amountInCents,
+      required String period,
+      required int cycleStartEpochDay,
+      required DateTime cycleStartedAt,
+      Value<int?> incomeTransactionId,
+      required String cycleSchedulesJson,
+      Value<bool> autoCloseEnabled,
+      Value<int> autoCloseMinuteOfDay,
+    });
+typedef $$BudgetsTableUpdateCompanionBuilder =
+    BudgetsCompanion Function({
+      Value<int> id,
+      Value<int> amountInCents,
+      Value<String> period,
+      Value<int> cycleStartEpochDay,
+      Value<DateTime> cycleStartedAt,
+      Value<int?> incomeTransactionId,
+      Value<String> cycleSchedulesJson,
+      Value<bool> autoCloseEnabled,
+      Value<int> autoCloseMinuteOfDay,
+    });
+
+class $$BudgetsTableFilterComposer
+    extends Composer<_$AppDatabase, $BudgetsTable> {
+  $$BudgetsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountInCents => $composableBuilder(
+    column: $table.amountInCents,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get period => $composableBuilder(
+    column: $table.period,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get cycleStartEpochDay => $composableBuilder(
+    column: $table.cycleStartEpochDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get cycleStartedAt => $composableBuilder(
+    column: $table.cycleStartedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get incomeTransactionId => $composableBuilder(
+    column: $table.incomeTransactionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cycleSchedulesJson => $composableBuilder(
+    column: $table.cycleSchedulesJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get autoCloseEnabled => $composableBuilder(
+    column: $table.autoCloseEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get autoCloseMinuteOfDay => $composableBuilder(
+    column: $table.autoCloseMinuteOfDay,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$BudgetsTableOrderingComposer
+    extends Composer<_$AppDatabase, $BudgetsTable> {
+  $$BudgetsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountInCents => $composableBuilder(
+    column: $table.amountInCents,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get period => $composableBuilder(
+    column: $table.period,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get cycleStartEpochDay => $composableBuilder(
+    column: $table.cycleStartEpochDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get cycleStartedAt => $composableBuilder(
+    column: $table.cycleStartedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get incomeTransactionId => $composableBuilder(
+    column: $table.incomeTransactionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cycleSchedulesJson => $composableBuilder(
+    column: $table.cycleSchedulesJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get autoCloseEnabled => $composableBuilder(
+    column: $table.autoCloseEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get autoCloseMinuteOfDay => $composableBuilder(
+    column: $table.autoCloseMinuteOfDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$BudgetsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BudgetsTable> {
+  $$BudgetsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get amountInCents => $composableBuilder(
+    column: $table.amountInCents,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get period =>
+      $composableBuilder(column: $table.period, builder: (column) => column);
+
+  GeneratedColumn<int> get cycleStartEpochDay => $composableBuilder(
+    column: $table.cycleStartEpochDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get cycleStartedAt => $composableBuilder(
+    column: $table.cycleStartedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get incomeTransactionId => $composableBuilder(
+    column: $table.incomeTransactionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get cycleSchedulesJson => $composableBuilder(
+    column: $table.cycleSchedulesJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get autoCloseEnabled => $composableBuilder(
+    column: $table.autoCloseEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get autoCloseMinuteOfDay => $composableBuilder(
+    column: $table.autoCloseMinuteOfDay,
+    builder: (column) => column,
+  );
+}
+
+class $$BudgetsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BudgetsTable,
+          BudgetConfigRow,
+          $$BudgetsTableFilterComposer,
+          $$BudgetsTableOrderingComposer,
+          $$BudgetsTableAnnotationComposer,
+          $$BudgetsTableCreateCompanionBuilder,
+          $$BudgetsTableUpdateCompanionBuilder,
+          (
+            BudgetConfigRow,
+            BaseReferences<_$AppDatabase, $BudgetsTable, BudgetConfigRow>,
+          ),
+          BudgetConfigRow,
+          PrefetchHooks Function()
+        > {
+  $$BudgetsTableTableManager(_$AppDatabase db, $BudgetsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BudgetsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BudgetsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BudgetsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> amountInCents = const Value.absent(),
+                Value<String> period = const Value.absent(),
+                Value<int> cycleStartEpochDay = const Value.absent(),
+                Value<DateTime> cycleStartedAt = const Value.absent(),
+                Value<int?> incomeTransactionId = const Value.absent(),
+                Value<String> cycleSchedulesJson = const Value.absent(),
+                Value<bool> autoCloseEnabled = const Value.absent(),
+                Value<int> autoCloseMinuteOfDay = const Value.absent(),
+              }) => BudgetsCompanion(
+                id: id,
+                amountInCents: amountInCents,
+                period: period,
+                cycleStartEpochDay: cycleStartEpochDay,
+                cycleStartedAt: cycleStartedAt,
+                incomeTransactionId: incomeTransactionId,
+                cycleSchedulesJson: cycleSchedulesJson,
+                autoCloseEnabled: autoCloseEnabled,
+                autoCloseMinuteOfDay: autoCloseMinuteOfDay,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int amountInCents,
+                required String period,
+                required int cycleStartEpochDay,
+                required DateTime cycleStartedAt,
+                Value<int?> incomeTransactionId = const Value.absent(),
+                required String cycleSchedulesJson,
+                Value<bool> autoCloseEnabled = const Value.absent(),
+                Value<int> autoCloseMinuteOfDay = const Value.absent(),
+              }) => BudgetsCompanion.insert(
+                id: id,
+                amountInCents: amountInCents,
+                period: period,
+                cycleStartEpochDay: cycleStartEpochDay,
+                cycleStartedAt: cycleStartedAt,
+                incomeTransactionId: incomeTransactionId,
+                cycleSchedulesJson: cycleSchedulesJson,
+                autoCloseEnabled: autoCloseEnabled,
+                autoCloseMinuteOfDay: autoCloseMinuteOfDay,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$BudgetsTable, BudgetConfigRow>(table),
+                  BaseReferences<_$AppDatabase, $BudgetsTable, BudgetConfigRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$BudgetsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BudgetsTable,
+      BudgetConfigRow,
+      $$BudgetsTableFilterComposer,
+      $$BudgetsTableOrderingComposer,
+      $$BudgetsTableAnnotationComposer,
+      $$BudgetsTableCreateCompanionBuilder,
+      $$BudgetsTableUpdateCompanionBuilder,
+      (
+        BudgetConfigRow,
+        BaseReferences<_$AppDatabase, $BudgetsTable, BudgetConfigRow>,
+      ),
+      BudgetConfigRow,
+      PrefetchHooks Function()
+    >;
+typedef $$BudgetCyclesTableCreateCompanionBuilder =
+    BudgetCyclesCompanion Function({
+      Value<int> id,
+      required String period,
+      required int budgetAmountInCents,
+      required int incomeInCents,
+      required int expenseInCents,
+      required int startDateEpochDay,
+      required int endDateEpochDay,
+      required DateTime closedAt,
+    });
+typedef $$BudgetCyclesTableUpdateCompanionBuilder =
+    BudgetCyclesCompanion Function({
+      Value<int> id,
+      Value<String> period,
+      Value<int> budgetAmountInCents,
+      Value<int> incomeInCents,
+      Value<int> expenseInCents,
+      Value<int> startDateEpochDay,
+      Value<int> endDateEpochDay,
+      Value<DateTime> closedAt,
+    });
+
+class $$BudgetCyclesTableFilterComposer
+    extends Composer<_$AppDatabase, $BudgetCyclesTable> {
+  $$BudgetCyclesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get period => $composableBuilder(
+    column: $table.period,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get budgetAmountInCents => $composableBuilder(
+    column: $table.budgetAmountInCents,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get incomeInCents => $composableBuilder(
+    column: $table.incomeInCents,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get expenseInCents => $composableBuilder(
+    column: $table.expenseInCents,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startDateEpochDay => $composableBuilder(
+    column: $table.startDateEpochDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endDateEpochDay => $composableBuilder(
+    column: $table.endDateEpochDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get closedAt => $composableBuilder(
+    column: $table.closedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$BudgetCyclesTableOrderingComposer
+    extends Composer<_$AppDatabase, $BudgetCyclesTable> {
+  $$BudgetCyclesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get period => $composableBuilder(
+    column: $table.period,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get budgetAmountInCents => $composableBuilder(
+    column: $table.budgetAmountInCents,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get incomeInCents => $composableBuilder(
+    column: $table.incomeInCents,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get expenseInCents => $composableBuilder(
+    column: $table.expenseInCents,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startDateEpochDay => $composableBuilder(
+    column: $table.startDateEpochDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endDateEpochDay => $composableBuilder(
+    column: $table.endDateEpochDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get closedAt => $composableBuilder(
+    column: $table.closedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$BudgetCyclesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BudgetCyclesTable> {
+  $$BudgetCyclesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get period =>
+      $composableBuilder(column: $table.period, builder: (column) => column);
+
+  GeneratedColumn<int> get budgetAmountInCents => $composableBuilder(
+    column: $table.budgetAmountInCents,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get incomeInCents => $composableBuilder(
+    column: $table.incomeInCents,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get expenseInCents => $composableBuilder(
+    column: $table.expenseInCents,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get startDateEpochDay => $composableBuilder(
+    column: $table.startDateEpochDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get endDateEpochDay => $composableBuilder(
+    column: $table.endDateEpochDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get closedAt =>
+      $composableBuilder(column: $table.closedAt, builder: (column) => column);
+}
+
+class $$BudgetCyclesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BudgetCyclesTable,
+          BudgetCycleRow,
+          $$BudgetCyclesTableFilterComposer,
+          $$BudgetCyclesTableOrderingComposer,
+          $$BudgetCyclesTableAnnotationComposer,
+          $$BudgetCyclesTableCreateCompanionBuilder,
+          $$BudgetCyclesTableUpdateCompanionBuilder,
+          (
+            BudgetCycleRow,
+            BaseReferences<_$AppDatabase, $BudgetCyclesTable, BudgetCycleRow>,
+          ),
+          BudgetCycleRow,
+          PrefetchHooks Function()
+        > {
+  $$BudgetCyclesTableTableManager(_$AppDatabase db, $BudgetCyclesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BudgetCyclesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BudgetCyclesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BudgetCyclesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> period = const Value.absent(),
+                Value<int> budgetAmountInCents = const Value.absent(),
+                Value<int> incomeInCents = const Value.absent(),
+                Value<int> expenseInCents = const Value.absent(),
+                Value<int> startDateEpochDay = const Value.absent(),
+                Value<int> endDateEpochDay = const Value.absent(),
+                Value<DateTime> closedAt = const Value.absent(),
+              }) => BudgetCyclesCompanion(
+                id: id,
+                period: period,
+                budgetAmountInCents: budgetAmountInCents,
+                incomeInCents: incomeInCents,
+                expenseInCents: expenseInCents,
+                startDateEpochDay: startDateEpochDay,
+                endDateEpochDay: endDateEpochDay,
+                closedAt: closedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String period,
+                required int budgetAmountInCents,
+                required int incomeInCents,
+                required int expenseInCents,
+                required int startDateEpochDay,
+                required int endDateEpochDay,
+                required DateTime closedAt,
+              }) => BudgetCyclesCompanion.insert(
+                id: id,
+                period: period,
+                budgetAmountInCents: budgetAmountInCents,
+                incomeInCents: incomeInCents,
+                expenseInCents: expenseInCents,
+                startDateEpochDay: startDateEpochDay,
+                endDateEpochDay: endDateEpochDay,
+                closedAt: closedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$BudgetCyclesTable, BudgetCycleRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $BudgetCyclesTable,
+                    BudgetCycleRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$BudgetCyclesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BudgetCyclesTable,
+      BudgetCycleRow,
+      $$BudgetCyclesTableFilterComposer,
+      $$BudgetCyclesTableOrderingComposer,
+      $$BudgetCyclesTableAnnotationComposer,
+      $$BudgetCyclesTableCreateCompanionBuilder,
+      $$BudgetCyclesTableUpdateCompanionBuilder,
+      (
+        BudgetCycleRow,
+        BaseReferences<_$AppDatabase, $BudgetCyclesTable, BudgetCycleRow>,
+      ),
+      BudgetCycleRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3698,4 +5398,8 @@ class $AppDatabaseManager {
       $$TransactionsTableTableManager(_db, _db.transactions);
   $$SavingsGoalsTableTableManager get savingsGoals =>
       $$SavingsGoalsTableTableManager(_db, _db.savingsGoals);
+  $$BudgetsTableTableManager get budgets =>
+      $$BudgetsTableTableManager(_db, _db.budgets);
+  $$BudgetCyclesTableTableManager get budgetCycles =>
+      $$BudgetCyclesTableTableManager(_db, _db.budgetCycles);
 }

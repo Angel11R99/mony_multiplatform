@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import '../../features/categories/data/categories_table.dart';
+import '../../features/budgets/data/budgets_table.dart';
 import '../../features/categories/domain/category.dart';
 import '../../features/payment_methods/data/payment_methods_table.dart';
 import '../../features/savings/data/savings_goals_table.dart';
@@ -10,7 +11,16 @@ import 'app_database.steps.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Categories, PaymentMethods, Transactions, SavingsGoals])
+@DriftDatabase(
+  tables: [
+    Categories,
+    PaymentMethods,
+    Transactions,
+    SavingsGoals,
+    Budgets,
+    BudgetCycles,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
     : super(
@@ -64,6 +74,11 @@ class AppDatabase extends _$AppDatabase {
         await migrator.createTable(schema.savingsGoals);
         await migrator.create(schema.savingsGoalsCompletedIdx);
       },
+      from4To5: (migrator, schema) async {
+        await migrator.createTable(schema.budgets);
+        await migrator.createTable(schema.budgetCycles);
+        await migrator.create(schema.budgetCyclesStartEndIdx);
+      },
     ),
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -71,7 +86,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 }
 
 const _initialCategories = <(String, CategoryType, String, int)>[
