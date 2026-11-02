@@ -131,6 +131,12 @@ class AppDatabase extends _$AppDatabase {
         await migrator.create(schema.recurringEntriesActiveNextIdx);
         await migrator.create(schema.transactionsRecurringDateUnique);
       },
+      from8To9: (migrator, schema) async {
+        await migrator.addColumn(
+          schema.shoppingListItems,
+          schema.shoppingListItems.barcode,
+        );
+      },
     ),
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -138,7 +144,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 }
 
 const _initialCategories = <(String, CategoryType, String, int)>[

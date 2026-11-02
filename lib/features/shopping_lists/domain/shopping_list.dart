@@ -70,6 +70,7 @@ class ShoppingListItem {
     this.actualUnitPriceInCents,
     this.isPurchased = false,
     this.notes,
+    this.barcode,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -82,6 +83,7 @@ class ShoppingListItem {
   final int? actualUnitPriceInCents;
   final bool isPurchased;
   final String? notes;
+  final String? barcode;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -95,6 +97,8 @@ class ShoppingListItem {
     bool? isPurchased,
     String? notes,
     bool clearNotes = false,
+    String? barcode,
+    bool clearBarcode = false,
     DateTime? updatedAt,
   }) => ShoppingListItem(
     id: id,
@@ -109,6 +113,7 @@ class ShoppingListItem {
         : actualUnitPriceInCents ?? this.actualUnitPriceInCents,
     isPurchased: isPurchased ?? this.isPurchased,
     notes: clearNotes ? null : notes ?? this.notes,
+    barcode: clearBarcode ? null : barcode ?? this.barcode,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );

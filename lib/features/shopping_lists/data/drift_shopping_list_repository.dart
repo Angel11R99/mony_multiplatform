@@ -230,6 +230,7 @@ class DriftShoppingListRepository implements ShoppingListRepository {
               ShoppingListItemsCompanion.insert(
                 shoppingListId: item.shoppingListId,
                 name: item.name.trim(),
+                barcode: Value(item.barcode),
                 quantity: item.quantity,
                 estimatedUnitPriceInCents: Value(
                   item.estimatedUnitPriceInCents,
@@ -253,6 +254,7 @@ class DriftShoppingListRepository implements ShoppingListRepository {
       )..where((row) => row.id.equals(item.id))).write(
         ShoppingListItemsCompanion(
           name: Value(item.name.trim()),
+          barcode: Value(item.barcode),
           quantity: Value(item.quantity),
           estimatedUnitPriceInCents: Value(item.estimatedUnitPriceInCents),
           actualUnitPriceInCents: Value(item.actualUnitPriceInCents),
@@ -383,6 +385,7 @@ class DriftShoppingListRepository implements ShoppingListRepository {
               ShoppingListItemsCompanion.insert(
                 shoppingListId: newId,
                 name: item.name,
+                barcode: Value(item.barcode),
                 quantity: item.quantity,
                 estimatedUnitPriceInCents: Value(
                   item.estimatedUnitPriceInCents,
@@ -775,6 +778,7 @@ class DriftShoppingListRepository implements ShoppingListRepository {
         id: row.id,
         shoppingListId: row.shoppingListId,
         name: row.name,
+        barcode: row.barcode,
         quantity: row.quantity,
         estimatedUnitPriceInCents: row.estimatedUnitPriceInCents,
         actualUnitPriceInCents: row.actualUnitPriceInCents,

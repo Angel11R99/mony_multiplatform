@@ -65,6 +65,29 @@ void main() {
   );
 
   test(
+    'persists a scanned barcode and retains it when updating the item',
+    () async {
+      final listId = await createList();
+      await repository.saveItem(
+        ShoppingListItem(
+          shoppingListId: listId,
+          name: 'Leche',
+          barcode: '1234567890123',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      var details = (await repository.getDetails(listId))!;
+      expect(details.items.single.barcode, '1234567890123');
+
+      await repository.saveItem(details.items.single.copyWith(quantity: 2));
+      details = (await repository.getDetails(listId))!;
+      expect(details.items.single.barcode, '1234567890123');
+      expect(details.items.single.quantity, 2);
+    },
+  );
+
+  test(
     'finalizes a cash purchase once and reopening removes the linked expense',
     () async {
       final listId = await createList();

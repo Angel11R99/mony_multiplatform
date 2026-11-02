@@ -49,6 +49,7 @@ class ShoppingListItems extends Table {
   IntColumn get actualUnitPriceInCents => integer().nullable()();
   BoolColumn get isPurchased => boolean().withDefault(const Constant(false))();
   TextColumn get notes => text().nullable()();
+  TextColumn get barcode => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }

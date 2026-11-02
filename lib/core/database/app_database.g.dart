@@ -4142,6 +4142,17 @@ class $ShoppingListItemsTable extends ShoppingListItems
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _barcodeMeta = const VerificationMeta(
+    'barcode',
+  );
+  @override
+  late final GeneratedColumn<String> barcode = GeneratedColumn<String>(
+    'barcode',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -4176,6 +4187,7 @@ class $ShoppingListItemsTable extends ShoppingListItems
     actualUnitPriceInCents,
     isPurchased,
     notes,
+    barcode,
     createdAt,
     updatedAt,
   ];
@@ -4254,6 +4266,12 @@ class $ShoppingListItemsTable extends ShoppingListItems
         notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
       );
     }
+    if (data.containsKey('barcode')) {
+      context.handle(
+        _barcodeMeta,
+        barcode.isAcceptableOrUnknown(data['barcode']!, _barcodeMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -4307,6 +4325,10 @@ class $ShoppingListItemsTable extends ShoppingListItems
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
       ),
+      barcode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}barcode'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -4334,6 +4356,7 @@ class ShoppingListItemRow extends DataClass
   final int? actualUnitPriceInCents;
   final bool isPurchased;
   final String? notes;
+  final String? barcode;
   final DateTime createdAt;
   final DateTime updatedAt;
   const ShoppingListItemRow({
@@ -4345,6 +4368,7 @@ class ShoppingListItemRow extends DataClass
     this.actualUnitPriceInCents,
     required this.isPurchased,
     this.notes,
+    this.barcode,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -4366,6 +4390,9 @@ class ShoppingListItemRow extends DataClass
     map['is_purchased'] = Variable<bool>(isPurchased);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || barcode != null) {
+      map['barcode'] = Variable<String>(barcode);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -4389,6 +4416,9 @@ class ShoppingListItemRow extends DataClass
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
+      barcode: barcode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(barcode),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -4412,6 +4442,7 @@ class ShoppingListItemRow extends DataClass
       ),
       isPurchased: serializer.fromJson<bool>(json['isPurchased']),
       notes: serializer.fromJson<String?>(json['notes']),
+      barcode: serializer.fromJson<String?>(json['barcode']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -4430,6 +4461,7 @@ class ShoppingListItemRow extends DataClass
       'actualUnitPriceInCents': serializer.toJson<int?>(actualUnitPriceInCents),
       'isPurchased': serializer.toJson<bool>(isPurchased),
       'notes': serializer.toJson<String?>(notes),
+      'barcode': serializer.toJson<String?>(barcode),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -4444,6 +4476,7 @@ class ShoppingListItemRow extends DataClass
     Value<int?> actualUnitPriceInCents = const Value.absent(),
     bool? isPurchased,
     Value<String?> notes = const Value.absent(),
+    Value<String?> barcode = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => ShoppingListItemRow(
@@ -4459,6 +4492,7 @@ class ShoppingListItemRow extends DataClass
         : this.actualUnitPriceInCents,
     isPurchased: isPurchased ?? this.isPurchased,
     notes: notes.present ? notes.value : this.notes,
+    barcode: barcode.present ? barcode.value : this.barcode,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -4480,6 +4514,7 @@ class ShoppingListItemRow extends DataClass
           ? data.isPurchased.value
           : this.isPurchased,
       notes: data.notes.present ? data.notes.value : this.notes,
+      barcode: data.barcode.present ? data.barcode.value : this.barcode,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -4496,6 +4531,7 @@ class ShoppingListItemRow extends DataClass
           ..write('actualUnitPriceInCents: $actualUnitPriceInCents, ')
           ..write('isPurchased: $isPurchased, ')
           ..write('notes: $notes, ')
+          ..write('barcode: $barcode, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -4512,6 +4548,7 @@ class ShoppingListItemRow extends DataClass
     actualUnitPriceInCents,
     isPurchased,
     notes,
+    barcode,
     createdAt,
     updatedAt,
   );
@@ -4527,6 +4564,7 @@ class ShoppingListItemRow extends DataClass
           other.actualUnitPriceInCents == this.actualUnitPriceInCents &&
           other.isPurchased == this.isPurchased &&
           other.notes == this.notes &&
+          other.barcode == this.barcode &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -4540,6 +4578,7 @@ class ShoppingListItemsCompanion extends UpdateCompanion<ShoppingListItemRow> {
   final Value<int?> actualUnitPriceInCents;
   final Value<bool> isPurchased;
   final Value<String?> notes;
+  final Value<String?> barcode;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   const ShoppingListItemsCompanion({
@@ -4551,6 +4590,7 @@ class ShoppingListItemsCompanion extends UpdateCompanion<ShoppingListItemRow> {
     this.actualUnitPriceInCents = const Value.absent(),
     this.isPurchased = const Value.absent(),
     this.notes = const Value.absent(),
+    this.barcode = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -4563,6 +4603,7 @@ class ShoppingListItemsCompanion extends UpdateCompanion<ShoppingListItemRow> {
     this.actualUnitPriceInCents = const Value.absent(),
     this.isPurchased = const Value.absent(),
     this.notes = const Value.absent(),
+    this.barcode = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   }) : shoppingListId = Value(shoppingListId),
@@ -4577,6 +4618,7 @@ class ShoppingListItemsCompanion extends UpdateCompanion<ShoppingListItemRow> {
     Expression<int>? actualUnitPriceInCents,
     Expression<bool>? isPurchased,
     Expression<String>? notes,
+    Expression<String>? barcode,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
   }) {
@@ -4591,6 +4633,7 @@ class ShoppingListItemsCompanion extends UpdateCompanion<ShoppingListItemRow> {
         'actual_unit_price_in_cents': actualUnitPriceInCents,
       if (isPurchased != null) 'is_purchased': isPurchased,
       if (notes != null) 'notes': notes,
+      if (barcode != null) 'barcode': barcode,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -4605,6 +4648,7 @@ class ShoppingListItemsCompanion extends UpdateCompanion<ShoppingListItemRow> {
     Value<int?>? actualUnitPriceInCents,
     Value<bool>? isPurchased,
     Value<String?>? notes,
+    Value<String?>? barcode,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
   }) {
@@ -4619,6 +4663,7 @@ class ShoppingListItemsCompanion extends UpdateCompanion<ShoppingListItemRow> {
           actualUnitPriceInCents ?? this.actualUnitPriceInCents,
       isPurchased: isPurchased ?? this.isPurchased,
       notes: notes ?? this.notes,
+      barcode: barcode ?? this.barcode,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -4655,6 +4700,9 @@ class ShoppingListItemsCompanion extends UpdateCompanion<ShoppingListItemRow> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (barcode.present) {
+      map['barcode'] = Variable<String>(barcode.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -4675,6 +4723,7 @@ class ShoppingListItemsCompanion extends UpdateCompanion<ShoppingListItemRow> {
           ..write('actualUnitPriceInCents: $actualUnitPriceInCents, ')
           ..write('isPurchased: $isPurchased, ')
           ..write('notes: $notes, ')
+          ..write('barcode: $barcode, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -12410,6 +12459,7 @@ typedef $$ShoppingListItemsTableCreateCompanionBuilder =
       Value<int?> actualUnitPriceInCents,
       Value<bool> isPurchased,
       Value<String?> notes,
+      Value<String?> barcode,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
     });
@@ -12423,6 +12473,7 @@ typedef $$ShoppingListItemsTableUpdateCompanionBuilder =
       Value<int?> actualUnitPriceInCents,
       Value<bool> isPurchased,
       Value<String?> notes,
+      Value<String?> barcode,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
     });
@@ -12500,6 +12551,11 @@ class $$ShoppingListItemsTableFilterComposer
 
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get barcode => $composableBuilder(
+    column: $table.barcode,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12581,6 +12637,11 @@ class $$ShoppingListItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get barcode => $composableBuilder(
+    column: $table.barcode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -12650,6 +12711,9 @@ class $$ShoppingListItemsTableAnnotationComposer
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get barcode =>
+      $composableBuilder(column: $table.barcode, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -12722,6 +12786,7 @@ class $$ShoppingListItemsTableTableManager
                 Value<int?> actualUnitPriceInCents = const Value.absent(),
                 Value<bool> isPurchased = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<String?> barcode = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => ShoppingListItemsCompanion(
@@ -12733,6 +12798,7 @@ class $$ShoppingListItemsTableTableManager
                 actualUnitPriceInCents: actualUnitPriceInCents,
                 isPurchased: isPurchased,
                 notes: notes,
+                barcode: barcode,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -12746,6 +12812,7 @@ class $$ShoppingListItemsTableTableManager
                 Value<int?> actualUnitPriceInCents = const Value.absent(),
                 Value<bool> isPurchased = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<String?> barcode = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => ShoppingListItemsCompanion.insert(
@@ -12757,6 +12824,7 @@ class $$ShoppingListItemsTableTableManager
                 actualUnitPriceInCents: actualUnitPriceInCents,
                 isPurchased: isPurchased,
                 notes: notes,
+                barcode: barcode,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),

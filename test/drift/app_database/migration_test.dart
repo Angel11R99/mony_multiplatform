@@ -12,6 +12,8 @@ import 'generated/schema_v4.dart' as v4;
 import 'generated/schema_v5.dart' as v5;
 import 'generated/schema_v6.dart' as v6;
 import 'generated/schema_v7.dart' as v7;
+import 'generated/schema_v8.dart' as v8;
+import 'generated/schema_v9.dart' as v9;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -33,6 +35,51 @@ void main() {
         }
       });
     }
+  });
+
+  test('v8 to v9 preserves shopping items and leaves barcode unset', () async {
+    await verifier.testWithDataIntegrity(
+      oldVersion: 8,
+      newVersion: 9,
+      createOld: v8.DatabaseAtV8.new,
+      createNew: v9.DatabaseAtV9.new,
+      openTestedDatabase: AppDatabase.new,
+      createItems: (batch, oldDatabase) {
+        batch.insert(
+          oldDatabase.shoppingLists,
+          const v8.ShoppingListsData(
+            id: 7,
+            name: 'Despensa',
+            status: 'pending',
+            createdAt: 100,
+            updatedAt: 100,
+          ),
+        );
+        batch.insert(
+          oldDatabase.shoppingListItems,
+          const v8.ShoppingListItemsData(
+            id: 11,
+            shoppingListId: 7,
+            name: 'Café',
+            quantity: 2,
+            estimatedUnitPriceInCents: 4500,
+            isPurchased: 0,
+            createdAt: 100,
+            updatedAt: 100,
+          ),
+        );
+      },
+      validateItems: (database) async {
+        final item = await database
+            .select(database.shoppingListItems)
+            .getSingle();
+        expect(item.id, 11);
+        expect(item.name, 'Café');
+        expect(item.quantity, 2);
+        expect(item.estimatedUnitPriceInCents, 4500);
+        expect(item.barcode, isNull);
+      },
+    );
   });
 
   test('v1 to v2 keeps categories and seeds payment methods', () async {
