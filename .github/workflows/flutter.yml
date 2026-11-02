@@ -25,6 +25,22 @@ jobs:
       - name: Build Android APK
         if: runner.os == 'Linux'
         run: flutter build apk --debug --dart-define=APP_ENV=staging
+      - name: Configure temporary Android release signing key
+        if: runner.os == 'Linux'
+        run: |
+          keytool -genkeypair -v -keystore android/ci-upload-key.jks -storepass ci-only-password -alias ci-upload -keypass ci-only-password -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Mony CI, OU=Build, O=Local, L=Local, S=Local, C=DO"
+          cat > android/key.properties <<'EOF'
+          storeFile=ci-upload-key.jks
+          storePassword=ci-only-password
+          keyAlias=ci-upload
+          keyPassword=ci-only-password
+          EOF
+      - name: Build Android release bundle (CI-only key)
+        if: runner.os == 'Linux'
+        run: flutter build appbundle --release --dart-define=APP_ENV=production
       - name: Build iOS simulator app
         if: runner.os == 'macOS'
         run: flutter build ios --simulator --debug --dart-define=APP_ENV=staging
+      - name: Build iOS release without distribution signing
+        if: runner.os == 'macOS'
+        run: flutter build ios --release --no-codesign --dart-define=APP_ENV=production

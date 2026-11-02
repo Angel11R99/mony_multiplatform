@@ -1,9 +1,30 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+val releaseSigningProperties = Properties().apply {
+    val propertiesFile = rootProject.file("key.properties")
+    if (propertiesFile.exists()) propertiesFile.inputStream().use { load(it) }
+}
+fun releaseValue(property: String, environment: String): String? =
+    System.getenv(environment)?.takeIf(String::isNotBlank)
+        ?: releaseSigningProperties.getProperty(property)?.takeIf(String::isNotBlank)
+
+val releaseStoreFile = releaseValue("storeFile", "MONY_RELEASE_STORE_FILE")
+val releaseStorePassword = releaseValue("storePassword", "MONY_RELEASE_STORE_PASSWORD")
+val releaseKeyAlias = releaseValue("keyAlias", "MONY_RELEASE_KEY_ALIAS")
+val releaseKeyPassword = releaseValue("keyPassword", "MONY_RELEASE_KEY_PASSWORD")
+val releaseSigningConfigured = listOf(
+    releaseStoreFile,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword,
+).all { !it.isNullOrBlank() }
 
 android {
     namespace = "com.example.mony_multiplatform"
@@ -36,11 +57,37 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            if (releaseSigningConfigured) {
+                storeFile = rootProject.file(releaseStoreFile!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+}
+
+tasks.configureEach {
+    if (
+        name == "validateSigningRelease" ||
+        name == "assembleRelease" ||
+        name == "bundleRelease" ||
+        name.startsWith("packageRelease")
+    ) {
+        doFirst {
+            check(releaseSigningConfigured) {
+                "Release signing is not configured. Set MONY_RELEASE_STORE_FILE, " +
+                    "MONY_RELEASE_STORE_PASSWORD, MONY_RELEASE_KEY_ALIAS, and " +
+                    "MONY_RELEASE_KEY_PASSWORD, or provide android/key.properties."
+            }
         }
     }
 }
