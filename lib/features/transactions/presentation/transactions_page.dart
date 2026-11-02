@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_confirm_dialog.dart';
@@ -12,6 +13,7 @@ import '../../payment_methods/domain/payment_method.dart';
 import '../../payment_methods/presentation/payment_methods_providers.dart';
 import '../domain/transaction.dart';
 import '../domain/transaction_history_filter.dart';
+import '../domain/transaction_repository.dart';
 import 'transactions_providers.dart';
 
 class TransactionsPage extends ConsumerStatefulWidget {
@@ -78,11 +80,12 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     BuildContext context,
     FinanceTransaction transaction,
   ) async {
+    final description = transaction.description?.trim();
     final confirmed = await MonyConfirmDialog.show(
       context,
       title: 'Eliminar movimiento',
       message:
-          '“${transaction.description ?? 'Movimiento'}” se eliminará definitivamente. Esta acción no se puede deshacer.',
+          '“${description == null || description.isEmpty ? 'Movimiento' : description}” se eliminará definitivamente. Esta acción no se puede deshacer.',
       confirmLabel: 'Eliminar',
       destructive: true,
     );
@@ -90,9 +93,11 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     try {
       await ref.read(transactionRepositoryProvider).delete(transaction.id);
       if (context.mounted) _notify(context, 'Movimiento eliminado.');
+    } on InvalidTransactionException catch (error) {
+      if (context.mounted) MonyFeedback.error(context, error.message);
     } catch (_) {
       if (context.mounted) {
-        _notify(context, 'No se pudo eliminar el movimiento.');
+        MonyFeedback.error(context, 'No se pudo eliminar el movimiento.');
       }
     }
   }
@@ -113,9 +118,11 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
               : 'Movimiento duplicado con la fecha de hoy.',
         );
       }
+    } on InvalidTransactionException catch (error) {
+      if (context.mounted) MonyFeedback.error(context, error.message);
     } catch (_) {
       if (context.mounted) {
-        _notify(context, 'No se pudo duplicar el movimiento.');
+        MonyFeedback.error(context, 'No se pudo duplicar el movimiento.');
       }
     }
   }
@@ -169,6 +176,33 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     };
     final filtered = _filter.apply(items, categoryNames: names);
     final shown = filtered.take(_visibleCount).toList(growable: false);
+    final groupByDate =
+        _sortOrder == TransactionSortOrder.newest ||
+        _sortOrder == TransactionSortOrder.oldest;
+    final entries = <_HistoryEntry>[];
+    DateTime? previousDate;
+    for (final item in shown) {
+      final date = DateTime(item.date.year, item.date.month, item.date.day);
+      if (groupByDate && !DateUtils.isSameDay(previousDate, date)) {
+        entries.add(_HistoryDateHeader(date));
+      }
+      previousDate = date;
+      final category = _firstWhereOrNull(
+        categories,
+        (entry) => entry.id == item.categoryId,
+      );
+      final method = _firstWhereOrNull(
+        methods,
+        (entry) => entry.id == item.paymentMethodId,
+      );
+      entries.add(
+        _HistoryMovement(
+          transaction: item,
+          categoryName: category?.name ?? 'Categoría archivada',
+          paymentMethodName: method?.name ?? 'Método archivado',
+        ),
+      );
+    }
     return Column(
       children: [
         Padding(
@@ -308,53 +342,62 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         ),
         Expanded(
           child: filtered.isEmpty
-              ? const _TransactionsEmpty(filtered: true)
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 104),
-                  itemCount:
-                      shown.length + (shown.length < filtered.length ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == shown.length) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Center(
-                          child: OutlinedButton.icon(
-                            onPressed: () =>
-                                setState(() => _visibleCount += _pageSize),
-                            icon: const Icon(Icons.expand_more),
-                            label: Text(
-                              'Cargar más (${filtered.length - shown.length})',
+              ? _TransactionsEmpty(filtered: _filter.hasCriteria)
+              : SlidableAutoCloseBehavior(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 104),
+                    itemCount:
+                        entries.length +
+                        (shown.length < filtered.length ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == entries.length) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Center(
+                            child: OutlinedButton.icon(
+                              onPressed: () =>
+                                  setState(() => _visibleCount += _pageSize),
+                              icon: const Icon(Icons.expand_more),
+                              label: Text(
+                                'Cargar más (${filtered.length - shown.length})',
+                              ),
                             ),
                           ),
+                        );
+                      }
+                      return switch (entries[index]) {
+                        _HistoryDateHeader(:final date) => _DateHeading(
+                          key: ValueKey(
+                            'date-${date.year}-${date.month}-${date.day}',
+                          ),
+                          date: date,
                         ),
-                      );
-                    }
-                    final item = shown[index];
-                    final category = _firstWhereOrNull(
-                      categories,
-                      (entry) => entry.id == item.categoryId,
-                    );
-                    final method = _firstWhereOrNull(
-                      methods,
-                      (entry) => entry.id == item.paymentMethodId,
-                    );
-                    return _TransactionCard(
-                      transaction: item,
-                      categoryName: category?.name ?? 'Categoría archivada',
-                      paymentMethodName: method?.name ?? 'Método archivado',
-                      onTap: () => context.pushNamed(
-                        'transactionDetail',
-                        pathParameters: {'id': item.id.toString()},
-                      ),
-                      onEdit: () => context.pushNamed(
-                        'transactionEdit',
-                        pathParameters: {'id': item.id.toString()},
-                      ),
-                      onDuplicate: () => _duplicate(context, item),
-                      onDelete: () => _delete(context, item),
-                      onManageSeries: () => context.goNamed('recurringEntries'),
-                    );
-                  },
+                        _HistoryMovement(
+                          :final transaction,
+                          :final categoryName,
+                          :final paymentMethodName,
+                        ) =>
+                          _TransactionCard(
+                            key: ValueKey('transaction-${transaction.id}'),
+                            transaction: transaction,
+                            categoryName: categoryName,
+                            paymentMethodName: paymentMethodName,
+                            onTap: () => context.pushNamed(
+                              'transactionDetail',
+                              pathParameters: {'id': transaction.id.toString()},
+                            ),
+                            onEdit: () => context.pushNamed(
+                              'transactionEdit',
+                              pathParameters: {'id': transaction.id.toString()},
+                            ),
+                            onDuplicate: () => _duplicate(context, transaction),
+                            onDelete: () => _delete(context, transaction),
+                            onManageSeries: () =>
+                                context.goNamed('recurringEntries'),
+                          ),
+                      };
+                    },
+                  ),
                 ),
         ),
       ],
@@ -395,6 +438,7 @@ class _TransactionCard extends StatelessWidget {
     required this.onDuplicate,
     required this.onDelete,
     required this.onManageSeries,
+    super.key,
   });
 
   final FinanceTransaction transaction;
@@ -410,91 +454,164 @@ class _TransactionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final income = transaction.type == TransactionType.income;
     final colorScheme = Theme.of(context).colorScheme;
-    return Card(
-      child: ListTile(
-        onTap: onTap,
-        leading: CircleAvatar(
-          backgroundColor: (income ? colorScheme.primary : colorScheme.error)
-              .withValues(alpha: 0.12),
-          child: Icon(
-            income ? Icons.south_west : Icons.north_east,
-            color: income ? colorScheme.primary : colorScheme.error,
+    return Slidable(
+      key: ValueKey('slidable-${transaction.id}'),
+      endActionPane: transaction.fixedEntryId == null
+          ? ActionPane(
+              motion: const DrawerMotion(),
+              extentRatio: 0.78,
+              children: [
+                SlidableAction(
+                  onPressed: (_) => onEdit(),
+                  icon: Icons.edit_outlined,
+                  label: 'Editar',
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                ),
+                SlidableAction(
+                  onPressed: (_) => onDuplicate(),
+                  icon: Icons.copy_outlined,
+                  label: 'Duplicar',
+                  backgroundColor: colorScheme.secondary,
+                  foregroundColor: colorScheme.onSecondary,
+                ),
+                SlidableAction(
+                  onPressed: (_) => onDelete(),
+                  icon: Icons.delete_outline,
+                  label: 'Eliminar',
+                  backgroundColor: colorScheme.error,
+                  foregroundColor: colorScheme.onError,
+                ),
+              ],
+            )
+          : null,
+      child: Card(
+        child: ListTile(
+          onTap: onTap,
+          leading: CircleAvatar(
+            backgroundColor: (income ? colorScheme.primary : colorScheme.error)
+                .withValues(alpha: 0.12),
+            child: Icon(
+              income ? Icons.south_west : Icons.north_east,
+              color: income ? colorScheme.primary : colorScheme.error,
+            ),
+          ),
+          title: Text(
+            transaction.description?.isNotEmpty == true
+                ? transaction.description ?? categoryName
+                : categoryName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(
+            '$categoryName · $paymentMethodName · ${_dateLabel(transaction.date)}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${income ? '+' : '−'}${MoneyFormatter.formatDopMinorUnits(transaction.amountInCents)}',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: income ? colorScheme.primary : colorScheme.error,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              PopupMenuButton<String>(
+                tooltip:
+                    'Acciones para ${transaction.description ?? categoryName}',
+                onSelected: (action) {
+                  switch (action) {
+                    case 'series':
+                      onManageSeries();
+                    case 'edit':
+                      onEdit();
+                    case 'duplicate':
+                      onDuplicate();
+                    case 'delete':
+                      onDelete();
+                  }
+                },
+                itemBuilder: (context) => transaction.fixedEntryId != null
+                    ? const [
+                        PopupMenuItem(
+                          value: 'series',
+                          child: ListTile(
+                            leading: Icon(Icons.repeat),
+                            title: Text('Administrar series'),
+                          ),
+                        ),
+                      ]
+                    : const [
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: ListTile(
+                            leading: Icon(Icons.edit_outlined),
+                            title: Text('Editar'),
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'duplicate',
+                          child: ListTile(
+                            leading: Icon(Icons.copy_outlined),
+                            title: Text('Duplicar'),
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: ListTile(
+                            leading: Icon(Icons.delete_outline),
+                            title: Text('Eliminar'),
+                          ),
+                        ),
+                      ],
+              ),
+            ],
           ),
         ),
-        title: Text(
-          transaction.description?.isNotEmpty == true
-              ? transaction.description ?? categoryName
-              : categoryName,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Text(
-          '$categoryName · $paymentMethodName · ${_dateLabel(transaction.date)}',
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '${income ? '+' : '−'}${MoneyFormatter.formatDopMinorUnits(transaction.amountInCents)}',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: income ? colorScheme.primary : colorScheme.error,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            PopupMenuButton<String>(
-              tooltip:
-                  'Acciones para ${transaction.description ?? categoryName}',
-              onSelected: (action) {
-                switch (action) {
-                  case 'series':
-                    onManageSeries();
-                  case 'edit':
-                    onEdit();
-                  case 'duplicate':
-                    onDuplicate();
-                  case 'delete':
-                    onDelete();
-                }
-              },
-              itemBuilder: (context) => transaction.fixedEntryId != null
-                  ? const [
-                      PopupMenuItem(
-                        value: 'series',
-                        child: ListTile(
-                          leading: Icon(Icons.repeat),
-                          title: Text('Administrar series'),
-                        ),
-                      ),
-                    ]
-                  : const [
-                      PopupMenuItem(
-                        value: 'edit',
-                        child: ListTile(
-                          leading: Icon(Icons.edit_outlined),
-                          title: Text('Editar'),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'duplicate',
-                        child: ListTile(
-                          leading: Icon(Icons.copy_outlined),
-                          title: Text('Duplicar'),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: ListTile(
-                          leading: Icon(Icons.delete_outline),
-                          title: Text('Eliminar'),
-                        ),
-                      ),
-                    ],
-            ),
-          ],
-        ),
       ),
+    );
+  }
+}
+
+sealed class _HistoryEntry {
+  const _HistoryEntry();
+}
+
+class _HistoryDateHeader extends _HistoryEntry {
+  const _HistoryDateHeader(this.date);
+  final DateTime date;
+}
+
+class _HistoryMovement extends _HistoryEntry {
+  const _HistoryMovement({
+    required this.transaction,
+    required this.categoryName,
+    required this.paymentMethodName,
+  });
+
+  final FinanceTransaction transaction;
+  final String categoryName;
+  final String paymentMethodName;
+}
+
+class _DateHeading extends StatelessWidget {
+  const _DateHeading({required this.date, super.key});
+  final DateTime date;
+
+  @override
+  Widget build(BuildContext context) {
+    final today = DateTime.now();
+    final yesterday = today.subtract(const Duration(days: 1));
+    final label = DateUtils.isSameDay(date, today)
+        ? 'Hoy'
+        : DateUtils.isSameDay(date, yesterday)
+        ? 'Ayer'
+        : _dateLabel(date);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 16, 4, 4),
+      child: Text(label, style: Theme.of(context).textTheme.titleSmall),
     );
   }
 }

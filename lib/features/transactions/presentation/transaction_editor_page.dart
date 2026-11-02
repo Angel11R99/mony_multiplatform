@@ -77,9 +77,11 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
   late final TextEditingController _description;
   late TransactionType _type;
   late DateTime _date;
+  late DateTime _initialDate;
   int? _categoryId;
   int? _paymentMethodId;
   bool _saving = false;
+  bool _confirmingDiscard = false;
 
   @override
   void initState() {
@@ -93,6 +95,7 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
     _description = TextEditingController(text: existing?.description ?? '');
     _type = existing?.type ?? widget.initialType;
     _date = existing?.date ?? DateTime.now();
+    _initialDate = DateTime(_date.year, _date.month, _date.day);
     _categoryId = existing?.categoryId;
     _paymentMethodId = existing?.paymentMethodId;
     _amount.addListener(_onDraftChanged);
@@ -120,6 +123,7 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
       return _amount.text.trim().isNotEmpty ||
           _description.text.trim().isNotEmpty ||
           _type != widget.initialType ||
+          !DateUtils.isSameDay(_date, _initialDate) ||
           _categoryId != null ||
           _paymentMethodId != null;
     }
@@ -132,14 +136,20 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
   }
 
   Future<void> _confirmDiscard() async {
-    final discard = await MonyConfirmDialog.show(
-      context,
-      title: 'Descartar cambios',
-      message: 'Hay cambios sin guardar en este movimiento.',
-      confirmLabel: 'Descartar',
-      cancelLabel: 'Seguir editando',
-    );
-    if (discard == true && mounted) Navigator.of(context).pop();
+    if (_confirmingDiscard || _saving) return;
+    _confirmingDiscard = true;
+    try {
+      final discard = await MonyConfirmDialog.show(
+        context,
+        title: 'Descartar cambios',
+        message: 'Hay cambios sin guardar en este movimiento.',
+        confirmLabel: 'Descartar',
+        cancelLabel: 'Seguir editando',
+      );
+      if (discard == true && mounted) Navigator.of(context).pop();
+    } finally {
+      _confirmingDiscard = false;
+    }
   }
 
   Future<void> _chooseDate() async {

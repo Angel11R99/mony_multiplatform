@@ -9,6 +9,7 @@ import '../../../core/money/money_formatter.dart';
 import '../../categories/presentation/categories_providers.dart';
 import '../../payment_methods/presentation/payment_methods_providers.dart';
 import '../domain/transaction.dart';
+import '../domain/transaction_repository.dart';
 import 'transactions_providers.dart';
 
 class TransactionDetailPage extends ConsumerWidget {
@@ -166,6 +167,10 @@ class TransactionDetailPage extends ConsumerWidget {
                       'No encontramos el movimiento.',
                     );
                   }
+                } on InvalidTransactionException catch (error) {
+                  if (context.mounted) {
+                    MonyFeedback.error(context, error.message);
+                  }
                 } catch (_) {
                   if (context.mounted) {
                     MonyFeedback.error(
@@ -193,6 +198,10 @@ class TransactionDetailPage extends ConsumerWidget {
                       .read(transactionRepositoryProvider)
                       .delete(transaction.id);
                   if (context.mounted) context.goNamed('transactions');
+                } on InvalidTransactionException catch (error) {
+                  if (context.mounted) {
+                    MonyFeedback.error(context, error.message);
+                  }
                 } catch (_) {
                   if (context.mounted) {
                     MonyFeedback.error(
