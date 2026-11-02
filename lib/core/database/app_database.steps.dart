@@ -1862,6 +1862,436 @@ i1.GeneratedColumn<String> _column_61(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NULL',
     );
+
+final class Schema8 extends i0.VersionedSchema {
+  Schema8({required super.database}) : super(version: 8);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    categories,
+    paymentMethods,
+    transactions,
+    savingsGoals,
+    budgets,
+    budgetCycles,
+    shoppingLists,
+    shoppingListItems,
+    shoppingAdjustments,
+    shoppingPayables,
+    obligations,
+    obligationPayments,
+    recurringEntries,
+    paymentMethodsSingleDefault,
+    transactionsDateIdx,
+    transactionsCategoryIdx,
+    transactionsPaymentMethodIdx,
+    transactionsFixedEntryIdx,
+    transactionsRecurringDateUnique,
+    transactionsSavingsGoalIdx,
+    savingsGoalsCompletedIdx,
+    budgetCyclesStartEndIdx,
+    shoppingListsExpenseIdx,
+    shoppingListItemsListIdx,
+    shoppingAdjustmentsListIdx,
+    obligationPaymentsObligationIdx,
+    recurringEntriesActiveNextIdx,
+  ];
+  late final Shape0 categories = Shape0(
+    source: i0.VersionedTable(
+      entityName: 'categories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['UNIQUE(type, normalized_name)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape1 paymentMethods = Shape1(
+    source: i0.VersionedTable(
+      entityName: 'payment_methods',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['UNIQUE(normalized_name)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_9,
+        _column_7,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape2 transactions = Shape2(
+    source: i0.VersionedTable(
+      entityName: 'transactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_0,
+        _column_10,
+        _column_3,
+        _column_11,
+        _column_12,
+        _column_13,
+        _column_14,
+        _column_7,
+        _column_15,
+        _column_16,
+        _column_17,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape3 savingsGoals = Shape3(
+    source: i0.VersionedTable(
+      entityName: 'savings_goals',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [_column_0, _column_1, _column_18, _column_7, _column_19],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape4 budgets = Shape4(
+    source: i0.VersionedTable(
+      entityName: 'budgets',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_20,
+        _column_10,
+        _column_21,
+        _column_22,
+        _column_23,
+        _column_24,
+        _column_25,
+        _column_26,
+        _column_27,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape5 budgetCycles = Shape5(
+    source: i0.VersionedTable(
+      entityName: 'budget_cycles',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_0,
+        _column_21,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+        _column_33,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape6 shoppingLists = Shape6(
+    source: i0.VersionedTable(
+      entityName: 'shopping_lists',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_34,
+        _column_35,
+        _column_36,
+        _column_37,
+        _column_38,
+        _column_39,
+        _column_40,
+        _column_7,
+        _column_15,
+        _column_19,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape7 shoppingListItems = Shape7(
+    source: i0.VersionedTable(
+      entityName: 'shopping_list_items',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_0,
+        _column_41,
+        _column_1,
+        _column_42,
+        _column_43,
+        _column_44,
+        _column_45,
+        _column_46,
+        _column_7,
+        _column_15,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape8 shoppingAdjustments = Shape8(
+    source: i0.VersionedTable(
+      entityName: 'shopping_adjustments',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_0,
+        _column_41,
+        _column_1,
+        _column_47,
+        _column_10,
+        _column_7,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape9 shoppingPayables = Shape9(
+    source: i0.VersionedTable(
+      entityName: 'shopping_payables',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_0,
+        _column_48,
+        _column_10,
+        _column_11,
+        _column_12,
+        _column_14,
+        _column_49,
+        _column_50,
+        _column_51,
+        _column_7,
+        _column_15,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape10 obligations = Shape10(
+    source: i0.VersionedTable(
+      entityName: 'obligations',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_0,
+        _column_52,
+        _column_53,
+        _column_54,
+        _column_10,
+        _column_55,
+        _column_11,
+        _column_56,
+        _column_57,
+        _column_58,
+        _column_46,
+        _column_7,
+        _column_15,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape11 obligationPayments = Shape11(
+    source: i0.VersionedTable(
+      entityName: 'obligation_payments',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_0,
+        _column_59,
+        _column_10,
+        _column_14,
+        _column_12,
+        _column_60,
+        _column_61,
+        _column_7,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape12 recurringEntries = Shape12(
+    source: i0.VersionedTable(
+      entityName: 'recurring_entries',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_0,
+        _column_53,
+        _column_10,
+        _column_3,
+        _column_11,
+        _column_12,
+        _column_62,
+        _column_63,
+        _column_31,
+        _column_64,
+        _column_65,
+        _column_6,
+        _column_7,
+        _column_15,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index paymentMethodsSingleDefault = i1.Index(
+    'payment_methods_single_default',
+    'CREATE UNIQUE INDEX payment_methods_single_default ON payment_methods (is_default) WHERE is_default = 1',
+  );
+  final i1.Index transactionsDateIdx = i1.Index(
+    'transactions_date_idx',
+    'CREATE INDEX transactions_date_idx ON transactions (date_epoch_day)',
+  );
+  final i1.Index transactionsCategoryIdx = i1.Index(
+    'transactions_category_idx',
+    'CREATE INDEX transactions_category_idx ON transactions (category_id)',
+  );
+  final i1.Index transactionsPaymentMethodIdx = i1.Index(
+    'transactions_payment_method_idx',
+    'CREATE INDEX transactions_payment_method_idx ON transactions (payment_method_id)',
+  );
+  final i1.Index transactionsFixedEntryIdx = i1.Index(
+    'transactions_fixed_entry_idx',
+    'CREATE INDEX transactions_fixed_entry_idx ON transactions (fixed_entry_id)',
+  );
+  final i1.Index transactionsRecurringDateUnique = i1.Index(
+    'transactions_recurring_date_unique',
+    'CREATE UNIQUE INDEX transactions_recurring_date_unique ON transactions (fixed_entry_id, date_epoch_day)',
+  );
+  final i1.Index transactionsSavingsGoalIdx = i1.Index(
+    'transactions_savings_goal_idx',
+    'CREATE INDEX transactions_savings_goal_idx ON transactions (savings_goal_id)',
+  );
+  final i1.Index savingsGoalsCompletedIdx = i1.Index(
+    'savings_goals_completed_idx',
+    'CREATE INDEX savings_goals_completed_idx ON savings_goals (completed_at)',
+  );
+  final i1.Index budgetCyclesStartEndIdx = i1.Index(
+    'budget_cycles_start_end_idx',
+    'CREATE INDEX budget_cycles_start_end_idx ON budget_cycles (start_date_epoch_day, end_date_epoch_day)',
+  );
+  final i1.Index shoppingListsExpenseIdx = i1.Index(
+    'shopping_lists_expense_idx',
+    'CREATE UNIQUE INDEX shopping_lists_expense_idx ON shopping_lists (expense_transaction_id) WHERE expense_transaction_id IS NOT NULL',
+  );
+  final i1.Index shoppingListItemsListIdx = i1.Index(
+    'shopping_list_items_list_idx',
+    'CREATE INDEX shopping_list_items_list_idx ON shopping_list_items (shopping_list_id)',
+  );
+  final i1.Index shoppingAdjustmentsListIdx = i1.Index(
+    'shopping_adjustments_list_idx',
+    'CREATE INDEX shopping_adjustments_list_idx ON shopping_adjustments (shopping_list_id)',
+  );
+  final i1.Index obligationPaymentsObligationIdx = i1.Index(
+    'obligation_payments_obligation_idx',
+    'CREATE INDEX obligation_payments_obligation_idx ON obligation_payments (obligation_id)',
+  );
+  final i1.Index recurringEntriesActiveNextIdx = i1.Index(
+    'recurring_entries_active_next_idx',
+    'CREATE INDEX recurring_entries_active_next_idx ON recurring_entries (is_active, next_date_epoch_day)',
+  );
+}
+
+class Shape12 extends i0.VersionedTable {
+  Shape12({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<int> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get title =>
+      columnsByName['title']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get amountInCents =>
+      columnsByName['amount_in_cents']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get type =>
+      columnsByName['type']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get categoryId =>
+      columnsByName['category_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get paymentMethodId =>
+      columnsByName['payment_method_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get frequency =>
+      columnsByName['frequency']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get interval =>
+      columnsByName['interval']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get startDateEpochDay =>
+      columnsByName['start_date_epoch_day']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get nextDateEpochDay =>
+      columnsByName['next_date_epoch_day']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get endDateEpochDay =>
+      columnsByName['end_date_epoch_day']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get isActive =>
+      columnsByName['is_active']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<String> _column_62(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'frequency',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_63(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'interval',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 1',
+      defaultValue: const i1.CustomExpression('1'),
+    );
+i1.GeneratedColumn<int> _column_64(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'next_date_epoch_day',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_65(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'end_date_epoch_day',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
@@ -1869,6 +2299,7 @@ i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
   required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
   required Future<void> Function(i1.Migrator m, Schema7 schema) from6To7,
+  required Future<void> Function(i1.Migrator m, Schema8 schema) from7To8,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -1902,6 +2333,11 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from6To7(migrator, schema);
         return 7;
+      case 7:
+        final schema = Schema8(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from7To8(migrator, schema);
+        return 8;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -1915,6 +2351,7 @@ i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
   required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
   required Future<void> Function(i1.Migrator m, Schema7 schema) from6To7,
+  required Future<void> Function(i1.Migrator m, Schema8 schema) from7To8,
 }) => i0.VersionedSchema.stepByStepHelper(
   step: migrationSteps(
     from1To2: from1To2,
@@ -1923,5 +2360,6 @@ i1.OnUpgrade stepByStep({
     from4To5: from4To5,
     from5To6: from5To6,
     from6To7: from6To7,
+    from7To8: from7To8,
   ),
 );

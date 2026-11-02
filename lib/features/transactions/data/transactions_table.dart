@@ -11,6 +11,11 @@ import '../../payment_methods/data/payment_methods_table.dart';
   columns: {#paymentMethodId},
 )
 @TableIndex(name: 'transactions_fixed_entry_idx', columns: {#fixedEntryId})
+@TableIndex(
+  name: 'transactions_recurring_date_unique',
+  columns: {#fixedEntryId, #dateEpochDay},
+  unique: true,
+)
 @TableIndex(name: 'transactions_savings_goal_idx', columns: {#savingsGoalId})
 class Transactions extends Table {
   IntColumn get id => integer().autoIncrement()();

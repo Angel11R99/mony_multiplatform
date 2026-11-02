@@ -8,6 +8,7 @@ import '../../features/payment_methods/data/payment_methods_table.dart';
 import '../../features/savings/data/savings_goals_table.dart';
 import '../../features/shopping_lists/data/shopping_lists_table.dart';
 import '../../features/obligations/data/obligations_table.dart';
+import '../../features/recurring/data/recurring_entries_table.dart';
 import '../../features/transactions/data/transactions_table.dart';
 import 'app_database.steps.dart';
 
@@ -27,6 +28,7 @@ part 'app_database.g.dart';
     ShoppingPayables,
     Obligations,
     ObligationPayments,
+    RecurringEntries,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -124,6 +126,11 @@ class AppDatabase extends _$AppDatabase {
           WHERE payables.is_settled = 1
         ''');
       },
+      from7To8: (migrator, schema) async {
+        await migrator.createTable(schema.recurringEntries);
+        await migrator.create(schema.recurringEntriesActiveNextIdx);
+        await migrator.create(schema.transactionsRecurringDateUnique);
+      },
     ),
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -131,7 +138,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 }
 
 const _initialCategories = <(String, CategoryType, String, int)>[
