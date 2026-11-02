@@ -2,8 +2,10 @@
 
 Crear ADR por decisión significativa, numeradas `ADR-0001`, `ADR-0002`... con: Contexto, Opciones, Decisión, Justificación, Plataformas, Alternativas descartadas, Riesgos, Validación, Fecha, Fase y Reversibilidad.
 
+## Decisiones registradas
+- ADR-0001 — conservar go_router 18.1.2: ver ADR-0001 en `02_DEPENDENCIES.md` (documentado en P01).
+
 ## Decisiones pendientes
-- Navegación existente vs go_router.
 - Gestor de estado existente vs alternativa (por defecto conservar).
 - Gráficos fl_chart vs existente.
 - Paquete de toast vs ScaffoldMessenger.
