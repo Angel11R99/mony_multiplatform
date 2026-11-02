@@ -1,9 +1,13 @@
+import 'dart:math' as math;
+
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/money/money_formatter.dart';
 import '../../../core/theme/mony_tokens.dart';
+import '../../../core/theme/mony_finance_colors.dart';
 import '../../../core/widgets/mony_finance_widgets.dart';
 import '../../../core/widgets/mony_layout.dart';
 import '../../../core/widgets/mony_states.dart';
@@ -127,12 +131,27 @@ class _HomePageState extends ConsumerState<HomePage> {
             onRetry: () => ref.invalidate(transactionsProvider),
           ),
           data: (value) => categories.when(
-            loading: () =>
-                const LoadingPlaceholder(message: 'Cargando categorías'),
-            error: (error, stack) => ErrorState(
-              message: 'No pudimos cargar las categorías.',
-              retryLabel: 'Reintentar',
-              onRetry: () => ref.invalidate(categoriesProvider),
+            loading: () => _DashboardContent(
+              summary: value,
+              categories: const [],
+              categoryNotice: 'Cargando categorías…',
+              currencyStyle: preferences.currencyFormatStyle,
+              onPreviousMonth: () => _changeMonth(-1),
+              onNextMonth: DateUtils.isSameMonth(_month, DateTime.now())
+                  ? null
+                  : () => _changeMonth(1),
+            ),
+            error: (error, stack) => _DashboardContent(
+              summary: value,
+              categories: const [],
+              categoryNotice:
+                  'No se pudieron cargar los nombres de categorías.',
+              onRetryCategories: () => ref.invalidate(categoriesProvider),
+              currencyStyle: preferences.currencyFormatStyle,
+              onPreviousMonth: () => _changeMonth(-1),
+              onNextMonth: DateUtils.isSameMonth(_month, DateTime.now())
+                  ? null
+                  : () => _changeMonth(1),
             ),
             data: (categoryItems) => _DashboardContent(
               summary: value,
@@ -154,6 +173,8 @@ class _DashboardContent extends StatelessWidget {
   const _DashboardContent({
     required this.summary,
     required this.categories,
+    this.categoryNotice,
+    this.onRetryCategories,
     required this.currencyStyle,
     required this.onPreviousMonth,
     required this.onNextMonth,
@@ -161,6 +182,8 @@ class _DashboardContent extends StatelessWidget {
 
   final FinancialDashboardSummary summary;
   final List<Category> categories;
+  final String? categoryNotice;
+  final VoidCallback? onRetryCategories;
   final CurrencyFormatStyle currencyStyle;
   final VoidCallback onPreviousMonth;
   final VoidCallback? onNextMonth;
@@ -193,169 +216,342 @@ class _DashboardContent extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 18),
-          _MonthSelector(
-            month: summary.month,
-            onPrevious: onPreviousMonth,
-            onNext: onNextMonth,
-          ),
-          const SizedBox(height: 12),
-          BalanceCard(
-            label: 'Balance del mes',
-            amount: MoneyFormatter.formatDopMinorUnits(
-              summary.balanceInCents,
-              style: currencyStyle,
-            ),
-            supportingText: summary.balanceInCents < 0
-                ? 'Gastos por encima de los ingresos'
-                : 'Ingresos menos gastos',
-          ),
-          const SizedBox(height: 12),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final cardWidth = (constraints.maxWidth - MonySpace.x3) / 2;
-              return Wrap(
-                spacing: MonySpace.x3,
-                runSpacing: MonySpace.x3,
-                children: [
-                  SizedBox(
-                    width: cardWidth,
-                    child: StatTile(
-                      title: 'Ingresos',
-                      value: MoneyFormatter.formatDopMinorUnits(
-                        summary.incomeInCents,
-                        style: currencyStyle,
-                      ),
-                      icon: Icons.south_west,
-                      emphasis: AmountEmphasis.income,
+          if (categoryNotice != null) ...[
+            const SizedBox(height: MonySpace.x2),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    categoryNotice!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  SizedBox(
-                    width: cardWidth,
-                    child: StatTile(
-                      title: 'Gastos',
-                      value: MoneyFormatter.formatDopMinorUnits(
-                        summary.expenseInCents,
-                        style: currencyStyle,
-                      ),
-                      icon: Icons.north_east,
-                      emphasis: AmountEmphasis.expense,
-                    ),
+                ),
+                if (onRetryCategories != null)
+                  TextButton(
+                    onPressed: onRetryCategories,
+                    child: const Text('Reintentar'),
                   ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 22),
-          const SectionHeader(title: 'Accesos rápidos'),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            runSpacing: 8,
-            children: [
-              FilledButton.icon(
-                onPressed: () => context.pushNamed(
-                  'transactionNew',
-                  queryParameters: const {'type': 'income'},
-                ),
-                icon: const Icon(Icons.add),
-                label: const Text('Nuevo ingreso'),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => context.pushNamed(
-                  'transactionNew',
-                  queryParameters: const {'type': 'expense'},
-                ),
-                icon: const Icon(Icons.remove),
-                label: const Text('Nuevo gasto'),
-              ),
-              TextButton.icon(
-                onPressed: () => context.goNamed('transactions'),
-                icon: const Icon(Icons.receipt_long_outlined),
-                label: const Text('Ver historial'),
-              ),
-              TextButton.icon(
-                onPressed: () => context.goNamed('savingsGoals'),
-                icon: const Icon(Icons.savings_outlined),
-                label: const Text('Metas de ahorro'),
-              ),
-              TextButton.icon(
-                onPressed: () => context.goNamed('budgets'),
-                icon: const Icon(Icons.account_balance_wallet_outlined),
-                label: const Text('Presupuestos'),
-              ),
-              TextButton.icon(
-                onPressed: () => context.goNamed('statistics'),
-                icon: const Icon(Icons.query_stats_outlined),
-                label: const Text('Estadísticas'),
-              ),
-              TextButton.icon(
-                onPressed: () => context.goNamed('exports'),
-                icon: const Icon(Icons.file_download_outlined),
-                label: const Text('Exportar datos'),
-              ),
-              TextButton.icon(
-                onPressed: () => context.pushNamed('barcodeScan'),
-                icon: const Icon(Icons.qr_code_scanner),
-                label: const Text('Escanear producto'),
-              ),
-              TextButton.icon(
-                onPressed: () => context.pushNamed('receiptScan'),
-                icon: const Icon(Icons.document_scanner_outlined),
-                label: const Text('Escanear ticket'),
-              ),
-              TextButton.icon(
-                onPressed: () => context.pushNamed('widgets'),
-                icon: const Icon(Icons.widgets_outlined),
-                label: const Text('Widgets de inicio'),
-              ),
-              TextButton.icon(
-                onPressed: () => context.goNamed('shoppingLists'),
-                icon: const Icon(Icons.shopping_cart_outlined),
-                label: const Text('Listas de compras'),
-              ),
-              TextButton.icon(
-                onPressed: () => context.goNamed('obligations'),
-                icon: const Icon(Icons.event_note_outlined),
-                label: const Text('Pagos y cobros pendientes'),
-              ),
-              TextButton.icon(
-                onPressed: () => context.goNamed('recurringEntries'),
-                icon: const Icon(Icons.repeat),
-                label: const Text('Movimientos recurrentes'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          SectionHeader(
-            title: 'Movimientos recientes',
-            action: TextButton(
-              onPressed: () => context.goNamed('transactions'),
-              child: const Text('Ver todos'),
+              ],
             ),
-          ),
-          if (summary.recentTransactions.isEmpty)
+          ],
+          if (summary.recentTransactions.isEmpty) ...[
+            const SizedBox(height: MonySpace.x8),
             const EmptyState(
               icon: Icons.account_balance_wallet_outlined,
-              title: 'Todavía no hay movimientos',
+              title: 'Empieza con tu primer movimiento',
               message:
-                  'Registra tu primer ingreso o gasto para ver el balance aquí.',
-            )
-          else
+                  'Registra un ingreso o un gasto para ver tu balance y la evolución de tus finanzas.',
+            ),
+            const SizedBox(height: MonySpace.x4),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: MonySpace.x3,
+              runSpacing: MonySpace.x2,
+              children: [
+                FilledButton.icon(
+                  onPressed: () => context.pushNamed(
+                    'transactionNew',
+                    queryParameters: const {'type': 'income'},
+                  ),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Añadir ingreso'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => context.pushNamed(
+                    'transactionNew',
+                    queryParameters: const {'type': 'expense'},
+                  ),
+                  icon: const Icon(Icons.remove),
+                  label: const Text('Añadir gasto'),
+                ),
+              ],
+            ),
+          ] else ...[
+            const SizedBox(height: MonySpace.x4),
+            _MonthSelector(
+              month: summary.month,
+              onPrevious: onPreviousMonth,
+              onNext: onNextMonth,
+            ),
+            const SizedBox(height: MonySpace.x2),
+            BalanceCard(
+              label: 'Balance neto del mes',
+              amount: MoneyFormatter.formatDopMinorUnits(
+                summary.balanceInCents,
+                style: currencyStyle,
+              ),
+              supportingText:
+                  'Ingresos menos gastos · ${_monthName(summary.month)}',
+            ),
+            const SizedBox(height: MonySpace.x3),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final cardWidth = (constraints.maxWidth - MonySpace.x3) / 2;
+                return Wrap(
+                  spacing: MonySpace.x3,
+                  runSpacing: MonySpace.x3,
+                  children: [
+                    SizedBox(
+                      width: cardWidth,
+                      child: StatTile(
+                        title: 'Ingresos',
+                        value: MoneyFormatter.formatDopMinorUnits(
+                          summary.incomeInCents,
+                          style: currencyStyle,
+                        ),
+                        icon: Icons.south_west,
+                        emphasis: AmountEmphasis.income,
+                      ),
+                    ),
+                    SizedBox(
+                      width: cardWidth,
+                      child: StatTile(
+                        title: 'Gastos',
+                        value: MoneyFormatter.formatDopMinorUnits(
+                          summary.expenseInCents,
+                          style: currencyStyle,
+                        ),
+                        icon: Icons.north_east,
+                        emphasis: AmountEmphasis.expense,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: MonySpace.x3),
+            Wrap(
+              spacing: MonySpace.x2,
+              runSpacing: MonySpace.x2,
+              children: [
+                FilledButton.icon(
+                  onPressed: () => context.pushNamed(
+                    'transactionNew',
+                    queryParameters: const {'type': 'income'},
+                  ),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Nuevo ingreso'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => context.pushNamed(
+                    'transactionNew',
+                    queryParameters: const {'type': 'expense'},
+                  ),
+                  icon: const Icon(Icons.remove),
+                  label: const Text('Nuevo gasto'),
+                ),
+              ],
+            ),
+            const SizedBox(height: MonySpace.x6),
+            _MonthlyTrendChart(
+              totals: summary.monthlyTotals,
+              currencyStyle: currencyStyle,
+            ),
+            const SizedBox(height: MonySpace.x6),
+            SectionHeader(
+              title: 'Movimientos recientes',
+              action: TextButton(
+                onPressed: () => context.goNamed('transactions'),
+                child: const Text('Ver todos'),
+              ),
+            ),
             ...summary.recentTransactions.map((transaction) {
-              final category =
-                  categoryNames[transaction.categoryId] ??
-                  'Categoría archivada';
+              final category = categoryNames[transaction.categoryId];
               return _RecentTransactionTile(
                 transaction: transaction,
-                categoryName: category,
+                categoryName:
+                    category ??
+                    (categoryNotice == null
+                        ? 'Categoría archivada'
+                        : 'Categoría no disponible'),
                 currencyStyle: currencyStyle,
               );
             }),
+          ],
         ],
       ),
     );
   }
+}
+
+class _MonthlyTrendChart extends StatelessWidget {
+  const _MonthlyTrendChart({required this.totals, required this.currencyStyle});
+
+  final List<DashboardMonthTotals> totals;
+  final CurrencyFormatStyle currencyStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final finance = Theme.of(context).extension<MonyFinanceColors>()!;
+    final maximum = totals.fold<int>(
+      0,
+      (value, month) =>
+          math.max(value, math.max(month.incomeInCents, month.expenseInCents)),
+    );
+    final chartDescription = totals
+        .map((month) {
+          final label = _shortMonth(month.month);
+          final income = MoneyFormatter.formatDopMinorUnits(
+            month.incomeInCents,
+            style: currencyStyle,
+          );
+          final expense = MoneyFormatter.formatDopMinorUnits(
+            month.expenseInCents,
+            style: currencyStyle,
+          );
+          return '$label: ingresos $income, gastos $expense';
+        })
+        .join('. ');
+
+    return MonyCard(
+      padding: const EdgeInsets.all(MonySpace.x4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Ingresos y gastos', style: theme.textTheme.titleMedium),
+          const SizedBox(height: MonySpace.x1),
+          Text(
+            'Últimos seis meses',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: MonySpace.x4),
+          Semantics(
+            label: 'Gráfico de ingresos y gastos. $chartDescription.',
+            child: ExcludeSemantics(
+              child: SizedBox(
+                height: 184,
+                child: BarChart(
+                  BarChartData(
+                    maxY: maximum == 0 ? 1 : maximum / 100,
+                    minY: 0,
+                    gridData: FlGridData(
+                      drawVerticalLine: false,
+                      horizontalInterval: maximum == 0
+                          ? 1
+                          : (maximum / 100 / 3).clamp(1, double.infinity),
+                      getDrawingHorizontalLine: (_) => FlLine(
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.45,
+                        ),
+                        strokeWidth: 1,
+                      ),
+                    ),
+                    borderData: FlBorderData(show: false),
+                    titlesData: FlTitlesData(
+                      leftTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 28,
+                          getTitlesWidget: (value, meta) {
+                            final index = value.toInt();
+                            if (index < 0 || index >= totals.length) {
+                              return const SizedBox.shrink();
+                            }
+                            return SideTitleWidget(
+                              meta: meta,
+                              child: Text(
+                                _shortMonth(totals[index].month),
+                                style: theme.textTheme.labelSmall,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    barGroups: [
+                      for (var index = 0; index < totals.length; index++)
+                        BarChartGroupData(
+                          x: index,
+                          barsSpace: 4,
+                          barRods: [
+                            BarChartRodData(
+                              toY: totals[index].incomeInCents / 100,
+                              width: 7,
+                              color: finance.income,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            BarChartRodData(
+                              toY: totals[index].expenseInCents / 100,
+                              width: 7,
+                              color: finance.expense,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                  duration: MonyMotion.durationFor(context, MonyMotion.quick),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: MonySpace.x3),
+          Wrap(
+            spacing: MonySpace.x4,
+            runSpacing: MonySpace.x2,
+            children: [
+              _TrendLegend(color: finance.income, label: 'Ingresos'),
+              _TrendLegend(color: finance.expense, label: 'Gastos'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrendLegend extends StatelessWidget {
+  const _TrendLegend({required this.color, required this.label});
+
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      ExcludeSemantics(
+        child: DecoratedBox(
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          child: const SizedBox(width: 10, height: 10),
+        ),
+      ),
+      const SizedBox(width: MonySpace.x1),
+      Text(label, style: Theme.of(context).textTheme.labelMedium),
+    ],
+  );
+}
+
+String _shortMonth(DateTime date) {
+  const months = [
+    'ene',
+    'feb',
+    'mar',
+    'abr',
+    'may',
+    'jun',
+    'jul',
+    'ago',
+    'sep',
+    'oct',
+    'nov',
+    'dic',
+  ];
+  return months[date.month - 1];
 }
 
 class _MonthSelector extends StatelessWidget {
