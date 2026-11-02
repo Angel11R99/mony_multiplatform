@@ -9,9 +9,9 @@ Esta matriz se enlaza a los criterios AC-xx-y de cada documento; **no marcar com
 | P02 | Contratos de arquitectura y consistencia de estado | APPROVED — `01-foundation/03_ARCHITECTURE.md` |
 | P03 | Theme tokens y pruebas de componentes | APPROVED — `P03_DESIGN_SYSTEM_REPORT.md`; pruebas escritas pero no ejecutadas |
 | P04 | 4 destinos con back/deep-link/estado probados | APPROVED — `P04_NAVIGATION_REPORT.md`; pruebas escritas, ejecución de navegador/dispositivo pendiente |
-| P05 | Motion + reduced motion + navegación accesible | TODO |
-| P06 | Overlays, toasts, confirmaciones y pruebas | TODO |
-| P07 | KPIs reales y empty/error states | TODO |
+| P05 | Motion + reduced motion + navegación accesible | APPROVED — `P05_MOTION_REPORT.md` |
+| P06 | Overlays, toasts, confirmaciones y pruebas | APPROVED — `P06_FEEDBACK_REPORT.md`; revisión manual pendiente del usuario |
+| P07 | KPIs reales y empty/error states | APPROVED — `P07_HOME_REPORT.md`; revisión manual pendiente del usuario |
 | P08 | CRUD y coherencia entre vistas | TODO |
 | P09 | Filtros combinados y búsqueda estable | TODO |
 | P10 | Inclusión de fechas/locale/hora verificada | TODO |

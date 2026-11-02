@@ -1,11 +1,25 @@
 # Historial de implementación
 
+## P07 — Home Dashboard financiero — 2026-11-02
+- Resultado: APPROVED bajo la autorización persistente del usuario.
+- `fl_chart` 1.3.0 para comparar ingresos/gastos de seis meses, con descripción semántica; resumen y gráfica usan movimientos locales y una sola moneda (DOP).
+- Estado de primera instalación ahora ofrece CTA a los dos formularios sin mostrar KPIs cero; reduce accesos secundarios y aclara que el balance es el neto del mes seleccionado.
+- La falla de categorías ya no oculta el dashboard; permite reintentar nombres y mantiene los cálculos disponibles. Dashboard se deriva del stream reactivo de Drift para actualizar CRUD.
+- `dart format`, `flutter analyze` y `git diff --check` completados. No se ejecutaron pruebas automáticas ni se inspeccionó captura visual porque el host de navegador no estuvo disponible; queda prueba manual del usuario.
+- Commit de dependencia, implementación y documentación separados; progreso en P08.
+
+## P06 — Feedback, confirmaciones y sheets — 2026-11-02
+- Resultado: APPROVED bajo la autorización persistente del usuario.
+- `toastification`, `adaptive_dialog` y `modal_bottom_sheet`; feedback de operaciones centralizado, confirmación segura y undo real al archivar una categoría.
+- `flutter analyze` y formato completados. Prueba manual queda para el usuario; sin pruebas automatizadas ejecutadas.
+- Commits `6126ed3`, `12e6af7`, `c8dd5cd`; progreso en P07.
+
 ## P05 — Motion, haptics y lenguaje nativo — 2026-11-02
 - Resultado: APPROVED bajo la autorización persistente del usuario.
 - `MonyMotion` aplica movimiento reducido; barra circular con movimiento corto; `animations` 3.0.0 provee Fade Through para importes de resumen solo al cambiar.
 - Navegación móvil ahora ofrece foco visible, activación por teclado/tacto y estado seleccionado semántico.
 - `dart format`, `flutter analyze` y `git diff --check` completados. Tests de motion añadidos, no ejecutados; el usuario hará la prueba.
-- Se agrega `animations` 3.0.0. Sin haptics añadidos. Commits P05 pendientes hasta que el usuario pida P06; progreso en P06 (TODO).
+- Se agrega `animations` 3.0.0. Sin haptics añadidos. Commits P05 `affa4f8`, `4e8d5f5`, `c51a714`; progreso en P06.
 
 ## P04 — App Shell, bottom nav y rutas — 2026-11-02
 - Resultado: APPROVED bajo la autorización explícita del usuario para aprobar las fases implementadas.
