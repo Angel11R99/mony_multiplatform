@@ -1,5 +1,5 @@
 // dart format width=80
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide isNull;
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:mony_multiplatform/core/database/app_database.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,6 +8,7 @@ import 'generated/schema.dart';
 import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
 import 'generated/schema_v3.dart' as v3;
+import 'generated/schema_v4.dart' as v4;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -156,6 +157,71 @@ void main() {
           await database.select(database.paymentMethods).get(),
         );
         expect(await database.select(database.transactions).get(), isEmpty);
+      },
+    );
+  });
+
+  test('v3 to v4 preserves existing finance data and starts with no goals', () async {
+    const oldCategories = <v3.CategoriesData>[
+      v3.CategoriesData(
+        id: 315,
+        name: 'Transporte',
+        normalizedName: 'transporte',
+        type: 'expense',
+        icon: 'directions_car',
+        colorArgb: 0xFF3B82F6,
+        isActive: 1,
+        createdAt: 1_762_000_000,
+      ),
+    ];
+    const oldMethods = <v3.PaymentMethodsData>[
+      v3.PaymentMethodsData(
+        id: 91,
+        name: 'Tarjeta local',
+        normalizedName: 'tarjeta local',
+        icon: 'debit_card',
+        colorArgb: 0xFF3B82F6,
+        isActive: 1,
+        isDefault: 0,
+        createdAt: 1_762_000_000,
+      ),
+    ];
+    const oldTransactions = <v3.TransactionsData>[
+      v3.TransactionsData(
+        id: 451,
+        amountInCents: 1275,
+        type: 'expense',
+        categoryId: 315,
+        paymentMethodId: 91,
+        description: 'Histórico anterior',
+        dateEpochDay: 20500,
+        createdAt: 1_762_000_000,
+        updatedAt: 1_762_000_000,
+        fixedEntryId: null,
+        savingsGoalId: null,
+      ),
+    ];
+
+    await verifier.testWithDataIntegrity(
+      oldVersion: 3,
+      newVersion: 4,
+      createOld: v3.DatabaseAtV3.new,
+      createNew: v4.DatabaseAtV4.new,
+      openTestedDatabase: AppDatabase.new,
+      createItems: (batch, oldDatabase) {
+        batch.insertAll(oldDatabase.categories, oldCategories);
+        batch.insertAll(oldDatabase.paymentMethods, oldMethods);
+        batch.insertAll(oldDatabase.transactions, oldTransactions);
+      },
+      validateItems: (database) async {
+        expect(await database.select(database.categories).get(), hasLength(1));
+        expect(await database.select(database.paymentMethods).get(), hasLength(1));
+        expect(await database.select(database.transactions).get(), hasLength(1));
+        final transaction = (await database.select(database.transactions).get()).single;
+        expect(transaction.id, 451);
+        expect(transaction.amountInCents, 1275);
+        expect(transaction.savingsGoalId, isNull);
+        expect(await database.select(database.savingsGoals).get(), isEmpty);
       },
     );
   });

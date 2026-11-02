@@ -393,9 +393,162 @@ i1.GeneratedColumn<int> _column_17(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NULL',
     );
+
+final class Schema4 extends i0.VersionedSchema {
+  Schema4({required super.database}) : super(version: 4);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    categories,
+    paymentMethods,
+    transactions,
+    savingsGoals,
+    paymentMethodsSingleDefault,
+    transactionsDateIdx,
+    transactionsCategoryIdx,
+    transactionsPaymentMethodIdx,
+    transactionsFixedEntryIdx,
+    transactionsSavingsGoalIdx,
+    savingsGoalsCompletedIdx,
+  ];
+  late final Shape0 categories = Shape0(
+    source: i0.VersionedTable(
+      entityName: 'categories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['UNIQUE(type, normalized_name)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape1 paymentMethods = Shape1(
+    source: i0.VersionedTable(
+      entityName: 'payment_methods',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['UNIQUE(normalized_name)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_9,
+        _column_7,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape2 transactions = Shape2(
+    source: i0.VersionedTable(
+      entityName: 'transactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_0,
+        _column_10,
+        _column_3,
+        _column_11,
+        _column_12,
+        _column_13,
+        _column_14,
+        _column_7,
+        _column_15,
+        _column_16,
+        _column_17,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape3 savingsGoals = Shape3(
+    source: i0.VersionedTable(
+      entityName: 'savings_goals',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [_column_0, _column_1, _column_18, _column_7, _column_19],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index paymentMethodsSingleDefault = i1.Index(
+    'payment_methods_single_default',
+    'CREATE UNIQUE INDEX payment_methods_single_default ON payment_methods (is_default) WHERE is_default = 1',
+  );
+  final i1.Index transactionsDateIdx = i1.Index(
+    'transactions_date_idx',
+    'CREATE INDEX transactions_date_idx ON transactions (date_epoch_day)',
+  );
+  final i1.Index transactionsCategoryIdx = i1.Index(
+    'transactions_category_idx',
+    'CREATE INDEX transactions_category_idx ON transactions (category_id)',
+  );
+  final i1.Index transactionsPaymentMethodIdx = i1.Index(
+    'transactions_payment_method_idx',
+    'CREATE INDEX transactions_payment_method_idx ON transactions (payment_method_id)',
+  );
+  final i1.Index transactionsFixedEntryIdx = i1.Index(
+    'transactions_fixed_entry_idx',
+    'CREATE INDEX transactions_fixed_entry_idx ON transactions (fixed_entry_id)',
+  );
+  final i1.Index transactionsSavingsGoalIdx = i1.Index(
+    'transactions_savings_goal_idx',
+    'CREATE INDEX transactions_savings_goal_idx ON transactions (savings_goal_id)',
+  );
+  final i1.Index savingsGoalsCompletedIdx = i1.Index(
+    'savings_goals_completed_idx',
+    'CREATE INDEX savings_goals_completed_idx ON savings_goals (completed_at)',
+  );
+}
+
+class Shape3 extends i0.VersionedTable {
+  Shape3({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<int> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get name =>
+      columnsByName['name']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get targetAmountInCents =>
+      columnsByName['target_amount_in_cents']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get completedAt =>
+      columnsByName['completed_at']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<int> _column_18(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'target_amount_in_cents',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL CHECK (target_amount_in_cents > 0)',
+    );
+i1.GeneratedColumn<int> _column_19(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'completed_at',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
+  required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -409,6 +562,11 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from2To3(migrator, schema);
         return 3;
+      case 3:
+        final schema = Schema4(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from3To4(migrator, schema);
+        return 4;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -418,6 +576,11 @@ i0.MigrationStepWithVersion migrationSteps({
 i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
+  required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
 }) => i0.VersionedSchema.stepByStepHelper(
-  step: migrationSteps(from1To2: from1To2, from2To3: from2To3),
+  step: migrationSteps(
+    from1To2: from1To2,
+    from2To3: from2To3,
+    from3To4: from3To4,
+  ),
 );
