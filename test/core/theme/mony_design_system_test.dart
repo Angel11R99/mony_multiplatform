@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mony_multiplatform/core/theme/mony_finance_colors.dart';
 import 'package:mony_multiplatform/core/theme/mony_theme.dart';
 import 'package:mony_multiplatform/core/theme/mony_tokens.dart';
-import 'package:mony_multiplatform/core/widgets/mony_controls.dart';
 import 'package:mony_multiplatform/core/widgets/mony_finance_widgets.dart';
 import 'package:mony_multiplatform/core/widgets/mony_states.dart';
 import 'package:mony_multiplatform/features/preferences/domain/app_preferences.dart';
@@ -65,11 +64,7 @@ void main() {
                 title: 'Sin movimientos',
                 message: 'Agrega tu primer movimiento.',
               ),
-              MonyButton(
-                label: 'Guardar',
-                onPressed: () {},
-                style: MonyButtonStyle.secondary,
-              ),
+              OutlinedButton(onPressed: () {}, child: const Text('Guardar')),
             ],
           ),
         ),
