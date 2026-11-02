@@ -1,5 +1,13 @@
 # Historial de implementación
 
+## P13 — Privacidad, seguridad y manejo de datos — 2026-11-02
+- Resultado: APPROVED bajo la autorización persistente del usuario.
+- Integrado `screenshot_shield` 0.2.0 para difuminar la vista en app switcher Android/iOS/Windows; capturas comunes continúan permitidas. Retirados del manifest merge los permisos transitivos de detección/capturas no usados.
+- Consulta de código de barras en Open Food Facts queda opt-in apagado inicialmente. Pantalla Privacidad documenta SQLite local no cifrada, backups por plataforma, exposición de widgets, exportes abiertos y máscara reciente.
+- Revisados logs, telemetría, OCR, backups, exportaciones y permisos. No hay telemetría financiera externa; esquema/migraciones Drift no cambiaron; biometría se difiere por falta de requisito y porque no cifra la DB.
+- `flutter pub get`, `dart format`, `flutter analyze`, `git diff --check` y build web release OK. APK Android debug bloqueado antes de compilar por instalación NDK local incompleta. Tests no ejecutados; iOS/Android y masking requieren verificación manual.
+- Commits P13 pendientes hasta la petición del siguiente paso; progreso en P14.
+
 ## P12 — Estadísticas, gráficos y comparaciones — 2026-11-02
 - Resultado: APPROVED bajo la autorización persistente del usuario.
 - Gráfico lineal de evolución migrado del painter manual a `fl_chart` ya adoptado en P07; agrega tooltip táctil, leyenda, descripción semántica y tabla expandible de valores mensuales.

@@ -2,10 +2,10 @@
 
 > Fuente de verdad del avance de las fases ejecutadas en este repositorio.
 
-**Fase actual:** P13 (TODO)
-**Última fase aprobada por el usuario:** P12 — estadísticas y gráficos, 2026-11-02
-**Siguiente acción autorizada:** iniciar P13 cuando el usuario diga `next`
-**Bloqueos:** `flutter test` no corre directamente desde el checkout porque Flutter no puede borrar `build/native_assets/windows/sqlite3.dll`; suite ejecutada con éxito en copia temporal limpia. Build Windows sin componentes C++ requeridos en Visual Studio.
+**Fase actual:** P14 (TODO)
+**Última fase aprobada por el usuario:** P13 — privacidad y manejo de datos, 2026-11-02
+**Siguiente acción autorizada:** iniciar P14 cuando el usuario diga `next`
+**Bloqueos:** `flutter test` no corre directamente desde el checkout porque Flutter no puede borrar `build/native_assets/windows/sqlite3.dll`; suite ejecutada con éxito en copia temporal limpia. Build Windows sin componentes C++ requeridos en Visual Studio. Build Android debug P13 detenido antes de compilar por NDK local `28.2.13676358` sin `source.properties`.
 
 | Fase | Estado | Evidencia / reporte | Aprobación del usuario |
 |---|---|---|---|
@@ -22,7 +22,7 @@
 | P10 | APPROVED | `P10_CALENDAR_TIME_REPORT.md`; analyze y build web OK; comprobación visual manual pendiente | SÍ — autorización persistente del usuario |
 | P11 | APPROVED | `P11_CATEGORIES_PAYMENTS_REPORT.md`; analyze y build web OK; suite de tests existente no ejecutada | SÍ — autorización persistente del usuario |
 | P12 | APPROVED | `P12_ANALYTICS_REPORT.md`; analyze y build web OK | SÍ — autorización persistente del usuario, 2026-11-02 |
-| P13 | TODO | — | NO |
+| P13 | APPROVED | `P13_PRIVACY_SECURITY_REPORT.md`; analyzer y web build OK; Android NDK y UAT móvil pendientes | SÍ — autorización persistente del usuario, 2026-11-02 |
 | P14 | TODO | — | NO |
 | P15 | TODO | — | NO |
 

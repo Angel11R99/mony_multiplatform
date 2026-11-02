@@ -17,7 +17,7 @@ Esta matriz se enlaza a los criterios AC-xx-y de cada documento; **no marcar com
 | P10 | Inclusión de fechas/locale/hora verificada | APPROVED — calendario `table_calendar` y fechas civiles centralizadas; analyze y build web OK; prueba visual manual queda para el usuario |
 | P11 | Integridad referencial categorías/métodos | APPROVED — validaciones redundantes en repositorios, archivado sin huérfanos y campos sensibles bloqueados; analyze y build web OK; pruebas existentes no ejecutadas |
 | P12 | Fórmulas y límites documentados; `fl_chart`, filtros sincronizados y datos accesibles implementados. Analyze y build web OK; UAT manual y medición con miles de filas pendientes | APPROVED — `P12_ANALYTICS_REPORT.md`; pruebas automatizadas no ejecutadas |
-| P13 | Privacy review y controles documentados | TODO |
+| P13 | Mapa de datos, logs, backups, permisos y riesgos; privacidad del app switcher, red de catálogo opt-in | APPROVED — `P13_PRIVACY_SECURITY_REPORT.md`; analyzer y build web OK; APK bloqueado por NDK local defectuoso; validación móvil manual pendiente |
 | P14 | Pruebas, perf, accesibilidad y plataformas | TODO |
 | P15 | Release checklist, UAT y rollback | TODO |
 
