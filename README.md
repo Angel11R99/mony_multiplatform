@@ -22,7 +22,11 @@ Riverpod administra la composición de dependencias y GoRouter las rutas declara
 
 ## CI
 
-GitHub Actions ejecuta análisis estático y pruebas de Flutter en Ubuntu y macOS, además de generar un APK de Android y una build de simulador iOS.
+GitHub Actions ejecuta análisis estático, pruebas de Flutter y builds Android/iOS de verificación en Ubuntu y macOS. El bundle Android de release de CI usa una llave efímera y no es distribuible. Para release real se requiere una llave propia fuera del repositorio; consulta [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md).
+
+## Privacidad y copias
+
+La base de finanzas permanece en el almacenamiento local privado de la app; el reconocimiento de tickets ocurre en el dispositivo. Las consultas de códigos de barras se envían a Open Food Facts solo cuando el usuario las solicita. Exportar ofrece CSV, Excel y PDF; la copia integral es un archivo cifrado AES-256-GCM protegido con una contraseña que Mony no guarda. La pantalla Privacidad y datos resume el tratamiento y [`docs/PRIVACY_POLICY_DRAFT.md`](docs/PRIVACY_POLICY_DRAFT.md) contiene el borrador que debe completar el responsable antes de publicar.
 
 ## Roadmap
 

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../categories/domain/category.dart';
@@ -202,6 +203,18 @@ class _ExportsPageState extends ConsumerState<ExportsPage> {
           child: ListView(
             padding: const EdgeInsets.all(20),
             children: [
+              Card.outlined(
+                child: ListTile(
+                  leading: const Icon(Icons.enhanced_encryption_outlined),
+                  title: const Text('Copia cifrada y restauración'),
+                  subtitle: const Text(
+                    'Guarda y restaura todos los datos de Mony.',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.pushNamed('backup'),
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
                 'Elige qué incluir y el período',
                 style: Theme.of(context).textTheme.titleLarge,

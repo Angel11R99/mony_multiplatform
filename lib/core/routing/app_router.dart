@@ -11,6 +11,7 @@ import '../../features/transactions/presentation/transaction_detail_page.dart';
 import '../../features/transactions/presentation/transaction_editor_page.dart';
 import '../../features/transactions/presentation/transactions_page.dart';
 import '../../features/preferences/presentation/settings_page.dart';
+import '../../features/preferences/presentation/privacy_page.dart';
 import '../../features/statistics/presentation/statistics_page.dart';
 import '../../features/shopping_lists/presentation/shopping_list_page.dart';
 import '../../features/shopping_lists/presentation/shopping_lists_page.dart';
@@ -18,6 +19,7 @@ import '../../features/obligations/presentation/obligation_detail_page.dart';
 import '../../features/obligations/presentation/obligations_page.dart';
 import '../../features/recurring/presentation/recurring_entries_page.dart';
 import '../../features/exports/presentation/exports_page.dart';
+import '../../features/exports/presentation/database_backup_page.dart';
 import '../../features/barcodes/presentation/barcode_scanner_page.dart';
 import '../../features/receipts/presentation/receipt_scanner_page.dart';
 import '../../features/widgets/presentation/widgets_page.dart';
@@ -41,9 +43,19 @@ GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
       builder: (context, state) => const SettingsPage(),
     ),
     GoRoute(
+      path: '/privacy',
+      name: 'privacy',
+      builder: (context, state) => const PrivacyPage(),
+    ),
+    GoRoute(
       path: '/exports',
       name: 'exports',
       builder: (context, state) => const ExportsPage(),
+    ),
+    GoRoute(
+      path: '/backup',
+      name: 'backup',
+      builder: (context, state) => const DatabaseBackupPage(),
     ),
     GoRoute(
       path: '/barcode-scan',

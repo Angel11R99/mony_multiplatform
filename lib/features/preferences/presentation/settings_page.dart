@@ -347,6 +347,12 @@ class _SettingsContent extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             OutlinedButton.icon(
+              onPressed: () => context.pushNamed('privacy'),
+              icon: const Icon(Icons.privacy_tip_outlined),
+              label: const Text('Privacidad y datos'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
               onPressed: onReset,
               icon: const Icon(Icons.restart_alt),
               label: const Text('Restaurar preferencias originales'),
