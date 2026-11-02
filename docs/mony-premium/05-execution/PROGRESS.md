@@ -2,16 +2,16 @@
 
 > Fuente de verdad del avance de las fases ejecutadas en este repositorio.
 
-**Fase actual:** P01 (APPROVED)
-**Última fase aprobada por el usuario:** P01 — aprobación explícita el 2026-11-02
-**Siguiente acción autorizada:** iniciar únicamente P02 al continuar el roadmap
+**Fase actual:** P02 (APPROVED)
+**Última fase aprobada por el usuario:** P02 — usuario autorizó aprobar las fases ejecutadas el 2026-11-02
+**Siguiente acción autorizada:** iniciar únicamente P03 al continuar el roadmap
 **Bloqueos:** `flutter test` no corre directamente desde el checkout porque Flutter no puede borrar `build/native_assets/windows/sqlite3.dll`; suite ejecutada con éxito en copia temporal limpia. Build Windows sin componentes C++ requeridos en Visual Studio.
 
 | Fase | Estado | Evidencia / reporte | Aprobación del usuario |
 |---|---|---|---|
 | P00 | APPROVED | `05-execution/AUDIT_REPORT.md`; analyze OK; 168 tests OK en copia temporal | SÍ — 2026-11-02 |
 | P01 | APPROVED | `00-governance/02_DEPENDENCIES.md`; matriz/ADR, sin dependencias agregadas | SÍ — 2026-11-02 |
-| P02 | TODO | — | NO |
+| P02 | APPROVED | `01-foundation/03_ARCHITECTURE.md`; diagrama/contratos/AC-02-5 demostración estática | SÍ — bajo autorización explícita del usuario, 2026-11-02 |
 | P03 | TODO | — | NO |
 | P04 | TODO | — | NO |
 | P05 | TODO | — | NO |
