@@ -56,6 +56,12 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             FilledButton.tonalIcon(
+              onPressed: () => context.goNamed('transactions'),
+              icon: const Icon(Icons.receipt_long_outlined),
+              label: const Text('Ver movimientos'),
+            ),
+            const SizedBox(height: 12),
+            FilledButton.tonalIcon(
               onPressed: () => context.goNamed('paymentMethods'),
               icon: const Icon(Icons.payment_outlined),
               label: const Text('Métodos de pago'),

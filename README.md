@@ -41,3 +41,7 @@ La versión web necesita `web/sqlite3.wasm` y `web/drift_worker.js`, incluidos e
 ## Métodos de pago
 
 El catálogo local inicia con efectivo, débito y crédito. Se pueden crear, editar, archivar y restaurar métodos, personalizar sus iconos y colores, y escoger el predeterminado. Siempre hay un método activo y un predeterminado activo; al archivar el predeterminado, se asigna otro automáticamente. El archivado conserva el ID para referencias futuras. Las bases de categorías v1 se actualizan a v2 mediante una migración probada que preserva sus datos.
+
+## Ingresos y gastos
+
+En Movimientos puedes registrar ingresos y gastos con importe en centavos exactos, fecha calendario, categoría activa, método de pago y nota opcional. Las filas se ordenan por fecha y hora de creación; se pueden editar, duplicar (con fecha de hoy) y eliminar. Las referencias a categorías y métodos se conservan por ID, por lo que archivar un elemento mantiene legible el historial. Las bases v2 se migran a v3 sin alterar los catálogos. Los resúmenes financieros y filtros se completarán en sus módulos correspondientes.
