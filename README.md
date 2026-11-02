@@ -53,3 +53,7 @@ El historial muestra movimientos en páginas de 20 y permite cargar más resulta
 ## Dashboard financiero
 
 Inicio muestra el resumen del mes seleccionado: ingresos, gastos y balance neto calculados en centavos, junto con los cinco movimientos más recientes. Puedes recorrer los meses y abrir el detalle de cada movimiento. Los accesos rápidos inician directamente el formulario de ingreso o gasto; los importes respetan el formato de moneda configurado. El resumen se deriva del stream local de movimientos y se actualiza al crear, editar o eliminar.
+
+## Metas de ahorro
+
+Metas de ahorro permite crear, editar, completar, reabrir y eliminar objetivos, consultar sus aportes y seguir el saldo frente al objetivo. Cada aporte se guarda una sola vez como gasto en la categoría activa **Ahorro** y queda vinculado a la meta; su progreso se calcula desde esos movimientos. Al eliminar una meta, los gastos permanecen en el historial y se desvinculan. La base v3 migra a v4 conservando los movimientos existentes.

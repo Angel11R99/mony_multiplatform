@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/home/presentation/home_page.dart';
 import '../../features/categories/presentation/categories_page.dart';
 import '../../features/payment_methods/presentation/payment_methods_page.dart';
+import '../../features/savings/presentation/savings_goals_page.dart';
 import '../../features/transactions/domain/transaction.dart';
 import '../../features/transactions/presentation/transaction_detail_page.dart';
 import '../../features/transactions/presentation/transaction_editor_page.dart';
@@ -37,6 +38,11 @@ GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
       path: '/payment-methods',
       name: 'paymentMethods',
       builder: (context, state) => const PaymentMethodsPage(),
+    ),
+    GoRoute(
+      path: '/savings-goals',
+      name: 'savingsGoals',
+      builder: (context, state) => const SavingsGoalsPage(),
     ),
     GoRoute(
       path: '/transactions',

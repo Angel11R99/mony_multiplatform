@@ -207,6 +207,7 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
 
   @override
   Widget build(BuildContext context) {
+    final isSavingsContribution = widget.existing?.savingsGoalId != null;
     final categories = ref.watch(activeCategoriesProvider(_categoryType));
     final methods = ref.watch(activePaymentMethodsProvider);
     final defaultMethod = ref.watch(defaultPaymentMethodProvider).value;
@@ -241,16 +242,17 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 112),
             children: [
               SegmentedButton<TransactionType>(
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: TransactionType.expense,
-                    label: Text('Gasto'),
-                    icon: Icon(Icons.south_west),
+                    label: const Text('Gasto'),
+                    icon: const Icon(Icons.south_west),
                   ),
                   ButtonSegment(
                     value: TransactionType.income,
-                    label: Text('Ingreso'),
-                    icon: Icon(Icons.north_east),
+                    label: const Text('Ingreso'),
+                    icon: const Icon(Icons.north_east),
+                    enabled: !isSavingsContribution,
                   ),
                 ],
                 selected: {_type},
@@ -259,6 +261,13 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
                   _categoryId = null;
                 }),
               ),
+              if (isSavingsContribution) ...[
+                const SizedBox(height: 6),
+                Text(
+                  'Este movimiento es un aporte vinculado a una meta y debe conservarse como gasto.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
               const SizedBox(height: 20),
               TextFormField(
                 controller: _amount,

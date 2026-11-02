@@ -205,6 +205,11 @@ class _DashboardContent extends StatelessWidget {
                       icon: const Icon(Icons.receipt_long_outlined),
                       label: const Text('Ver historial'),
                     ),
+                    TextButton.icon(
+                      onPressed: () => context.goNamed('savingsGoals'),
+                      icon: const Icon(Icons.savings_outlined),
+                      label: const Text('Metas de ahorro'),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
