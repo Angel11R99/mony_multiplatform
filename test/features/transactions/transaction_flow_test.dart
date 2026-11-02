@@ -40,6 +40,11 @@ void main() {
     expect(find.text('Pago de nómina'), findsOneWidget);
     expect(find.textContaining('+RD\$1,234.50'), findsOneWidget);
 
+    await tester.tap(find.text('Pago de nómina'));
+    await tester.pumpAndSettle();
+    expect(find.text('Detalle del movimiento'), findsOneWidget);
+    expect(find.text('Efectivo'), findsOneWidget);
+
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));
   });

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/home/presentation/home_page.dart';
 import '../../features/categories/presentation/categories_page.dart';
 import '../../features/payment_methods/presentation/payment_methods_page.dart';
+import '../../features/transactions/presentation/transaction_detail_page.dart';
 import '../../features/transactions/presentation/transaction_editor_page.dart';
 import '../../features/transactions/presentation/transactions_page.dart';
 import '../../features/preferences/presentation/settings_page.dart';
@@ -45,6 +46,16 @@ GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
           path: 'new',
           name: 'transactionNew',
           builder: (context, state) => const TransactionEditorPage(),
+        ),
+        GoRoute(
+          path: ':id',
+          name: 'transactionDetail',
+          builder: (context, state) {
+            final id = int.tryParse(state.pathParameters['id'] ?? '');
+            return id == null
+                ? UnknownRoutePage(location: state.uri.path)
+                : TransactionDetailPage(transactionId: id);
+          },
         ),
         GoRoute(
           path: ':id/edit',
