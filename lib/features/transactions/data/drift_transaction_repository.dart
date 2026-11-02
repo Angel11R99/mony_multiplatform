@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
 import '../domain/transaction.dart';
+import '../domain/transaction_history_filter.dart';
 import '../domain/transaction_repository.dart';
 import '../domain/transaction_validator.dart';
 
@@ -18,6 +19,104 @@ class DriftTransactionRepository implements TransactionRepository {
           ]))
           .watch()
           .map((rows) => rows.map(_fromRow).toList(growable: false));
+
+  @override
+  Stream<List<FinanceTransaction>> watchFiltered(
+    TransactionHistoryFilter filter,
+  ) {
+    final transactions = _database.transactions;
+    final categories = _database.categories;
+    final methods = _database.paymentMethods;
+    final query = _database.select(transactions).join([
+      innerJoin(categories, categories.id.equalsExp(transactions.categoryId)),
+      innerJoin(methods, methods.id.equalsExp(transactions.paymentMethodId)),
+    ]);
+    final predicates = <Expression<bool>>[];
+    if (filter.type != null) {
+      predicates.add(transactions.type.equals(filter.type!.name));
+    }
+    final categoryIds = filter.categoryIds.isNotEmpty
+        ? filter.categoryIds
+        : filter.categoryId == null
+        ? const <int>{}
+        : {filter.categoryId!};
+    if (categoryIds.isNotEmpty) {
+      predicates.add(transactions.categoryId.isIn(categoryIds));
+    }
+    if (filter.paymentMethodIds.isNotEmpty) {
+      predicates.add(
+        transactions.paymentMethodId.isIn(filter.paymentMethodIds),
+      );
+    }
+    if (filter.minimumAmountInCents != null) {
+      predicates.add(
+        transactions.amountInCents.isBiggerOrEqualValue(
+          filter.minimumAmountInCents!,
+        ),
+      );
+    }
+    if (filter.maximumAmountInCents != null) {
+      predicates.add(
+        transactions.amountInCents.isSmallerOrEqualValue(
+          filter.maximumAmountInCents!,
+        ),
+      );
+    }
+    if (filter.startDate != null) {
+      predicates.add(
+        transactions.dateEpochDay.isBiggerOrEqualValue(
+          dateToEpochDay(filter.startDate!),
+        ),
+      );
+    }
+    if (filter.endDate != null) {
+      predicates.add(
+        transactions.dateEpochDay.isSmallerOrEqualValue(
+          dateToEpochDay(filter.endDate!),
+        ),
+      );
+    }
+    final normalizedQuery = filter.query.trim().toLowerCase();
+    if (normalizedQuery.isNotEmpty) {
+      final escaped = normalizedQuery
+          .replaceAll(r'\', r'\\')
+          .replaceAll('%', r'\%')
+          .replaceAll('_', r'\_');
+      final pattern = '%$escaped%';
+      predicates.add(
+        transactions.description.like(pattern, escapeChar: r'\') |
+            categories.name.like(pattern, escapeChar: r'\') |
+            methods.name.like(pattern, escapeChar: r'\'),
+      );
+    }
+    if (predicates.isNotEmpty) query.where(predicates.reduce((a, b) => a & b));
+    final byNewest = [
+      OrderingTerm.desc(transactions.dateEpochDay),
+      OrderingTerm.desc(transactions.createdAt),
+      OrderingTerm.desc(transactions.id),
+    ];
+    query.orderBy(switch (filter.sortOrder) {
+      TransactionSortOrder.newest => byNewest,
+      TransactionSortOrder.oldest => [
+        OrderingTerm.asc(transactions.dateEpochDay),
+        OrderingTerm.asc(transactions.createdAt),
+        OrderingTerm.asc(transactions.id),
+      ],
+      TransactionSortOrder.amountHighToLow => [
+        OrderingTerm.desc(transactions.amountInCents),
+        ...byNewest,
+      ],
+      TransactionSortOrder.amountLowToHigh => [
+        OrderingTerm.asc(transactions.amountInCents),
+        ...byNewest,
+      ],
+    });
+    return query.watch().map(
+      (rows) => rows
+          .map((row) => _fromRow(row.readTable(transactions)))
+          .toList(growable: false),
+    );
+  }
 
   @override
   Future<FinanceTransaction?> get(int id) async => _fromNullable(

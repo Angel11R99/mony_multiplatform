@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'dart:async';
+import 'package:stream_transform/stream_transform.dart';
 
 import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_confirm_dialog.dart';
@@ -26,16 +28,42 @@ class TransactionsPage extends ConsumerStatefulWidget {
 class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   static const _pageSize = 20;
   final _search = TextEditingController();
+  final _minimumAmount = TextEditingController();
+  final _maximumAmount = TextEditingController();
+  final _queryChanges = StreamController<String>();
+  StreamSubscription<String>? _querySubscription;
+  String _appliedQuery = '';
   TransactionType? _type;
-  int? _categoryId;
+  Set<int> _categoryIds = {};
+  Set<int> _paymentMethodIds = {};
+  int? _minimumAmountInCents;
+  int? _maximumAmountInCents;
   DateTime? _startDate;
   DateTime? _endDate;
   TransactionSortOrder _sortOrder = TransactionSortOrder.newest;
   int _visibleCount = _pageSize;
 
   @override
+  void initState() {
+    super.initState();
+    _querySubscription = _queryChanges.stream
+        .debounce(const Duration(milliseconds: 300))
+        .listen((value) {
+          if (!mounted) return;
+          setState(() {
+            _appliedQuery = value;
+            _visibleCount = _pageSize;
+          });
+        });
+  }
+
+  @override
   void dispose() {
+    _querySubscription?.cancel();
+    _queryChanges.close();
     _search.dispose();
+    _minimumAmount.dispose();
+    _maximumAmount.dispose();
     super.dispose();
   }
 
@@ -45,9 +73,12 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   });
 
   TransactionHistoryFilter get _filter => TransactionHistoryFilter(
-    query: _search.text,
+    query: _appliedQuery,
     type: _type,
-    categoryId: _categoryId,
+    categoryIds: _categoryIds,
+    paymentMethodIds: _paymentMethodIds,
+    minimumAmountInCents: _minimumAmountInCents,
+    maximumAmountInCents: _maximumAmountInCents,
     startDate: _startDate,
     endDate: _endDate,
     sortOrder: _sortOrder,
@@ -74,6 +105,83 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         _endDate = DateTime(range.end.year, range.end.month, range.end.day);
       });
     }
+  }
+
+  Future<Set<int>?> _selectIds({
+    required String title,
+    required List<(int, String)> values,
+    required Set<int> selected,
+  }) => showDialog<Set<int>>(
+    context: context,
+    builder: (context) {
+      final draft = {...selected};
+      return StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(title),
+          content: SizedBox(
+            width: 360,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                for (final (id, name) in values)
+                  CheckboxListTile(
+                    value: draft.contains(id),
+                    title: Text(name),
+                    onChanged: (checked) => setDialogState(() {
+                      if (checked == true) {
+                        draft.add(id);
+                      } else {
+                        draft.remove(id);
+                      }
+                    }),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, <int>{}),
+              child: const Text('Quitar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, draft),
+              child: const Text('Aplicar'),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+
+  void _applyAmountRange() {
+    final minimumText = _minimumAmount.text.trim();
+    final maximumText = _maximumAmount.text.trim();
+    final minimum = minimumText.isEmpty
+        ? null
+        : MoneyFormatter.parseDopMinorUnits(minimumText);
+    final maximum = maximumText.isEmpty
+        ? null
+        : MoneyFormatter.parseDopMinorUnits(maximumText);
+    if ((minimumText.isNotEmpty && (minimum == null || minimum < 0)) ||
+        (maximumText.isNotEmpty && (maximum == null || maximum < 0))) {
+      MonyFeedback.error(context, 'Indica importes válidos y no negativos.');
+      return;
+    }
+    if (minimum != null && maximum != null && minimum > maximum) {
+      MonyFeedback.error(
+        context,
+        'El importe mínimo no puede superar el máximo.',
+      );
+      return;
+    }
+    _updateFilter(() {
+      _minimumAmountInCents = minimum;
+      _maximumAmountInCents = maximum;
+    });
   }
 
   Future<void> _delete(
@@ -133,7 +241,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final transactions = ref.watch(transactionsProvider);
+    final transactions = ref.watch(filteredTransactionsProvider(_filter));
     final categories = ref.watch(categoriesProvider);
     final methods = ref.watch(paymentMethodsProvider);
 
@@ -147,7 +255,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       body: transactions.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => _TransactionsError(
-          onRetry: () => ref.invalidate(transactionsProvider),
+          onRetry: () => ref.invalidate(filteredTransactionsProvider(_filter)),
         ),
         data: (items) => categories.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -171,10 +279,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     List<Category> categories,
     List<PaymentMethod> methods,
   ) {
-    final names = {
-      for (final category in categories) category.id: category.name,
-    };
-    final filtered = _filter.apply(items, categoryNames: names);
+    final filtered = items;
     final shown = filtered.take(_visibleCount).toList(growable: false);
     final groupByDate =
         _sortOrder == TransactionSortOrder.newest ||
@@ -211,11 +316,11 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             children: [
               TextField(
                 controller: _search,
-                onChanged: (_) => _updateFilter(() {}),
+                onChanged: (value) => _queryChanges.add(value),
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
                   labelText: 'Buscar movimientos',
-                  hintText: 'Nota o categoría',
+                  hintText: 'Descripción, categoría o método',
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: _search.text.isEmpty
                       ? null
@@ -223,7 +328,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                           tooltip: 'Limpiar búsqueda',
                           onPressed: () {
                             _search.clear();
-                            _updateFilter(() {});
+                            _queryChanges.add('');
                           },
                           icon: const Icon(Icons.close),
                         ),
@@ -240,36 +345,78 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     value: _type,
                     onChanged: (value) => _updateFilter(() => _type = value),
                   ),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final selected = await _selectIds(
+                        title: 'Categorías',
+                        values: categories
+                            .map((item) => (item.id, item.name))
+                            .toList(),
+                        selected: _categoryIds,
+                      );
+                      if (selected != null) {
+                        _updateFilter(() => _categoryIds = selected);
+                      }
+                    },
+                    icon: const Icon(Icons.category_outlined),
+                    label: Text(
+                      _categoryIds.isEmpty
+                          ? 'Categorías'
+                          : 'Categorías (${_categoryIds.length})',
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final selected = await _selectIds(
+                        title: 'Métodos de pago',
+                        values: methods
+                            .map((item) => (item.id, item.name))
+                            .toList(),
+                        selected: _paymentMethodIds,
+                      );
+                      if (selected != null) {
+                        _updateFilter(() => _paymentMethodIds = selected);
+                      }
+                    },
+                    icon: const Icon(Icons.payments_outlined),
+                    label: Text(
+                      _paymentMethodIds.isEmpty
+                          ? 'Métodos'
+                          : 'Métodos (${_paymentMethodIds.length})',
+                    ),
+                  ),
                   SizedBox(
-                    width: 190,
-                    child: DropdownButtonFormField<int?>(
-                      key: ValueKey(_categoryId),
-                      initialValue: _categoryId,
-                      isExpanded: true,
+                    width: 130,
+                    child: TextField(
+                      controller: _minimumAmount,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: const InputDecoration(
-                        labelText: 'Categoría',
+                        labelText: 'Mínimo RD\$',
                         isDense: true,
                         border: OutlineInputBorder(),
                       ),
-                      items: [
-                        const DropdownMenuItem<int?>(
-                          value: null,
-                          child: Text('Todas las categorías'),
-                        ),
-                        ...categories.map(
-                          (category) => DropdownMenuItem<int?>(
-                            value: category.id,
-                            child: Text(
-                              category.isActive
-                                  ? category.name
-                                  : '${category.name} (archivada)',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                      ],
-                      onChanged: (value) =>
-                          _updateFilter(() => _categoryId = value),
+                      onSubmitted: (_) => _applyAmountRange(),
+                    ),
+                  ),
+                  FilledButton.tonal(
+                    onPressed: _applyAmountRange,
+                    child: const Text('Aplicar importe'),
+                  ),
+                  SizedBox(
+                    width: 130,
+                    child: TextField(
+                      controller: _maximumAmount,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Máximo RD\$',
+                        isDense: true,
+                        border: OutlineInputBorder(),
+                      ),
+                      onSubmitted: (_) => _applyAmountRange(),
                     ),
                   ),
                   OutlinedButton.icon(
@@ -312,15 +459,24 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       },
                     ),
                   ),
-                  if (_filter.hasCriteria)
+                  if (_filter.hasCriteria ||
+                      _search.text.isNotEmpty ||
+                      _sortOrder != TransactionSortOrder.newest)
                     TextButton.icon(
                       onPressed: () {
                         _search.clear();
+                        _minimumAmount.clear();
+                        _maximumAmount.clear();
+                        _appliedQuery = '';
                         _updateFilter(() {
                           _type = null;
-                          _categoryId = null;
+                          _categoryIds = {};
+                          _paymentMethodIds = {};
+                          _minimumAmountInCents = null;
+                          _maximumAmountInCents = null;
                           _startDate = null;
                           _endDate = null;
+                          _sortOrder = TransactionSortOrder.newest;
                         });
                       },
                       icon: const Icon(Icons.filter_alt_off),
@@ -328,6 +484,68 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     ),
                 ],
               ),
+              if (_filter.hasCriteria)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Wrap(
+                    spacing: 6,
+                    children: [
+                      if (_appliedQuery.isNotEmpty)
+                        InputChip(
+                          label: Text('Texto: $_appliedQuery'),
+                          onDeleted: () {
+                            _search.clear();
+                            _appliedQuery = '';
+                            _updateFilter(() {});
+                          },
+                        ),
+                      if (_type != null)
+                        InputChip(
+                          label: Text(
+                            _type == TransactionType.income
+                                ? 'Ingresos'
+                                : 'Gastos',
+                          ),
+                          onDeleted: () => _updateFilter(() => _type = null),
+                        ),
+                      if (_categoryIds.isNotEmpty)
+                        InputChip(
+                          label: Text('Categorías: ${_categoryIds.length}'),
+                          onDeleted: () =>
+                              _updateFilter(() => _categoryIds = {}),
+                        ),
+                      if (_paymentMethodIds.isNotEmpty)
+                        InputChip(
+                          label: Text('Métodos: ${_paymentMethodIds.length}'),
+                          onDeleted: () =>
+                              _updateFilter(() => _paymentMethodIds = {}),
+                        ),
+                      if (_minimumAmountInCents != null ||
+                          _maximumAmountInCents != null)
+                        InputChip(
+                          label: Text(
+                            'Importe: ${_minimumAmountInCents == null ? '0' : MoneyFormatter.toDopInput(_minimumAmountInCents!)}–${_maximumAmountInCents == null ? '∞' : MoneyFormatter.toDopInput(_maximumAmountInCents!)}',
+                          ),
+                          onDeleted: () {
+                            _minimumAmount.clear();
+                            _maximumAmount.clear();
+                            _updateFilter(() {
+                              _minimumAmountInCents = null;
+                              _maximumAmountInCents = null;
+                            });
+                          },
+                        ),
+                      if (_startDate != null || _endDate != null)
+                        InputChip(
+                          label: Text(_rangeLabel),
+                          onDeleted: () => _updateFilter(() {
+                            _startDate = null;
+                            _endDate = null;
+                          }),
+                        ),
+                    ],
+                  ),
+                ),
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerLeft,

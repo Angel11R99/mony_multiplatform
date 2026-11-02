@@ -7,6 +7,10 @@ class TransactionHistoryFilter {
     this.query = '',
     this.type,
     this.categoryId,
+    this.categoryIds = const {},
+    this.paymentMethodIds = const {},
+    this.minimumAmountInCents,
+    this.maximumAmountInCents,
     this.startDate,
     this.endDate,
     this.sortOrder = TransactionSortOrder.newest,
@@ -15,6 +19,10 @@ class TransactionHistoryFilter {
   final String query;
   final TransactionType? type;
   final int? categoryId;
+  final Set<int> categoryIds;
+  final Set<int> paymentMethodIds;
+  final int? minimumAmountInCents;
+  final int? maximumAmountInCents;
   final DateTime? startDate;
   final DateTime? endDate;
   final TransactionSortOrder sortOrder;
@@ -23,6 +31,10 @@ class TransactionHistoryFilter {
       query.trim().isNotEmpty ||
       type != null ||
       categoryId != null ||
+      categoryIds.isNotEmpty ||
+      paymentMethodIds.isNotEmpty ||
+      minimumAmountInCents != null ||
+      maximumAmountInCents != null ||
       startDate != null ||
       endDate != null;
 
@@ -36,6 +48,22 @@ class TransactionHistoryFilter {
     final result = transactions.where((transaction) {
       if (type != null && transaction.type != type) return false;
       if (categoryId != null && transaction.categoryId != categoryId) {
+        return false;
+      }
+      if (categoryIds.isNotEmpty &&
+          !categoryIds.contains(transaction.categoryId)) {
+        return false;
+      }
+      if (paymentMethodIds.isNotEmpty &&
+          !paymentMethodIds.contains(transaction.paymentMethodId)) {
+        return false;
+      }
+      if (minimumAmountInCents != null &&
+          transaction.amountInCents < minimumAmountInCents!) {
+        return false;
+      }
+      if (maximumAmountInCents != null &&
+          transaction.amountInCents > maximumAmountInCents!) {
         return false;
       }
       final day = dateToEpochDay(transaction.date);
@@ -64,11 +92,12 @@ class TransactionHistoryFilter {
           : -byId;
       return switch (sortOrder) {
         TransactionSortOrder.newest => byNewest,
-        TransactionSortOrder.oldest => byDate != 0
-            ? byDate
-            : byCreated != 0
-            ? byCreated
-            : byId,
+        TransactionSortOrder.oldest =>
+          byDate != 0
+              ? byDate
+              : byCreated != 0
+              ? byCreated
+              : byId,
         TransactionSortOrder.amountHighToLow =>
           a.amountInCents != b.amountInCents
               ? b.amountInCents.compareTo(a.amountInCents)
@@ -81,4 +110,35 @@ class TransactionHistoryFilter {
     });
     return result;
   }
+
+  @override
+  bool operator ==(Object other) =>
+      other is TransactionHistoryFilter &&
+      other.query == query &&
+      other.type == type &&
+      other.categoryId == categoryId &&
+      _sameSet(other.categoryIds, categoryIds) &&
+      _sameSet(other.paymentMethodIds, paymentMethodIds) &&
+      other.minimumAmountInCents == minimumAmountInCents &&
+      other.maximumAmountInCents == maximumAmountInCents &&
+      other.startDate == startDate &&
+      other.endDate == endDate &&
+      other.sortOrder == sortOrder;
+
+  @override
+  int get hashCode => Object.hash(
+    query,
+    type,
+    categoryId,
+    Object.hashAllUnordered(categoryIds),
+    Object.hashAllUnordered(paymentMethodIds),
+    minimumAmountInCents,
+    maximumAmountInCents,
+    startDate,
+    endDate,
+    sortOrder,
+  );
+
+  static bool _sameSet(Set<int> first, Set<int> second) =>
+      first.length == second.length && first.containsAll(second);
 }
