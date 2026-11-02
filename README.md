@@ -65,3 +65,7 @@ Los presupuestos aplican un límite mensual o quincenal y muestran ingresos, gas
 ## Estadísticas
 
 Estadísticas resume ingresos, gastos, balance y actividad para el ciclo actual, el mes, el año, todo el historial o un rango personalizado. Compara períodos, muestra la distribución por categoría y la evolución mensual de ingresos y gastos; también presenta avisos visuales al acercarse o superar los límites de categoría del ciclo actual. Los cálculos usan movimientos locales y cantidades enteras en centavos.
+
+## Listas de compras
+
+Las listas guardan productos con cantidad y precios estimados y reales, permiten marcar lo comprado y registrar descuentos, cupones, impuestos y recargos. El total actual usa solo productos marcados como comprados; finalizar requiere precios reales, registra el gasto con categoría, fecha y método de pago, o deja el pago a crédito pendiente. Las listas se pueden duplicar y reabrir; los productos se conservan al reabrir.

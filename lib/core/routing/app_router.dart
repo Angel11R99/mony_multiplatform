@@ -12,6 +12,8 @@ import '../../features/transactions/presentation/transaction_editor_page.dart';
 import '../../features/transactions/presentation/transactions_page.dart';
 import '../../features/preferences/presentation/settings_page.dart';
 import '../../features/statistics/presentation/statistics_page.dart';
+import '../../features/shopping_lists/presentation/shopping_list_page.dart';
+import '../../features/shopping_lists/presentation/shopping_lists_page.dart';
 
 GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
   initialLocation: initialLocation,
@@ -55,6 +57,23 @@ GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
       path: '/statistics',
       name: 'statistics',
       builder: (context, state) => const StatisticsPage(),
+    ),
+    GoRoute(
+      path: '/shopping-lists',
+      name: 'shoppingLists',
+      builder: (context, state) => const ShoppingListsPage(),
+      routes: [
+        GoRoute(
+          path: ':id',
+          name: 'shoppingListDetail',
+          builder: (context, state) {
+            final id = int.tryParse(state.pathParameters['id'] ?? '');
+            return id == null
+                ? UnknownRoutePage(location: state.uri.path)
+                : ShoppingListPage(listId: id);
+          },
+        ),
+      ],
     ),
     GoRoute(
       path: '/transactions',

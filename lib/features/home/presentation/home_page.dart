@@ -220,6 +220,11 @@ class _DashboardContent extends StatelessWidget {
                       icon: const Icon(Icons.query_stats_outlined),
                       label: const Text('Estadísticas'),
                     ),
+                    TextButton.icon(
+                      onPressed: () => context.goNamed('shoppingLists'),
+                      icon: const Icon(Icons.shopping_cart_outlined),
+                      label: const Text('Listas de compras'),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
