@@ -6,6 +6,7 @@ import '../../features/budgets/data/budgets_table.dart';
 import '../../features/categories/domain/category.dart';
 import '../../features/payment_methods/data/payment_methods_table.dart';
 import '../../features/savings/data/savings_goals_table.dart';
+import '../../features/shopping_lists/data/shopping_lists_table.dart';
 import '../../features/transactions/data/transactions_table.dart';
 import 'app_database.steps.dart';
 
@@ -19,6 +20,10 @@ part 'app_database.g.dart';
     SavingsGoals,
     Budgets,
     BudgetCycles,
+    ShoppingLists,
+    ShoppingListItems,
+    ShoppingAdjustments,
+    ShoppingPayables,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -79,6 +84,15 @@ class AppDatabase extends _$AppDatabase {
         await migrator.createTable(schema.budgetCycles);
         await migrator.create(schema.budgetCyclesStartEndIdx);
       },
+      from5To6: (migrator, schema) async {
+        await migrator.createTable(schema.shoppingLists);
+        await migrator.create(schema.shoppingListsExpenseIdx);
+        await migrator.createTable(schema.shoppingListItems);
+        await migrator.create(schema.shoppingListItemsListIdx);
+        await migrator.createTable(schema.shoppingAdjustments);
+        await migrator.create(schema.shoppingAdjustmentsListIdx);
+        await migrator.createTable(schema.shoppingPayables);
+      },
     ),
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -86,7 +100,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 }
 
 const _initialCategories = <(String, CategoryType, String, int)>[

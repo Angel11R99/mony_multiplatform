@@ -10,6 +10,7 @@ import 'generated/schema_v2.dart' as v2;
 import 'generated/schema_v3.dart' as v3;
 import 'generated/schema_v4.dart' as v4;
 import 'generated/schema_v5.dart' as v5;
+import 'generated/schema_v6.dart' as v6;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -270,6 +271,68 @@ void main() {
           expect(goals.single.targetAmountInCents, 125000);
           expect(await database.select(database.budgets).get(), isEmpty);
           expect(await database.select(database.budgetCycles).get(), isEmpty);
+        },
+      );
+    },
+  );
+
+  test(
+    'v5 to v6 preserves finance data and creates shopping tables empty',
+    () async {
+      const oldGoals = <v5.SavingsGoalsData>[
+        v5.SavingsGoalsData(
+          id: 73,
+          name: 'Reserva',
+          targetAmountInCents: 125000,
+          createdAt: 1_762_000_000,
+          completedAt: null,
+        ),
+      ];
+      const oldCategories = <v5.CategoriesData>[
+        v5.CategoriesData(
+          id: 315,
+          name: 'Mercado',
+          normalizedName: 'mercado',
+          type: 'expense',
+          icon: 'shopping_cart',
+          colorArgb: 0xFF3B82F6,
+          isActive: 1,
+          createdAt: 1_762_000_000,
+        ),
+      ];
+
+      await verifier.testWithDataIntegrity(
+        oldVersion: 5,
+        newVersion: 6,
+        createOld: v5.DatabaseAtV5.new,
+        createNew: v6.DatabaseAtV6.new,
+        openTestedDatabase: AppDatabase.new,
+        createItems: (batch, oldDatabase) {
+          batch.insertAll(oldDatabase.savingsGoals, oldGoals);
+          batch.insertAll(oldDatabase.categories, oldCategories);
+        },
+        validateItems: (database) async {
+          expect(
+            await database.select(database.savingsGoals).get(),
+            hasLength(1),
+          );
+          expect(
+            await database.select(database.categories).get(),
+            hasLength(1),
+          );
+          expect(await database.select(database.shoppingLists).get(), isEmpty);
+          expect(
+            await database.select(database.shoppingListItems).get(),
+            isEmpty,
+          );
+          expect(
+            await database.select(database.shoppingAdjustments).get(),
+            isEmpty,
+          );
+          expect(
+            await database.select(database.shoppingPayables).get(),
+            isEmpty,
+          );
         },
       );
     },
