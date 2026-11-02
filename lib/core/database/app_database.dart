@@ -3,10 +3,12 @@ import 'package:drift_flutter/drift_flutter.dart';
 
 import '../../features/categories/data/categories_table.dart';
 import '../../features/categories/domain/category.dart';
+import '../../features/payment_methods/data/payment_methods_table.dart';
+import 'app_database.steps.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Categories])
+@DriftDatabase(tables: [Categories, PaymentMethods])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
     : super(
@@ -40,11 +42,19 @@ class AppDatabase extends _$AppDatabase {
               .toList(),
         );
       });
+      await _seedPaymentMethods();
     },
+    onUpgrade: stepByStep(
+      from1To2: (migrator, schema) async {
+        await migrator.createTable(schema.paymentMethods);
+        await migrator.create(schema.paymentMethodsSingleDefault);
+        await _seedPaymentMethods();
+      },
+    ),
   );
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 }
 
 const _initialCategories = <(String, CategoryType, String, int)>[
@@ -70,3 +80,30 @@ const _initialCategories = <(String, CategoryType, String, int)>[
   ('Emergencias', CategoryType.expense, 'emergency', 0xFFEF4444),
   ('Otros', CategoryType.expense, 'more_horiz', 0xFF71717A),
 ];
+
+const _initialPaymentMethods = <(String, String, int, bool)>[
+  ('Efectivo', 'cash', 0xFF16A34A, true),
+  ('Débito', 'debit_card', 0xFF3B82F6, false),
+  ('Crédito', 'credit_card', 0xFF9333EA, false),
+];
+
+extension on AppDatabase {
+  Future<void> _seedPaymentMethods() async {
+    await batch((batch) {
+      batch.insertAll(
+        paymentMethods,
+        _initialPaymentMethods
+            .map(
+              (method) => PaymentMethodsCompanion.insert(
+                name: method.$1,
+                normalizedName: method.$1.toLowerCase(),
+                icon: method.$2,
+                colorArgb: method.$3,
+                isDefault: Value(method.$4),
+              ),
+            )
+            .toList(),
+      );
+    });
+  }
+}

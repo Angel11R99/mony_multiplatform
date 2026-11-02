@@ -579,15 +579,544 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
   }
 }
 
+class $PaymentMethodsTable extends PaymentMethods
+    with TableInfo<$PaymentMethodsTable, PaymentMethodRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PaymentMethodsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 40,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _normalizedNameMeta = const VerificationMeta(
+    'normalizedName',
+  );
+  @override
+  late final GeneratedColumn<String> normalizedName = GeneratedColumn<String>(
+    'normalized_name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 40,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+    'icon',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 40,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _colorArgbMeta = const VerificationMeta(
+    'colorArgb',
+  );
+  @override
+  late final GeneratedColumn<int> colorArgb = GeneratedColumn<int>(
+    'color_argb',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _isDefaultMeta = const VerificationMeta(
+    'isDefault',
+  );
+  @override
+  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
+    'is_default',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_default" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    normalizedName,
+    icon,
+    colorArgb,
+    isActive,
+    isDefault,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'payment_methods';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PaymentMethodRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('normalized_name')) {
+      context.handle(
+        _normalizedNameMeta,
+        normalizedName.isAcceptableOrUnknown(
+          data['normalized_name']!,
+          _normalizedNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_normalizedNameMeta);
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_iconMeta);
+    }
+    if (data.containsKey('color_argb')) {
+      context.handle(
+        _colorArgbMeta,
+        colorArgb.isAcceptableOrUnknown(data['color_argb']!, _colorArgbMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_colorArgbMeta);
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('is_default')) {
+      context.handle(
+        _isDefaultMeta,
+        isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {normalizedName},
+  ];
+  @override
+  PaymentMethodRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PaymentMethodRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      normalizedName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}normalized_name'],
+      )!,
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      )!,
+      colorArgb: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}color_argb'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      isDefault: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_default'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PaymentMethodsTable createAlias(String alias) {
+    return $PaymentMethodsTable(attachedDatabase, alias);
+  }
+}
+
+class PaymentMethodRow extends DataClass
+    implements Insertable<PaymentMethodRow> {
+  final int id;
+  final String name;
+  final String normalizedName;
+  final String icon;
+  final int colorArgb;
+  final bool isActive;
+  final bool isDefault;
+  final DateTime createdAt;
+  const PaymentMethodRow({
+    required this.id,
+    required this.name,
+    required this.normalizedName,
+    required this.icon,
+    required this.colorArgb,
+    required this.isActive,
+    required this.isDefault,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['normalized_name'] = Variable<String>(normalizedName);
+    map['icon'] = Variable<String>(icon);
+    map['color_argb'] = Variable<int>(colorArgb);
+    map['is_active'] = Variable<bool>(isActive);
+    map['is_default'] = Variable<bool>(isDefault);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  PaymentMethodsCompanion toCompanion(bool nullToAbsent) {
+    return PaymentMethodsCompanion(
+      id: Value(id),
+      name: Value(name),
+      normalizedName: Value(normalizedName),
+      icon: Value(icon),
+      colorArgb: Value(colorArgb),
+      isActive: Value(isActive),
+      isDefault: Value(isDefault),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory PaymentMethodRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PaymentMethodRow(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      normalizedName: serializer.fromJson<String>(json['normalizedName']),
+      icon: serializer.fromJson<String>(json['icon']),
+      colorArgb: serializer.fromJson<int>(json['colorArgb']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      isDefault: serializer.fromJson<bool>(json['isDefault']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'normalizedName': serializer.toJson<String>(normalizedName),
+      'icon': serializer.toJson<String>(icon),
+      'colorArgb': serializer.toJson<int>(colorArgb),
+      'isActive': serializer.toJson<bool>(isActive),
+      'isDefault': serializer.toJson<bool>(isDefault),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  PaymentMethodRow copyWith({
+    int? id,
+    String? name,
+    String? normalizedName,
+    String? icon,
+    int? colorArgb,
+    bool? isActive,
+    bool? isDefault,
+    DateTime? createdAt,
+  }) => PaymentMethodRow(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    normalizedName: normalizedName ?? this.normalizedName,
+    icon: icon ?? this.icon,
+    colorArgb: colorArgb ?? this.colorArgb,
+    isActive: isActive ?? this.isActive,
+    isDefault: isDefault ?? this.isDefault,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  PaymentMethodRow copyWithCompanion(PaymentMethodsCompanion data) {
+    return PaymentMethodRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      normalizedName: data.normalizedName.present
+          ? data.normalizedName.value
+          : this.normalizedName,
+      icon: data.icon.present ? data.icon.value : this.icon,
+      colorArgb: data.colorArgb.present ? data.colorArgb.value : this.colorArgb,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PaymentMethodRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('normalizedName: $normalizedName, ')
+          ..write('icon: $icon, ')
+          ..write('colorArgb: $colorArgb, ')
+          ..write('isActive: $isActive, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    normalizedName,
+    icon,
+    colorArgb,
+    isActive,
+    isDefault,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PaymentMethodRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.normalizedName == this.normalizedName &&
+          other.icon == this.icon &&
+          other.colorArgb == this.colorArgb &&
+          other.isActive == this.isActive &&
+          other.isDefault == this.isDefault &&
+          other.createdAt == this.createdAt);
+}
+
+class PaymentMethodsCompanion extends UpdateCompanion<PaymentMethodRow> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String> normalizedName;
+  final Value<String> icon;
+  final Value<int> colorArgb;
+  final Value<bool> isActive;
+  final Value<bool> isDefault;
+  final Value<DateTime> createdAt;
+  const PaymentMethodsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.normalizedName = const Value.absent(),
+    this.icon = const Value.absent(),
+    this.colorArgb = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  PaymentMethodsCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required String normalizedName,
+    required String icon,
+    required int colorArgb,
+    this.isActive = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : name = Value(name),
+       normalizedName = Value(normalizedName),
+       icon = Value(icon),
+       colorArgb = Value(colorArgb);
+  static Insertable<PaymentMethodRow> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? normalizedName,
+    Expression<String>? icon,
+    Expression<int>? colorArgb,
+    Expression<bool>? isActive,
+    Expression<bool>? isDefault,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (normalizedName != null) 'normalized_name': normalizedName,
+      if (icon != null) 'icon': icon,
+      if (colorArgb != null) 'color_argb': colorArgb,
+      if (isActive != null) 'is_active': isActive,
+      if (isDefault != null) 'is_default': isDefault,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  PaymentMethodsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<String>? normalizedName,
+    Value<String>? icon,
+    Value<int>? colorArgb,
+    Value<bool>? isActive,
+    Value<bool>? isDefault,
+    Value<DateTime>? createdAt,
+  }) {
+    return PaymentMethodsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      normalizedName: normalizedName ?? this.normalizedName,
+      icon: icon ?? this.icon,
+      colorArgb: colorArgb ?? this.colorArgb,
+      isActive: isActive ?? this.isActive,
+      isDefault: isDefault ?? this.isDefault,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (normalizedName.present) {
+      map['normalized_name'] = Variable<String>(normalizedName.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
+    }
+    if (colorArgb.present) {
+      map['color_argb'] = Variable<int>(colorArgb.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (isDefault.present) {
+      map['is_default'] = Variable<bool>(isDefault.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PaymentMethodsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('normalizedName: $normalizedName, ')
+          ..write('icon: $icon, ')
+          ..write('colorArgb: $colorArgb, ')
+          ..write('isActive: $isActive, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $CategoriesTable categories = $CategoriesTable(this);
+  late final $PaymentMethodsTable paymentMethods = $PaymentMethodsTable(this);
+  late final Index paymentMethodsSingleDefault = Index(
+    'payment_methods_single_default',
+    'CREATE UNIQUE INDEX payment_methods_single_default ON payment_methods (is_default) WHERE is_default = 1',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [categories];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    categories,
+    paymentMethods,
+    paymentMethodsSingleDefault,
+  ];
 }
 
 typedef $$CategoriesTableCreateCompanionBuilder =
@@ -873,10 +1402,280 @@ typedef $$CategoriesTableProcessedTableManager =
       CategoryRow,
       PrefetchHooks Function()
     >;
+typedef $$PaymentMethodsTableCreateCompanionBuilder =
+    PaymentMethodsCompanion Function({
+      Value<int> id,
+      required String name,
+      required String normalizedName,
+      required String icon,
+      required int colorArgb,
+      Value<bool> isActive,
+      Value<bool> isDefault,
+      Value<DateTime> createdAt,
+    });
+typedef $$PaymentMethodsTableUpdateCompanionBuilder =
+    PaymentMethodsCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String> normalizedName,
+      Value<String> icon,
+      Value<int> colorArgb,
+      Value<bool> isActive,
+      Value<bool> isDefault,
+      Value<DateTime> createdAt,
+    });
+
+class $$PaymentMethodsTableFilterComposer
+    extends Composer<_$AppDatabase, $PaymentMethodsTable> {
+  $$PaymentMethodsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get normalizedName => $composableBuilder(
+    column: $table.normalizedName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get colorArgb => $composableBuilder(
+    column: $table.colorArgb,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PaymentMethodsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PaymentMethodsTable> {
+  $$PaymentMethodsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get normalizedName => $composableBuilder(
+    column: $table.normalizedName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get colorArgb => $composableBuilder(
+    column: $table.colorArgb,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PaymentMethodsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PaymentMethodsTable> {
+  $$PaymentMethodsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get normalizedName => $composableBuilder(
+    column: $table.normalizedName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+
+  GeneratedColumn<int> get colorArgb =>
+      $composableBuilder(column: $table.colorArgb, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDefault =>
+      $composableBuilder(column: $table.isDefault, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$PaymentMethodsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PaymentMethodsTable,
+          PaymentMethodRow,
+          $$PaymentMethodsTableFilterComposer,
+          $$PaymentMethodsTableOrderingComposer,
+          $$PaymentMethodsTableAnnotationComposer,
+          $$PaymentMethodsTableCreateCompanionBuilder,
+          $$PaymentMethodsTableUpdateCompanionBuilder,
+          (
+            PaymentMethodRow,
+            BaseReferences<
+              _$AppDatabase,
+              $PaymentMethodsTable,
+              PaymentMethodRow
+            >,
+          ),
+          PaymentMethodRow,
+          PrefetchHooks Function()
+        > {
+  $$PaymentMethodsTableTableManager(
+    _$AppDatabase db,
+    $PaymentMethodsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PaymentMethodsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PaymentMethodsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PaymentMethodsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> normalizedName = const Value.absent(),
+                Value<String> icon = const Value.absent(),
+                Value<int> colorArgb = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => PaymentMethodsCompanion(
+                id: id,
+                name: name,
+                normalizedName: normalizedName,
+                icon: icon,
+                colorArgb: colorArgb,
+                isActive: isActive,
+                isDefault: isDefault,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                required String normalizedName,
+                required String icon,
+                required int colorArgb,
+                Value<bool> isActive = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => PaymentMethodsCompanion.insert(
+                id: id,
+                name: name,
+                normalizedName: normalizedName,
+                icon: icon,
+                colorArgb: colorArgb,
+                isActive: isActive,
+                isDefault: isDefault,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$PaymentMethodsTable, PaymentMethodRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $PaymentMethodsTable,
+                    PaymentMethodRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PaymentMethodsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PaymentMethodsTable,
+      PaymentMethodRow,
+      $$PaymentMethodsTableFilterComposer,
+      $$PaymentMethodsTableOrderingComposer,
+      $$PaymentMethodsTableAnnotationComposer,
+      $$PaymentMethodsTableCreateCompanionBuilder,
+      $$PaymentMethodsTableUpdateCompanionBuilder,
+      (
+        PaymentMethodRow,
+        BaseReferences<_$AppDatabase, $PaymentMethodsTable, PaymentMethodRow>,
+      ),
+      PaymentMethodRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
   $$CategoriesTableTableManager get categories =>
       $$CategoriesTableTableManager(_db, _db.categories);
+  $$PaymentMethodsTableTableManager get paymentMethods =>
+      $$PaymentMethodsTableTableManager(_db, _db.paymentMethods);
 }
