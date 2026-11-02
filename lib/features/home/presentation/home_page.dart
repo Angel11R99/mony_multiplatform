@@ -10,6 +10,11 @@ class HomePage extends StatelessWidget {
       title: const Text('Mony'),
       actions: [
         IconButton(
+          tooltip: 'Métodos de pago',
+          onPressed: () => context.goNamed('paymentMethods'),
+          icon: const Icon(Icons.payment_outlined),
+        ),
+        IconButton(
           tooltip: 'Administrar categorías',
           onPressed: () => context.goNamed('categories'),
           icon: const Icon(Icons.category_outlined),
@@ -50,6 +55,12 @@ class HomePage extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 24),
+            FilledButton.tonalIcon(
+              onPressed: () => context.goNamed('paymentMethods'),
+              icon: const Icon(Icons.payment_outlined),
+              label: const Text('Métodos de pago'),
+            ),
+            const SizedBox(height: 12),
             FilledButton.tonalIcon(
               onPressed: () => context.goNamed('categories'),
               icon: const Icon(Icons.category_outlined),

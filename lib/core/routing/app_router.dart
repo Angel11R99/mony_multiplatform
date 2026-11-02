@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/home/presentation/home_page.dart';
 import '../../features/categories/presentation/categories_page.dart';
+import '../../features/payment_methods/presentation/payment_methods_page.dart';
 import '../../features/preferences/presentation/settings_page.dart';
 
 GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
@@ -27,6 +28,11 @@ GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
       path: '/categories',
       name: 'categories',
       builder: (context, state) => const CategoriesPage(),
+    ),
+    GoRoute(
+      path: '/payment-methods',
+      name: 'paymentMethods',
+      builder: (context, state) => const PaymentMethodsPage(),
     ),
   ],
   errorBuilder: (context, state) => UnknownRoutePage(location: state.uri.path),

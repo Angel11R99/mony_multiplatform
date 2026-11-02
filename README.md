@@ -37,3 +37,7 @@ Desde el botón de ajustes en Inicio puedes elegir tema del sistema, claro u osc
 Las categorías se guardan localmente en SQLite mediante Drift. La primera apertura crea el catálogo inicial de 21 categorías de Mony. Se pueden crear, editar, archivar y restaurar categorías, con icono, color y límite de presupuesto opcional. Las categorías archivadas mantienen su ID para que los movimientos históricos puedan seguir apuntando a ellas; los selectores de movimientos solo ofrecen categorías activas. Los nombres se validan sin distinguir mayúsculas y se impide archivar la última categoría de ingresos activa.
 
 La versión web necesita `web/sqlite3.wasm` y `web/drift_worker.js`, incluidos en el proyecto y servidos junto con la app Flutter.
+
+## Métodos de pago
+
+El catálogo local inicia con efectivo, débito y crédito. Se pueden crear, editar, archivar y restaurar métodos, personalizar sus iconos y colores, y escoger el predeterminado. Siempre hay un método activo y un predeterminado activo; al archivar el predeterminado, se asigna otro automáticamente. El archivado conserva el ID para referencias futuras. Las bases de categorías v1 se actualizan a v2 mediante una migración probada que preserva sus datos.
