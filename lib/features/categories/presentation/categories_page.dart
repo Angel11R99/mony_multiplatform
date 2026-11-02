@@ -4,6 +4,8 @@ import '../../../core/widgets/mony_feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/money/money_formatter.dart';
+import '../../../core/theme/finance_color_names.dart';
+import '../domain/categories_repository.dart';
 import '../domain/category.dart';
 import '../domain/category_validator.dart';
 import 'categories_providers.dart';
@@ -63,6 +65,8 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
         );
         _message('Categoría actualizada.');
       }
+    } on InvalidCategoryException catch (error) {
+      _message(error.message);
     } catch (_) {
       _message('No se pudo guardar la categoría. Inténtalo de nuevo.');
     } finally {
@@ -87,12 +91,18 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
       if (category.isActive && mounted) {
         MonyFeedback.undo(
           context,
-          'Categoría archivada.',
+          'Categoría archivada. Se conserva el historial y no estará disponible en movimientos nuevos.',
           onUndo: () => repository.setActive(category.id, true),
         );
       } else {
         _message('Categoría restaurada.');
       }
+    } on LastActiveIncomeCategoryException {
+      _message('Debe existir al menos una categoría de ingresos activa.');
+    } on CategoryUnavailableException {
+      _message(
+        'No encontramos la categoría. Actualiza la lista e inténtalo de nuevo.',
+      );
     } catch (_) {
       _message('No se pudo actualizar la categoría.');
     }
@@ -456,17 +466,20 @@ class _CategoryEditorState extends State<_CategoryEditor> {
               runSpacing: 8,
               children: categoryIcons.entries
                   .map(
-                    (entry) => IconButton.filledTonal(
-                      tooltip: entry.key,
-                      onPressed: () => setState(() => _icon = entry.key),
-                      style: IconButton.styleFrom(
-                        backgroundColor: _icon == entry.key
-                            ? Color(_color).withValues(alpha: 0.28)
-                            : null,
-                      ),
-                      icon: Icon(
-                        entry.value,
-                        color: _icon == entry.key ? Color(_color) : null,
+                    (entry) => Semantics(
+                      selected: _icon == entry.key,
+                      child: IconButton.filledTonal(
+                        tooltip: 'Icono ${entry.key}',
+                        onPressed: () => setState(() => _icon = entry.key),
+                        style: IconButton.styleFrom(
+                          backgroundColor: _icon == entry.key
+                              ? Color(_color).withValues(alpha: 0.28)
+                              : null,
+                        ),
+                        icon: Icon(
+                          entry.value,
+                          color: _icon == entry.key ? Color(_color) : null,
+                        ),
                       ),
                     ),
                   )
@@ -480,19 +493,27 @@ class _CategoryEditorState extends State<_CategoryEditor> {
               runSpacing: 8,
               children: _colors
                   .map(
-                    (color) => InkWell(
-                      onTap: () => setState(() => _color = color),
-                      customBorder: const CircleBorder(),
-                      child: CircleAvatar(
-                        radius: 16,
-                        backgroundColor: Color(color),
-                        child: _color == color
-                            ? const Icon(
-                                Icons.check,
-                                size: 18,
-                                color: Colors.white,
-                              )
-                            : null,
+                    (color) => Semantics(
+                      button: true,
+                      selected: _color == color,
+                      label: 'Color ${financeColorName(color)}',
+                      child: Tooltip(
+                        message: 'Seleccionar color ${financeColorName(color)}',
+                        child: InkWell(
+                          onTap: () => setState(() => _color = color),
+                          customBorder: const CircleBorder(),
+                          child: CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Color(color),
+                            child: _color == color
+                                ? const Icon(
+                                    Icons.check,
+                                    size: 18,
+                                    color: Colors.white,
+                                  )
+                                : null,
+                          ),
+                        ),
                       ),
                     ),
                   )

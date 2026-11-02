@@ -19,3 +19,16 @@ abstract interface class CategoriesRepository {
   });
   Future<void> setActive(int id, bool isActive);
 }
+
+final class InvalidCategoryException implements Exception {
+  const InvalidCategoryException(this.message);
+  final String message;
+}
+
+final class CategoryUnavailableException implements Exception {
+  const CategoryUnavailableException();
+}
+
+final class LastActiveIncomeCategoryException implements Exception {
+  const LastActiveIncomeCategoryException();
+}

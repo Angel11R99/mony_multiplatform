@@ -13,6 +13,14 @@ abstract final class PaymentMethodValidator {
     if (name.length > maxNameLength) {
       return 'El nombre no puede tener más de $maxNameLength caracteres';
     }
+    final digitCount = RegExp(r'\d').allMatches(name).length;
+    final containsSensitiveToken = RegExp(
+      r'\b(?:cvv|cvc|código de seguridad|codigo de seguridad|security code|pin|password|contraseña|contrasena|credencial(?:es)?|credential(?:s)?)\b',
+      caseSensitive: false,
+    ).hasMatch(name);
+    if (digitCount >= 12 || containsSensitiveToken) {
+      return 'No guardes números de tarjeta, CVV, PIN ni credenciales; usa un nombre general como “Débito”.';
+    }
     if (existing.any(
       (method) =>
           method.id != excludeId &&

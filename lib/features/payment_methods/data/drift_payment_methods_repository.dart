@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
 import '../domain/payment_method.dart';
+import '../domain/payment_method_validator.dart';
 import '../domain/payment_methods_repository.dart';
 
 class DriftPaymentMethodsRepository implements PaymentMethodsRepository {
@@ -44,6 +45,7 @@ class DriftPaymentMethodsRepository implements PaymentMethodsRepository {
     required int colorArgb,
   }) async {
     await _database.transaction(() async {
+      await _validateName(name);
       final defaultMethod = await (_database.select(
         _database.paymentMethods,
       )..where((row) => row.isDefault.equals(true))).getSingleOrNull();
@@ -68,16 +70,23 @@ class DriftPaymentMethodsRepository implements PaymentMethodsRepository {
     required String icon,
     required int colorArgb,
   }) async {
-    await (_database.update(
-      _database.paymentMethods,
-    )..where((row) => row.id.equals(id))).write(
-      PaymentMethodsCompanion(
-        name: Value(name.trim()),
-        normalizedName: Value(name.trim().toLowerCase()),
-        icon: Value(icon),
-        colorArgb: Value(colorArgb),
-      ),
-    );
+    await _database.transaction(() async {
+      final existing = await (_database.select(
+        _database.paymentMethods,
+      )..where((row) => row.id.equals(id))).getSingleOrNull();
+      if (existing == null) throw const PaymentMethodUnavailableException();
+      await _validateName(name, excludeId: id);
+      await (_database.update(
+        _database.paymentMethods,
+      )..where((row) => row.id.equals(id))).write(
+        PaymentMethodsCompanion(
+          name: Value(name.trim()),
+          normalizedName: Value(name.trim().toLowerCase()),
+          icon: Value(icon),
+          colorArgb: Value(colorArgb),
+        ),
+      );
+    });
   }
 
   @override
@@ -140,6 +149,17 @@ class DriftPaymentMethodsRepository implements PaymentMethodsRepository {
               .write(const PaymentMethodsCompanion(isActive: Value(true)));
         }
       });
+
+  Future<void> _validateName(String name, {int? excludeId}) async {
+    final rows = await _database.select(_database.paymentMethods).get();
+    final existing = rows.map(_fromRow).toList(growable: false);
+    final error = PaymentMethodValidator.validateName(
+      name,
+      existing,
+      excludeId: excludeId,
+    );
+    if (error != null) throw InvalidPaymentMethodException(error);
+  }
 
   PaymentMethod _fromRow(PaymentMethodRow row) => PaymentMethod(
     id: row.id,

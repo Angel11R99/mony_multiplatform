@@ -26,3 +26,8 @@ final class LastActivePaymentMethodException implements Exception {
 final class PaymentMethodUnavailableException implements Exception {
   const PaymentMethodUnavailableException();
 }
+
+final class InvalidPaymentMethodException implements Exception {
+  const InvalidPaymentMethodException(this.message);
+  final String message;
+}

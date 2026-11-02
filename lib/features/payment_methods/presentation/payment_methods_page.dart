@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/widgets/mony_feedback.dart';
+import '../../../core/theme/finance_color_names.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/payment_method.dart';
@@ -55,6 +56,8 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
         );
         _message('Método de pago actualizado.');
       }
+    } on InvalidPaymentMethodException catch (error) {
+      _message(error.message);
     } catch (_) {
       _message('No se pudo guardar el método de pago. Inténtalo de nuevo.');
     } finally {
@@ -70,8 +73,8 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
       _message(
         method.isActive
             ? method.isDefault
-                  ? 'Método archivado y predeterminado reasignado.'
-                  : 'Método archivado. Sus referencias se conservan.'
+                  ? 'Método archivado y predeterminado reasignado. Sus movimientos se conservan y no estará disponible para nuevos.'
+                  : 'Método archivado. Se conservan sus referencias anteriores y no estará disponible en movimientos nuevos.'
             : 'Método restaurado.',
       );
     } on LastActivePaymentMethodException {
@@ -406,7 +409,9 @@ class _PaymentMethodEditorState extends State<_PaymentMethodEditor> {
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(
                 labelText: 'Nombre',
-                hintText: 'Ej. Transferencia bancaria',
+                hintText: 'Ej. Débito o Transferencia',
+                helperText:
+                    'Usa un nombre general; no ingreses números ni credenciales.',
               ),
               validator: (value) {
                 final name = value?.trim() ?? '';
@@ -424,17 +429,20 @@ class _PaymentMethodEditorState extends State<_PaymentMethodEditor> {
               runSpacing: 8,
               children: paymentMethodIcons.entries
                   .map(
-                    (entry) => IconButton.filledTonal(
-                      tooltip: entry.key,
-                      onPressed: () => setState(() => _icon = entry.key),
-                      style: IconButton.styleFrom(
-                        backgroundColor: _icon == entry.key
-                            ? Color(_color).withValues(alpha: 0.28)
-                            : null,
-                      ),
-                      icon: Icon(
-                        entry.value,
-                        color: _icon == entry.key ? Color(_color) : null,
+                    (entry) => Semantics(
+                      selected: _icon == entry.key,
+                      child: IconButton.filledTonal(
+                        tooltip: 'Icono ${entry.key}',
+                        onPressed: () => setState(() => _icon = entry.key),
+                        style: IconButton.styleFrom(
+                          backgroundColor: _icon == entry.key
+                              ? Color(_color).withValues(alpha: 0.28)
+                              : null,
+                        ),
+                        icon: Icon(
+                          entry.value,
+                          color: _icon == entry.key ? Color(_color) : null,
+                        ),
                       ),
                     ),
                   )
@@ -448,19 +456,27 @@ class _PaymentMethodEditorState extends State<_PaymentMethodEditor> {
               runSpacing: 8,
               children: _colors
                   .map(
-                    (color) => InkWell(
-                      onTap: () => setState(() => _color = color),
-                      customBorder: const CircleBorder(),
-                      child: CircleAvatar(
-                        radius: 16,
-                        backgroundColor: Color(color),
-                        child: _color == color
-                            ? const Icon(
-                                Icons.check,
-                                size: 18,
-                                color: Colors.white,
-                              )
-                            : null,
+                    (color) => Semantics(
+                      button: true,
+                      selected: _color == color,
+                      label: 'Color ${financeColorName(color)}',
+                      child: Tooltip(
+                        message: 'Seleccionar color ${financeColorName(color)}',
+                        child: InkWell(
+                          onTap: () => setState(() => _color = color),
+                          customBorder: const CircleBorder(),
+                          child: CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Color(color),
+                            child: _color == color
+                                ? const Icon(
+                                    Icons.check,
+                                    size: 18,
+                                    color: Colors.white,
+                                  )
+                                : null,
+                          ),
+                        ),
                       ),
                     ),
                   )
