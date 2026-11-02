@@ -1,5 +1,13 @@
 # Historial de implementación
 
+## P09 — Búsqueda y filtros combinados — 2026-11-02
+- Resultado: APPROVED bajo la autorización persistente del usuario.
+- `stream_transform 2.1.2` aporta debounce de 300 ms; la consulta reactiva de Drift busca descripción, categoría y método y combina filtros AND/OR parametrizados.
+- Añadidos filtros por tipo, selección múltiple de categorías y métodos, rango de importes validado, fechas inclusivas, orden y chips eliminables; Reset restaura el estado inicial.
+- Sin cambios de esquema. Limitación documentada: SQLite base no normaliza mayúsculas acentuadas para `LIKE` en todos los targets.
+- `dart format`, `flutter analyze`, `git diff --check` y build web release completados. Pruebas automatizadas no ejecutadas; queda la prueba manual de volumen al usuario.
+- Commits de dependencia, código y documentación pendientes hasta la petición del siguiente paso; progreso en P10.
+
 ## P08 — Movimientos y operación financiera — 2026-11-02
 - Resultado: APPROVED bajo la autorización persistente del usuario.
 - Adoptado `flutter_slidable 4.0.3` porque la última versión 5.2.0 no cabe en Flutter 3.44/Dart 3.12; filas agrupadas por fecha y acciones de editar/duplicar/eliminar con el menú alternativo visible.
