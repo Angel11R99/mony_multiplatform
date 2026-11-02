@@ -16,6 +16,7 @@ class SettingsPage extends ConsumerStatefulWidget {
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   static const _colorOptions = <_ColorOption>[
+    _ColorOption('Lavanda Mony', 0xFFC8A8F4),
     _ColorOption('Rojo', 0xFFEF4444),
     _ColorOption('Rosa', 0xFFEC4899),
     _ColorOption('Morado', 0xFF9333EA),

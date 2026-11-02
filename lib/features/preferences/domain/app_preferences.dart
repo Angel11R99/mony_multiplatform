@@ -5,8 +5,8 @@ enum CurrencyFormatStyle { symbol, code }
 class AppPreferences {
   const AppPreferences({
     this.themeMode = AppThemeMode.system,
-    this.primaryColorArgb = 0xFF7C3AED,
-    this.accentColorArgb = 0xFFFF6B73,
+    this.primaryColorArgb = 0xFFC8A8F4,
+    this.accentColorArgb = 0xFFB794E8,
     this.currencyCode = 'DOP',
     this.currencyFormatStyle = CurrencyFormatStyle.symbol,
     this.notificationsEnabled = false,
