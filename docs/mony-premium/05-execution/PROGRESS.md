@@ -2,9 +2,9 @@
 
 > Fuente de verdad del avance de las fases ejecutadas en este repositorio.
 
-**Fase actual:** P11 (TODO)
-**Última fase aprobada por el usuario:** P10 — calendario de actividad, rangos y fechas localizadas, 2026-11-02
-**Siguiente acción autorizada:** iniciar P11 cuando el usuario diga `next`
+**Fase actual:** P12 (TODO)
+**Última fase aprobada por el usuario:** P11 — integridad de categorías y métodos, 2026-11-02
+**Siguiente acción autorizada:** iniciar P12 cuando el usuario diga `next`
 **Bloqueos:** `flutter test` no corre directamente desde el checkout porque Flutter no puede borrar `build/native_assets/windows/sqlite3.dll`; suite ejecutada con éxito en copia temporal limpia. Build Windows sin componentes C++ requeridos en Visual Studio.
 
 | Fase | Estado | Evidencia / reporte | Aprobación del usuario |
@@ -20,7 +20,7 @@
 | P08 | APPROVED | `P08_TRANSACTIONS_REPORT.md`; analyze, diff check y build web OK; tests existentes no ejecutados | SÍ — autorización persistente, 2026-11-02 |
 | P09 | APPROVED | `P09_SEARCH_FILTERS_REPORT.md`; analyze y build web OK; comprobación manual de volumen pendiente | SÍ — autorización persistente del usuario |
 | P10 | APPROVED | `P10_CALENDAR_TIME_REPORT.md`; analyze y build web OK; comprobación visual manual pendiente | SÍ — autorización persistente del usuario |
-| P11 | TODO | — | NO |
+| P11 | APPROVED | `P11_CATEGORIES_PAYMENTS_REPORT.md`; analyze y build web OK; suite de tests existente no ejecutada | SÍ — autorización persistente del usuario |
 | P12 | TODO | — | NO |
 | P13 | TODO | — | NO |
 | P14 | TODO | — | NO |

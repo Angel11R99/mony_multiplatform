@@ -1,5 +1,13 @@
 # Historial de implementación
 
+## P11 — Categorías, métodos e integridad referencial — 2026-11-02
+- Resultado: APPROVED bajo la autorización persistente del usuario.
+- `DriftCategoriesRepository` ahora valida en transacción alta/edición, existencia y protección de la última categoría de ingresos activa; `DriftPaymentMethodsRepository` valida duplicados, existencia y nombres sin datos sensibles.
+- Se conservan relaciones por ID al archivar; mensajes explican impacto en movimientos anteriores/nuevos. El esquema ya mantiene `ON DELETE RESTRICT`, sin migración.
+- Selectores de icono/color ganan tooltips, selección semántica y nombres accesibles de color. Se mantiene catálogo Material de 28 iconos: `icon_picker 2.1.0` no admite Dart 3 y `flutter_iconpicker 4.0.3` añade fonts/deps con riesgos documentados en pub.dev.
+- `dart format`, `flutter analyze` y `git diff --check` completados. Tests existentes no ejecutados; revisión manual de formularios queda para el usuario.
+- Commits de código y documentación pendientes hasta la petición del siguiente paso; progreso en P12.
+
 ## P10 — Calendario, rangos y locale — 2026-11-02
 - Resultado: APPROVED bajo la autorización persistente del usuario.
 - Adoptado `table_calendar 3.2.1`, compatible con `intl 0.20.2` que fija Flutter; 3.3.0 se excluyó por requerir `intl >=0.20.3`. Grilla mensual muestra únicamente actividad proveniente del stream real de Drift.
