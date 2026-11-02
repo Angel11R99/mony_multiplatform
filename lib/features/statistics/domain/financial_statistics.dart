@@ -37,7 +37,7 @@ StatisticsPeriod statisticsPeriod({
   StatisticsRange.currentBudget => _period(activeBudgetPeriod(budget, today)),
   StatisticsRange.currentMonth => StatisticsPeriod(
     start: DateTime(today.year, today.month),
-    endInclusive: DateTime(today.year, today.month + 1, 0),
+    endInclusive: DateTime(today.year, today.month, today.day),
   ),
   StatisticsRange.currentYear => StatisticsPeriod(
     start: DateTime(today.year),
@@ -60,20 +60,33 @@ StatisticsPeriod previousStatisticsPeriod({
     return const StatisticsPeriod();
   }
   if (range == StatisticsRange.currentBudget) {
-    final priorDay = current.start!.subtract(const Duration(days: 1));
-    return _period(activeBudgetPeriod(budget, priorDay));
+    final duration = current.dayCount ?? 1;
+    final end = current.start!.subtract(const Duration(days: 1));
+    return StatisticsPeriod(
+      start: end.subtract(Duration(days: duration - 1)),
+      endInclusive: end,
+    );
   }
   if (range == StatisticsRange.currentMonth) {
     final previousMonth = DateTime(today.year, today.month - 1);
+    final previousEnd = DateTime(
+      previousMonth.year,
+      previousMonth.month + 1,
+      0,
+    );
     return StatisticsPeriod(
       start: previousMonth,
-      endInclusive: DateTime(previousMonth.year, previousMonth.month + 1, 0),
+      endInclusive: DateTime(
+        previousEnd.year,
+        previousEnd.month,
+        today.day < previousEnd.day ? today.day : previousEnd.day,
+      ),
     );
   }
   final previousYear = today.year - 1;
   return StatisticsPeriod(
     start: DateTime(previousYear),
-    endInclusive: DateTime(previousYear, 12, 31),
+    endInclusive: DateTime(previousYear, today.month, today.day),
   );
 }
 
@@ -164,14 +177,35 @@ class MonthlyStatistics {
 List<MonthlyStatistics> monthlyStatistics(
   Iterable<FinanceTransaction> transactions, {
   required DateTime through,
-  int months = 6,
+  StatisticsPeriod? period,
+  int? months,
+  int maxMonths = 12,
+  int? categoryId,
 }) {
-  final first = DateTime(through.year, through.month - months + 1);
+  final effectiveEnd =
+      period?.endInclusive != null && period!.endInclusive!.isBefore(through)
+      ? period.endInclusive!
+      : through;
+  final selectedStart = period?.start;
+  final totalMonths = selectedStart == null
+      ? 6
+      : (effectiveEnd.year - selectedStart.year) * 12 +
+            effectiveEnd.month -
+            selectedStart.month +
+            1;
+  final monthCount = (months ?? totalMonths).clamp(1, maxMonths);
+  final first = DateTime(
+    effectiveEnd.year,
+    effectiveEnd.month - monthCount + 1,
+  );
   final totals = <DateTime, List<int>>{
-    for (var i = 0; i < months; i++)
+    for (var i = 0; i < monthCount; i++)
       DateTime(first.year, first.month + i): [0, 0],
   };
   for (final transaction in transactions) {
+    if (categoryId != null && transaction.categoryId != categoryId) continue;
+    if (period != null && !period.contains(transaction.date)) continue;
+    if (transaction.date.isAfter(effectiveEnd)) continue;
     final month = DateTime(transaction.date.year, transaction.date.month);
     final totalsForMonth = totals[month];
     if (totalsForMonth == null) continue;

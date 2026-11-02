@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/money/money_formatter.dart';
@@ -100,17 +101,11 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
             customEnd: _customEnd,
           )
         : _periodForCycle(cycle, now);
-    final previousPeriod = _cycleIndex != null
-        ? _periodForCycle(cycle!, DateTime(now.year, now.month - 1, now.day))
-        : statisticsPeriod(
-            range: _range,
-            today: now,
-            budget: budget,
-            customStart: _customStart,
-            customEnd: _customEnd,
-          );
+    final scopedTransactions = _categoryId == null
+        ? transactions
+        : transactions.where((item) => item.categoryId == _categoryId);
     final current = calculateFinancialStatistics(
-      transactions: transactions,
+      transactions: scopedTransactions,
       categories: {for (final category in categories) category.id: category},
       period: period,
     );
@@ -118,18 +113,18 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
         _range != StatisticsRange.allTime && _range != StatisticsRange.custom;
     final previous = isComparable
         ? calculateFinancialStatistics(
-            transactions: transactions,
+            transactions: scopedTransactions,
             categories: {
               for (final category in categories) category.id: category,
             },
-            period: _cycleIndex == null
-                ? previousStatisticsPeriod(
-                    range: _range,
-                    current: period,
-                    today: now,
-                    budget: budget,
-                  )
-                : previousPeriod,
+            period: previousStatisticsPeriod(
+              range: _cycleIndex == null
+                  ? _range
+                  : StatisticsRange.currentBudget,
+              current: period,
+              today: now,
+              budget: budget,
+            ),
           )
         : null;
     final focusedCategory = categories
@@ -140,11 +135,18 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
         .firstOrNull;
     final currentBudgetPeriod = activeBudgetPeriod(budget, now);
     final limitInsights = budgetLimitInsights(
-      transactions: transactions,
-      categories: categories,
+      transactions: scopedTransactions,
+      categories: _categoryId == null
+          ? categories
+          : categories.where((item) => item.id == _categoryId),
       period: _periodForRange(currentBudgetPeriod),
     );
-    final evolution = monthlyStatistics(transactions, through: now);
+    final evolution = monthlyStatistics(
+      scopedTransactions,
+      through: now,
+      period: period,
+      categoryId: _categoryId,
+    );
     final expenseCategories =
         categories.where((item) => item.type == CategoryType.expense).toList()
           ..sort(
@@ -224,6 +226,7 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
                   _EvolutionCard(
                     data: evolution,
                     currencyStyle: preferences.currencyFormatStyle,
+                    periodLabel: _evolutionLabel(period, _range, cycle),
                   ),
                   const SizedBox(height: 22),
                   _SectionTitle(
@@ -371,6 +374,24 @@ String _periodLabel(
     return 'Período seleccionado';
   }
   return '${_dateLabel(period.start!)} – ${_dateLabel(period.endInclusive!)}';
+}
+
+String _evolutionLabel(
+  StatisticsPeriod period,
+  StatisticsRange range,
+  BudgetCycleSchedule? cycle,
+) {
+  if (range == StatisticsRange.allTime) return 'Últimos 6 meses';
+  final months = period.start == null || period.endInclusive == null
+      ? 0
+      : (period.endInclusive!.year - period.start!.year) * 12 +
+            period.endInclusive!.month -
+            period.start!.month +
+            1;
+  if (months > 12) {
+    return 'Últimos 12 meses · ${_periodLabel(period, range, cycle)}';
+  }
+  return _periodLabel(period, range, cycle);
 }
 
 String _dateLabel(DateTime date) => MonyDateFormatter.formatDate(date);
@@ -660,9 +681,14 @@ class _TrendRow extends StatelessWidget {
 }
 
 class _EvolutionCard extends StatelessWidget {
-  const _EvolutionCard({required this.data, required this.currencyStyle});
+  const _EvolutionCard({
+    required this.data,
+    required this.currencyStyle,
+    required this.periodLabel,
+  });
   final List<MonthlyStatistics> data;
   final CurrencyFormatStyle currencyStyle;
+  final String periodLabel;
   @override
   Widget build(BuildContext context) {
     final income = Theme.of(context).colorScheme.primary;
@@ -680,7 +706,7 @@ class _EvolutionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'EVOLUCIÓN · ÚLTIMOS 6 MESES',
+              'EVOLUCIÓN · $periodLabel',
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 5),
@@ -693,28 +719,83 @@ class _EvolutionCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Semantics(
-              label: description,
-              child: ExcludeSemantics(
-                child: SizedBox(
-                  height: 170,
-                  child: CustomPaint(
-                    painter: _EvolutionPainter(
-                      data: data,
-                      incomeColor: income,
-                      expenseColor: expense,
+              label: 'Ingresos y gastos por mes. $description',
+              child: SizedBox(
+                height: 210,
+                child: LineChart(
+                  LineChartData(
+                    minY: 0,
+                    maxY: _chartMaxY,
+                    gridData: FlGridData(drawVerticalLine: false),
+                    borderData: FlBorderData(show: false),
+                    titlesData: FlTitlesData(
+                      leftTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 30,
+                          getTitlesWidget: (value, meta) {
+                            final index = value.toInt();
+                            if (index < 0 || index >= data.length) {
+                              return const SizedBox.shrink();
+                            }
+                            return SideTitleWidget(
+                              meta: meta,
+                              child: Text(
+                                _monthLabel(data[index].month),
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                     ),
-                    child: const SizedBox.expand(),
+                    lineTouchData: LineTouchData(
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipItems: (spots) => spots.map((spot) {
+                          final item = data[spot.x.toInt()];
+                          final amount = spot.barIndex == 0
+                              ? item.incomeInCents
+                              : item.expenseInCents;
+                          final label = spot.barIndex == 0
+                              ? 'Ingresos'
+                              : 'Gastos';
+                          return LineTooltipItem(
+                            '$label · ${_money(amount, currencyStyle)}',
+                            TextStyle(
+                              color:
+                                  spot.bar.color ??
+                                  Theme.of(context).colorScheme.onSurface,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    lineBarsData: [_line(true, income), _line(false, expense)],
                   ),
+                  duration: const Duration(milliseconds: 180),
                 ),
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: const Text('Ver datos por mes'),
               children: [
                 for (final item in data)
-                  Text(
-                    _monthLabel(item.month),
-                    style: Theme.of(context).textTheme.labelSmall,
+                  ListTile(
+                    dense: true,
+                    title: Text(_monthLabel(item.month)),
+                    subtitle: Text(
+                      'Ingresos ${_money(item.incomeInCents, currencyStyle)} · Gastos ${_money(item.expenseInCents, currencyStyle)}',
+                    ),
                   ),
               ],
             ),
@@ -723,6 +804,30 @@ class _EvolutionCard extends StatelessWidget {
       ),
     );
   }
+
+  double get _chartMaxY {
+    final max = data.fold<int>(
+      0,
+      (value, item) =>
+          math.max(value, math.max(item.incomeInCents, item.expenseInCents)),
+    );
+    return max == 0 ? 1 : max / 100 * 1.1;
+  }
+
+  LineChartBarData _line(bool income, Color color) => LineChartBarData(
+    spots: [
+      for (var index = 0; index < data.length; index++)
+        FlSpot(
+          index.toDouble(),
+          (income ? data[index].incomeInCents : data[index].expenseInCents) /
+              100,
+        ),
+    ],
+    color: color,
+    barWidth: 3,
+    isCurved: false,
+    dotData: const FlDotData(show: true),
+  );
 }
 
 class _Legend extends StatelessWidget {
@@ -742,81 +847,6 @@ class _Legend extends StatelessWidget {
       Text(label, style: Theme.of(context).textTheme.bodySmall),
     ],
   );
-}
-
-class _EvolutionPainter extends CustomPainter {
-  const _EvolutionPainter({
-    required this.data,
-    required this.incomeColor,
-    required this.expenseColor,
-  });
-  final List<MonthlyStatistics> data;
-  final Color incomeColor;
-  final Color expenseColor;
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (data.isEmpty) return;
-    const inset = 4.0;
-    final maxValue = data
-        .fold<int>(
-          1,
-          (max, item) =>
-              math.max(max, math.max(item.incomeInCents, item.expenseInCents)),
-        )
-        .toDouble();
-    final grid = Paint()
-      ..color = const Color(0x33777777)
-      ..strokeWidth = 1;
-    for (var i = 0; i < 4; i++) {
-      final y = inset + (size.height - inset * 2) * i / 3;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), grid);
-    }
-    void drawSeries(int Function(MonthlyStatistics) value, Color color) {
-      final path = Path();
-      for (var i = 0; i < data.length; i++) {
-        final x = data.length == 1
-            ? size.width / 2
-            : size.width * i / (data.length - 1);
-        final y =
-            size.height -
-            inset -
-            (size.height - inset * 2) * value(data[i]) / maxValue;
-        if (i == 0) {
-          path.moveTo(x, y);
-        } else {
-          path.lineTo(x, y);
-        }
-      }
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = color
-          ..strokeWidth = 2.5
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round,
-      );
-      for (var i = 0; i < data.length; i++) {
-        final x = data.length == 1
-            ? size.width / 2
-            : size.width * i / (data.length - 1);
-        final y =
-            size.height -
-            inset -
-            (size.height - inset * 2) * value(data[i]) / maxValue;
-        canvas.drawCircle(Offset(x, y), 3.5, Paint()..color = color);
-      }
-    }
-
-    drawSeries((item) => item.incomeInCents, incomeColor);
-    drawSeries((item) => item.expenseInCents, expenseColor);
-  }
-
-  @override
-  bool shouldRepaint(covariant _EvolutionPainter old) =>
-      old.data != data ||
-      old.incomeColor != incomeColor ||
-      old.expenseColor != expenseColor;
 }
 
 class _SectionTitle extends StatelessWidget {
