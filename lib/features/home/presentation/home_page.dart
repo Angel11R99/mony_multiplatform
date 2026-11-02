@@ -210,6 +210,11 @@ class _DashboardContent extends StatelessWidget {
                       icon: const Icon(Icons.savings_outlined),
                       label: const Text('Metas de ahorro'),
                     ),
+                    TextButton.icon(
+                      onPressed: () => context.goNamed('budgets'),
+                      icon: const Icon(Icons.account_balance_wallet_outlined),
+                      label: const Text('Presupuestos'),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),

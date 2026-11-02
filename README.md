@@ -57,3 +57,7 @@ Inicio muestra el resumen del mes seleccionado: ingresos, gastos y balance neto 
 ## Metas de ahorro
 
 Metas de ahorro permite crear, editar, completar, reabrir y eliminar objetivos, consultar sus aportes y seguir el saldo frente al objetivo. Cada aporte se guarda una sola vez como gasto en la categoría activa **Ahorro** y queda vinculado a la meta; su progreso se calcula desde esos movimientos. Al eliminar una meta, los gastos permanecen en el historial y se desvinculan. La base v3 migra a v4 conservando los movimientos existentes.
+
+## Presupuestos
+
+Los presupuestos aplican un límite mensual o quincenal y muestran ingresos, gastos, saldo disponible y alertas visuales al llegar al 75 % o excederlo. Cada categoría de gasto puede tener su propio límite por período, y su consumo se calcula usando la fecha del movimiento. Los ciclos cerrados quedan en un historial y los movimientos se conservan. El cierre puede hacerse manualmente al final del ciclo o automáticamente a la hora elegida mientras la app está activa; si el sistema suspende la app, se procesan los ciclos vencidos al volver a abrirla. El ingreso del presupuesto se registra como un movimiento de ingreso asociado y se actualiza al cambiar el monto. La base v4 migra a v5 conservando metas y movimientos.

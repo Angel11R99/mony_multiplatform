@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/home/presentation/home_page.dart';
+import '../../features/budgets/presentation/budgets_page.dart';
 import '../../features/categories/presentation/categories_page.dart';
 import '../../features/payment_methods/presentation/payment_methods_page.dart';
 import '../../features/savings/presentation/savings_goals_page.dart';
@@ -43,6 +44,11 @@ GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
       path: '/savings-goals',
       name: 'savingsGoals',
       builder: (context, state) => const SavingsGoalsPage(),
+    ),
+    GoRoute(
+      path: '/budgets',
+      name: 'budgets',
+      builder: (context, state) => const BudgetsPage(),
     ),
     GoRoute(
       path: '/transactions',

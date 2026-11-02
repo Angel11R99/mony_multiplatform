@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../core/config/app_config.dart';
 import '../core/routing/app_router.dart';
 import '../core/theme/mony_theme.dart';
+import '../features/budgets/presentation/budget_cycle_automation.dart';
 import '../features/preferences/domain/app_preferences.dart';
 import '../features/preferences/presentation/preferences_controller.dart';
 
@@ -18,13 +19,15 @@ class MonyApp extends ConsumerWidget {
     final preferences =
         ref.watch(appPreferencesProvider).value ?? AppPreferences.defaults;
 
-    return MaterialApp.router(
-      title: config.appName,
-      debugShowCheckedModeBanner: config.showDebugBanner,
-      theme: MonyTheme.light(preferences),
-      darkTheme: MonyTheme.dark(preferences),
-      themeMode: MonyTheme.themeMode(preferences.themeMode),
-      routerConfig: router,
+    return BudgetCycleAutomation(
+      child: MaterialApp.router(
+        title: config.appName,
+        debugShowCheckedModeBanner: config.showDebugBanner,
+        theme: MonyTheme.light(preferences),
+        darkTheme: MonyTheme.dark(preferences),
+        themeMode: MonyTheme.themeMode(preferences.themeMode),
+        routerConfig: router,
+      ),
     );
   }
 }
