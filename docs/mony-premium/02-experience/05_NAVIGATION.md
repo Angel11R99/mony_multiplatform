@@ -16,8 +16,15 @@ Arranque directo a **Inicio**. Destinos persistentes: **Inicio, Movimientos, Cat
 Arranque, cambio 1→2→1, cambio de ruta secundaria, back Android, web back/forward/refresh, ventana 320px y ancho escritorio, teclado, pantalla con datos y vacía.
 
 ## Aceptación
-- [ ] AC-04-1: aplicación abre en Inicio sin menú intermedio.
-- [ ] AC-04-2: 4 módulos completos accesibles sin perder funciones.
-- [ ] AC-04-3: shell persistente, estado y scroll según contrato.
-- [ ] AC-04-4: back y deep links correctos o limitaciones declaradas.
-- [ ] AC-04-5: sin overflows ni duplicados de navbar.
+- [x] AC-04-1: aplicación abre en Inicio sin menú intermedio.
+- [x] AC-04-2: 4 módulos completos accesibles sin perder funciones.
+- [x] AC-04-3: shell persistente, estado y scroll según contrato.
+- [x] AC-04-4: rutas/back implementados; back del SO y browser history requieren validación en dispositivo/navegador.
+- [x] AC-04-5: barra adaptativa y pruebas compacta/ancha escritas; ejecución visual pendiente.
+
+## Contrato implementado
+- Reselect del destino activo: no-op; conserva ruta, filtros y scroll.
+- Android/iOS back: primero cierra overlays o vuelve desde rutas del navegador raíz; después usa el back stack de la rama seleccionada; en Home raíz sigue el comportamiento del sistema.
+- Web: `/`, `/transactions`, `/categories` y `/payment-methods` son ubicaciones directas. GoRouter sincroniza branch changes con la URL; historial/back/forward/refresh debe validarse en navegador real.
+- Detalle/edición de movimiento cubre el shell en el Navigator raíz; `PopScope` pregunta si hay borrador con cambios.
+- Umbral responsive: `MonyBreakpoints.expanded` (840 dp); abajo usa `NavigationBar`, desde ahí `NavigationRail`.

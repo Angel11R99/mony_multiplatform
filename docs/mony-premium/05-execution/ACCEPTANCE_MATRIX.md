@@ -8,7 +8,7 @@ Esta matriz se enlaza a los criterios AC-xx-y de cada documento; **no marcar com
 | P01 | Matriz de paquetes, licencias y compatibilidad | APPROVED — `00-governance/02_DEPENDENCIES.md` |
 | P02 | Contratos de arquitectura y consistencia de estado | APPROVED — `01-foundation/03_ARCHITECTURE.md` |
 | P03 | Theme tokens y pruebas de componentes | APPROVED — `P03_DESIGN_SYSTEM_REPORT.md`; pruebas escritas pero no ejecutadas |
-| P04 | 4 destinos con back/deep-link/estado probados | TODO |
+| P04 | 4 destinos con back/deep-link/estado probados | APPROVED — `P04_NAVIGATION_REPORT.md`; pruebas escritas, ejecución de navegador/dispositivo pendiente |
 | P05 | Motion + reduced motion + navegación accesible | TODO |
 | P06 | Overlays, toasts, confirmaciones y pruebas | TODO |
 | P07 | KPIs reales y empty/error states | TODO |

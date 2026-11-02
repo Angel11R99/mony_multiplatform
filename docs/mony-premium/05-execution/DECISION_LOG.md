@@ -6,6 +6,7 @@ Crear ADR por decisión significativa, numeradas `ADR-0001`, `ADR-0002`... con: 
 - ADR-0001 — conservar go_router 18.1.2: ver ADR-0001 en `02_DEPENDENCIES.md` (documentado en P01).
 - ADR-0002 — conservar límites feature/Riverpod/Drift y hacer cambios incrementales: ver contratos y evidencia P02 en `01-foundation/03_ARCHITECTURE.md`.
 - ADR-0003 — tema y widgets compartidos Mony, definidos en esta fase y documentados en `P03_DESIGN_SYSTEM_REPORT.md`.
+- ADR-0004 — shell responsive con ramas indexadas go_router, descrito en `P04_NAVIGATION_REPORT.md`.
 
 ### ADR-0002 — Conservar arquitectura feature-based con Riverpod y Drift
 

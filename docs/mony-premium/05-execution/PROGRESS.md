@@ -2,9 +2,9 @@
 
 > Fuente de verdad del avance de las fases ejecutadas en este repositorio.
 
-**Fase actual:** P04 (TODO — pendiente de inicio)
-**Última fase aprobada por el usuario:** P03 — usuario autorizó aprobar las fases ejecutadas el 2026-11-02
-**Siguiente acción autorizada:** iniciar únicamente P04 cuando el usuario lo solicite después de su prueba de P03
+**Fase actual:** P05 (TODO — pendiente de inicio)
+**Última fase aprobada por el usuario:** P04 — usuario autorizó aprobar las fases implementadas al pedir “next”, 2026-11-02
+**Siguiente acción autorizada:** iniciar únicamente P05 cuando el usuario lo solicite después de probar P04
 **Bloqueos:** `flutter test` no corre directamente desde el checkout porque Flutter no puede borrar `build/native_assets/windows/sqlite3.dll`; suite ejecutada con éxito en copia temporal limpia. Build Windows sin componentes C++ requeridos en Visual Studio.
 
 | Fase | Estado | Evidencia / reporte | Aprobación del usuario |
@@ -13,8 +13,8 @@
 | P01 | APPROVED | `00-governance/02_DEPENDENCIES.md`; matriz/ADR, sin dependencias agregadas | SÍ — 2026-11-02 |
 | P02 | APPROVED | `01-foundation/03_ARCHITECTURE.md`; diagrama/contratos/AC-02-5 demostración estática | SÍ — bajo autorización explícita del usuario, 2026-11-02 |
 | P03 | APPROVED | `P03_DESIGN_SYSTEM_REPORT.md`; tokens, temas y biblioteca; `flutter analyze` OK; pruebas de widgets escritas, no ejecutadas por solicitud del usuario | SÍ — autorización explícita para aprobar fases implementadas, 2026-11-02 |
-| P04 | TODO | `02-experience/05_NAVIGATION.md` | NO — siguiente fase; aún sin iniciar |
-| P05 | TODO | — | NO |
+| P04 | APPROVED | `P04_NAVIGATION_REPORT.md`; shell, branches, prueba compacta/ancha escrita; `flutter analyze` OK; runtime/browser tests no ejecutados | SÍ — autorización explícita para aprobar fases implementadas, 2026-11-02 |
+| P05 | TODO | `02-experience/06_MOTION_PLATFORM.md` | NO — siguiente fase; aún sin iniciar |
 | P06 | TODO | — | NO |
 | P07 | TODO | — | NO |
 | P08 | TODO | — | NO |

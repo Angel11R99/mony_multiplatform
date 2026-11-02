@@ -1,5 +1,12 @@
 # Historial de implementación
 
+## P04 — App Shell, bottom nav y rutas — 2026-11-02
+- Resultado: APPROVED bajo la autorización explícita del usuario para aprobar las fases implementadas.
+- `StatefulShellRoute.indexedStack` con Inicio, Movimientos, Categorías y Métodos; NavigationBar compacto y NavigationRail ancho.
+- Preservación de stack/filtros; rutas de detalle y edición cubren el shell; formulario con confirmación para descartar cambios. Acciones secundarias de Home agrupadas en menú compacto.
+- Tests de routing y viewport añadidos; `dart format`, `flutter analyze` y `git diff --check` completados. No se ejecutaron pruebas de Flutter/browser/device para que el usuario pruebe.
+- Sin paquetes, cambios de DB ni commit P04. El progreso queda en P05 (TODO).
+
 ## P03 — Design System y temas — 2026-11-02
 - Resultado: APPROVED bajo la autorización explícita del usuario para aprobar las fases implementadas.
 - Añadidos tokens, tema claro/oscuro y semántica financiera; biblioteca base de widgets y tests de componentes.
