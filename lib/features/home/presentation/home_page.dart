@@ -43,7 +43,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final preferences =
         ref.watch(appPreferencesProvider).value ?? AppPreferences.defaults;
 
-    return MonyScaffold(
+    return Scaffold(
       appBar: AppBar(
         title: const Text('Mony'),
         actions: [
@@ -118,29 +118,31 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ],
       ),
-      body: summary.when(
-        loading: () => const LoadingPlaceholder(message: 'Cargando resumen'),
-        error: (error, stack) => ErrorState(
-          message: 'No pudimos cargar el resumen financiero.',
-          retryLabel: 'Reintentar',
-          onRetry: () => ref.invalidate(transactionsProvider),
-        ),
-        data: (value) => categories.when(
-          loading: () =>
-              const LoadingPlaceholder(message: 'Cargando categorías'),
+      body: SafeArea(
+        child: summary.when(
+          loading: () => const LoadingPlaceholder(message: 'Cargando resumen'),
           error: (error, stack) => ErrorState(
-            message: 'No pudimos cargar las categorías.',
+            message: 'No pudimos cargar el resumen financiero.',
             retryLabel: 'Reintentar',
-            onRetry: () => ref.invalidate(categoriesProvider),
+            onRetry: () => ref.invalidate(transactionsProvider),
           ),
-          data: (categoryItems) => _DashboardContent(
-            summary: value,
-            categories: categoryItems,
-            currencyStyle: preferences.currencyFormatStyle,
-            onPreviousMonth: () => _changeMonth(-1),
-            onNextMonth: DateUtils.isSameMonth(_month, DateTime.now())
-                ? null
-                : () => _changeMonth(1),
+          data: (value) => categories.when(
+            loading: () =>
+                const LoadingPlaceholder(message: 'Cargando categorías'),
+            error: (error, stack) => ErrorState(
+              message: 'No pudimos cargar las categorías.',
+              retryLabel: 'Reintentar',
+              onRetry: () => ref.invalidate(categoriesProvider),
+            ),
+            data: (categoryItems) => _DashboardContent(
+              summary: value,
+              categories: categoryItems,
+              currencyStyle: preferences.currencyFormatStyle,
+              onPreviousMonth: () => _changeMonth(-1),
+              onNextMonth: DateUtils.isSameMonth(_month, DateTime.now())
+                  ? null
+                  : () => _changeMonth(1),
+            ),
           ),
         ),
       ),

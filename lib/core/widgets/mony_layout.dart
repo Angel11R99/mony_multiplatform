@@ -2,32 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../theme/mony_tokens.dart';
 
-class MonyScaffold extends StatelessWidget {
-  const MonyScaffold({
-    required this.body,
-    this.appBar,
-    this.floatingActionButton,
-    this.bottomNavigationBar,
-    this.extendBody = false,
-    super.key,
-  });
-
-  final Widget body;
-  final PreferredSizeWidget? appBar;
-  final Widget? floatingActionButton;
-  final Widget? bottomNavigationBar;
-  final bool extendBody;
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: appBar,
-    body: SafeArea(child: body),
-    floatingActionButton: floatingActionButton,
-    bottomNavigationBar: bottomNavigationBar,
-    extendBody: extendBody,
-  );
-}
-
 class MonyCard extends StatelessWidget {
   const MonyCard({
     required this.child,

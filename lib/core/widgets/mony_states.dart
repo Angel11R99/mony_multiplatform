@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../theme/mony_tokens.dart';
-import 'mony_controls.dart';
 
 class EmptyState extends StatelessWidget {
   const EmptyState({
@@ -27,10 +26,12 @@ class EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AppIcon(
-            icon: icon,
-            size: 44,
-            color: Theme.of(context).colorScheme.primary,
+          ExcludeSemantics(
+            child: Icon(
+              icon,
+              size: 44,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
           const SizedBox(height: MonySpace.x2),
           Text(
@@ -42,11 +43,7 @@ class EmptyState extends StatelessWidget {
           Text(message, textAlign: TextAlign.center),
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: MonySpace.x3),
-            MonyButton(
-              label: actionLabel!,
-              onPressed: onAction,
-              style: MonyButtonStyle.secondary,
-            ),
+            OutlinedButton(onPressed: onAction, child: Text(actionLabel!)),
           ],
         ],
       ),
@@ -75,15 +72,14 @@ class ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const AppIcon(icon: Icons.error_outline, size: 40),
+            const ExcludeSemantics(child: Icon(Icons.error_outline, size: 40)),
             const SizedBox(height: MonySpace.x3),
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: MonySpace.x3),
-            MonyButton(
-              label: retryLabel,
-              icon: Icons.refresh,
+            OutlinedButton.icon(
               onPressed: onRetry,
-              style: MonyButtonStyle.secondary,
+              icon: const Icon(Icons.refresh),
+              label: Text(retryLabel),
             ),
           ],
         ),
