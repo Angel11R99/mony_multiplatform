@@ -51,6 +51,12 @@ class DriftTransactionRepository implements TransactionRepository {
       throw const InvalidTransactionException('No encontramos el movimiento.');
     }
     final normalized = TransactionValidator.normalize(transaction);
+    if (existing.savingsGoalId != null &&
+        normalized.type != TransactionType.expense) {
+      throw const InvalidTransactionException(
+        'Un aporte de ahorro debe mantenerse como gasto.',
+      );
+    }
     _validateAmount(normalized);
     await _validateReferences(normalized);
     await (_database.update(
