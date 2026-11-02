@@ -7,6 +7,7 @@ Arranque directo a **Inicio**. Destinos persistentes: **Inicio, Movimientos, Cat
 - En móvil: `NavigationBar` Material 3 con 4 destinos y selección clara; acción `+` flotante **solo si** existe flujo de creación apropiado (no añadir quinto tab sin aprobación).
 - Desktop/tablet ancho: `NavigationRail` o sidebar; UI central reutilizada y ruta URL consistente.
 - Si ya existe go_router: preferir `StatefulShellRoute.indexedStack`; si no, comparar estrategia mínima que preserve back stack por tab.
+- **Origen de implementación:** `NavigationBar`, `NavigationRail` y `NavigationDestination` son widgets incluidos en `package:flutter/material.dart` (SDK Flutter); no requieren una dependencia adicional de pub.dev. Para rutas se conserva [`go_router`](https://pub.dev/packages/go_router), ya instalado y aprobado en P01. Solo se añadirá un paquete de pub.dev si la solución nativa no cubre un requisito demostrado y la evaluación de P01 lo justifica.
 - Preservar scroll, filtro y estado efímero sensato; formularios con cambios no guardados deben advertir o preservar borrador.
 - Tap en destino activo: comportamiento documentado (por ejemplo scroll-to-top, sin recargar).
 - Navegador web: URL por destino, back/forward y refresh deep link; rutas anidadas para detalles.
@@ -28,3 +29,4 @@ Arranque, cambio 1→2→1, cambio de ruta secundaria, back Android, web back/fo
 - Web: `/`, `/transactions`, `/categories` y `/payment-methods` son ubicaciones directas. GoRouter sincroniza branch changes con la URL; historial/back/forward/refresh debe validarse en navegador real.
 - Detalle/edición de movimiento cubre el shell en el Navigator raíz; `PopScope` pregunta si hay borrador con cambios.
 - Umbral responsive: `MonyBreakpoints.expanded` (840 dp); abajo usa `NavigationBar`, desde ahí `NavigationRail`.
+- Referencias: [Flutter `NavigationBar`](https://api.flutter.dev/flutter/material/NavigationBar-class.html), [Flutter `NavigationRail`](https://api.flutter.dev/flutter/material/NavigationRail-class.html), [paquete `go_router`](https://pub.dev/packages/go_router).
