@@ -18,6 +18,7 @@ import '../../features/obligations/presentation/obligation_detail_page.dart';
 import '../../features/obligations/presentation/obligations_page.dart';
 import '../../features/recurring/presentation/recurring_entries_page.dart';
 import '../../features/exports/presentation/exports_page.dart';
+import '../../features/barcodes/presentation/barcode_scanner_page.dart';
 
 GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
   initialLocation: initialLocation,
@@ -41,6 +42,13 @@ GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
       path: '/exports',
       name: 'exports',
       builder: (context, state) => const ExportsPage(),
+    ),
+    GoRoute(
+      path: '/barcode-scan',
+      name: 'barcodeScan',
+      builder: (context, state) => BarcodeScannerPage(
+        shoppingListId: int.tryParse(state.uri.queryParameters['listId'] ?? ''),
+      ),
     ),
     GoRoute(
       path: '/categories',

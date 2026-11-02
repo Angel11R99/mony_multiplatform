@@ -64,6 +64,11 @@ class _HomePageState extends ConsumerState<HomePage> {
             icon: const Icon(Icons.file_download_outlined),
           ),
           IconButton(
+            tooltip: 'Escanear producto',
+            onPressed: () => context.pushNamed('barcodeScan'),
+            icon: const Icon(Icons.qr_code_scanner),
+          ),
+          IconButton(
             tooltip: 'Acerca de Mony',
             onPressed: () => context.goNamed('about'),
             icon: const Icon(Icons.info_outline),
@@ -229,6 +234,11 @@ class _DashboardContent extends StatelessWidget {
                       onPressed: () => context.goNamed('exports'),
                       icon: const Icon(Icons.file_download_outlined),
                       label: const Text('Exportar datos'),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => context.pushNamed('barcodeScan'),
+                      icon: const Icon(Icons.qr_code_scanner),
+                      label: const Text('Escanear producto'),
                     ),
                     TextButton.icon(
                       onPressed: () => context.goNamed('shoppingLists'),

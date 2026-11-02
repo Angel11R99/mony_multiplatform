@@ -78,6 +78,15 @@ class _ShoppingListContent extends ConsumerWidget {
         actions: [
           if (!completed)
             IconButton(
+              tooltip: 'Escanear producto',
+              onPressed: () => context.pushNamed(
+                'barcodeScan',
+                queryParameters: {'listId': list.id.toString()},
+              ),
+              icon: const Icon(Icons.qr_code_scanner),
+            ),
+          if (!completed)
+            IconButton(
               tooltip: 'Editar lista',
               onPressed: () => _editList(context, ref, details),
               icon: const Icon(Icons.edit_outlined),
@@ -426,6 +435,11 @@ class _ShoppingItemTile extends StatelessWidget {
                                 : '${_money(item.actualUnitPriceInCents!, currencyStyle)} c/u · real',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
+                          if (item.barcode != null)
+                            Text(
+                              'Código ${item.barcode}',
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
                         ],
                       ),
                     ),
@@ -851,6 +865,7 @@ Future<void> _editItem(
                         actualUnitPriceInCents: real,
                         isPurchased: purchased,
                         notes: existing?.notes,
+                        barcode: existing?.barcode,
                         createdAt: existing?.createdAt ?? now,
                         updatedAt: now,
                       ),
