@@ -40,6 +40,49 @@ void main() {
       expect(MonyBreakpoints.compact, lessThan(MonyBreakpoints.expanded));
       expect(MonySpace.x4, 16);
     });
+
+    testWidgets('motion tokens disable transitions when requested', (
+      tester,
+    ) async {
+      Duration? duration;
+      Curve? curve;
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          home: Builder(
+            builder: (context) {
+              duration = MonyMotion.durationFor(context, MonyMotion.standard);
+              curve = MonyMotion.curveFor(context, Curves.easeOut);
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+
+      expect(duration, Duration.zero);
+      expect(curve, Curves.linear);
+    });
+
+    testWidgets('motion tokens keep standard duration when enabled', (
+      tester,
+    ) async {
+      Duration? duration;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              duration = MonyMotion.durationFor(context, MonyMotion.standard);
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+
+      expect(duration, MonyMotion.standard);
+    });
   });
 
   testWidgets('finance components expose meaningful semantics', (tester) async {

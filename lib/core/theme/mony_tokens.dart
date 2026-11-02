@@ -21,6 +21,12 @@ abstract final class MonyMotion {
   static const Duration standard = Duration(milliseconds: 220);
   static const Duration emphasis = Duration(milliseconds: 320);
   static const Curve standardCurve = Curves.easeInOutCubic;
+
+  static Duration durationFor(BuildContext context, Duration duration) =>
+      MediaQuery.disableAnimationsOf(context) ? Duration.zero : duration;
+
+  static Curve curveFor(BuildContext context, Curve curve) =>
+      MediaQuery.disableAnimationsOf(context) ? Curves.linear : curve;
 }
 
 abstract final class MonyBreakpoints {

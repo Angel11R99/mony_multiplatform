@@ -66,6 +66,16 @@ class MonyNavigationShell extends StatelessWidget {
                   circleWidth: 56,
                   color: Theme.of(context).colorScheme.surfaceContainer,
                   circleColor: Theme.of(context).colorScheme.primaryContainer,
+                  tabDurationMillSec: MonyMotion.durationFor(
+                    context,
+                    MonyMotion.standard,
+                  ).inMilliseconds,
+                  iconDurationMillSec: MonyMotion.durationFor(
+                    context,
+                    MonyMotion.quick,
+                  ).inMilliseconds,
+                  tabCurve: MonyMotion.curveFor(context, Curves.easeOutCubic),
+                  iconCurve: MonyMotion.curveFor(context, Curves.easeOut),
                   cornerRadius: const BorderRadius.vertical(
                     top: Radius.circular(22),
                   ),
@@ -82,8 +92,16 @@ class MonyNavigationShell extends StatelessWidget {
                           button: true,
                           selected: navigationShell.currentIndex == index,
                           onTap: () => _selectBranch(index),
-                          child: const ExcludeSemantics(
-                            child: SizedBox.expand(),
+                          child: ExcludeSemantics(
+                            child: InkWell(
+                              onTap: () => _selectBranch(index),
+                              excludeFromSemantics: true,
+                              canRequestFocus: true,
+                              focusColor: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.12),
+                              child: const SizedBox.expand(),
+                            ),
                           ),
                         ),
                       ),
