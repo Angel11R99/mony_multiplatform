@@ -4,7 +4,7 @@ Esta matriz se enlaza a los criterios AC-xx-y de cada documento; **no marcar com
 
 | Fase | Evidencia mínima | Estado inicial |
 |---|---|---|
-| P00 | Auditoría con árbol, SDK, módulos y baseline | TODO |
+| P00 | Auditoría con árbol, SDK, módulos y baseline | APPROVED — `AUDIT_REPORT.md` |
 | P01 | Matriz de paquetes, licencias y compatibilidad | TODO |
 | P02 | Contratos de arquitectura y consistencia de estado | TODO |
 | P03 | Theme tokens y pruebas de componentes | TODO |

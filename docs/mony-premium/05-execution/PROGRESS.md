@@ -1,15 +1,15 @@
 # Estado de ejecución — fuente de verdad
 
-> Plantilla inicial; Codex debe actualizarla **solo después** de ejecutar verificaciones. Este paquete no ha ejecutado ninguna fase sobre el código de Mony.
+> Fuente de verdad del avance de las fases ejecutadas en este repositorio.
 
-**Fase actual:** P00 (pendiente)  
-**Última fase aprobada por el usuario:** ninguna  
-**Siguiente acción autorizada:** preparar y ejecutar solamente P00 al recibir el prompt maestro inicial  
-**Bloqueos:** desconocidos hasta auditoría
+**Fase actual:** P00 (APPROVED)
+**Última fase aprobada por el usuario:** P00 — usuario confirmó revisión el 2026-11-02
+**Siguiente acción autorizada:** continuar con P01 tras registrar P00
+**Bloqueos:** `flutter test` no corre directamente desde el checkout porque Flutter no puede borrar `build/native_assets/windows/sqlite3.dll`; suite ejecutada con éxito en copia temporal limpia. Build Windows sin componentes C++ requeridos en Visual Studio.
 
 | Fase | Estado | Evidencia / reporte | Aprobación del usuario |
 |---|---|---|---|
-| P00 | TODO | — | NO |
+| P00 | APPROVED | `05-execution/AUDIT_REPORT.md`; analyze OK; 168 tests OK en copia temporal | SÍ — 2026-11-02 |
 | P01 | TODO | — | NO |
 | P02 | TODO | — | NO |
 | P03 | TODO | — | NO |
