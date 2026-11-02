@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 import '../../../core/money/money_formatter.dart';
+import '../../../core/theme/mony_tokens.dart';
+import '../../../core/widgets/mony_feedback.dart';
+import '../../../core/widgets/mony_confirm_dialog.dart';
 import '../../categories/domain/category.dart';
 import '../../categories/presentation/categories_providers.dart';
 import '../../preferences/domain/app_preferences.dart';
@@ -117,16 +121,13 @@ class _BudgetsPageState extends ConsumerState<BudgetsPage> {
                       } on BudgetRepositoryException catch (error) {
                         if (!dialogContext.mounted) return;
                         setDialogState(() => saving = false);
-                        ScaffoldMessenger.of(
-                          dialogContext,
-                        ).showSnackBar(SnackBar(content: Text(error.message)));
+                        MonyFeedback.error(dialogContext, error.message);
                       } catch (_) {
                         if (!dialogContext.mounted) return;
                         setDialogState(() => saving = false);
-                        ScaffoldMessenger.of(dialogContext).showSnackBar(
-                          const SnackBar(
-                            content: Text('No se pudo guardar el presupuesto.'),
-                          ),
+                        MonyFeedback.error(
+                          dialogContext,
+                          'No se pudo guardar el presupuesto.',
                         );
                       }
                     },
@@ -417,10 +418,9 @@ class _BudgetsPageState extends ConsumerState<BudgetsPage> {
                   if (dialogContext.mounted) Navigator.pop(dialogContext, true);
                 } catch (_) {
                   if (!dialogContext.mounted) return;
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    const SnackBar(
-                      content: Text('No se pudo guardar el límite.'),
-                    ),
+                  MonyFeedback.error(
+                    dialogContext,
+                    'No se pudo guardar el límite.',
                   );
                 }
               },
@@ -436,24 +436,12 @@ class _BudgetsPageState extends ConsumerState<BudgetsPage> {
   Future<void> _closeCycle(BudgetConfig config, DateTime now) async {
     final period = budgetPeriodToClose(config, now);
     final next = nextBudgetPeriod(config, period.endInclusive);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Cerrar ciclo'),
-        content: Text(
+    final confirmed = await MonyConfirmDialog.show(
+      context,
+      title: 'Cerrar ciclo',
+      message:
           'Se guardará el período ${_formatDate(period.start)} – ${_formatDate(period.endInclusive)} en el historial y comenzará el ${_formatDate(next.start)}. Los movimientos permanecerán en tu historial.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton.tonal(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Cerrar ciclo'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Cerrar ciclo',
     );
     if (confirmed != true || !mounted) return;
     setState(() => _closing = true);
@@ -478,18 +466,15 @@ class _BudgetsPageState extends ConsumerState<BudgetsPage> {
   }
 
   Future<void> _openHistory() async {
-    await showModalBottomSheet<void>(
+    await showMaterialModalBottomSheet<void>(
       context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
+      duration: MonyMotion.durationFor(context, MonyMotion.standard),
       builder: (context) => const _BudgetHistorySheet(),
     );
   }
 
   void _notify(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    MonyFeedback.info(context, message);
   }
 
   @override
@@ -1006,6 +991,17 @@ class _BudgetHistorySheet extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: Container(
+                width: 32,
+                height: 4,
+                margin: const EdgeInsets.only(top: MonySpace.x2),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(MonyRadius.small),
+                ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
               child: Text(
@@ -1024,6 +1020,7 @@ class _BudgetHistorySheet extends ConsumerWidget {
                         child: Text('Los ciclos cerrados aparecerán aquí.'),
                       )
                     : ListView.separated(
+                        controller: ModalScrollController.of(context),
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                         itemCount: cycles.length,
                         separatorBuilder: (context, index) =>

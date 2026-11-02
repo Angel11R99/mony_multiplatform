@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/mony_feedback.dart';
 import 'package:home_widget/home_widget.dart';
 
 import 'widgets_providers.dart';
@@ -62,15 +64,12 @@ class _WidgetCatalogTileState extends State<_WidgetCatalogTile> {
         androidName: widget.kind.qualifiedAndroidReceiver,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Solicitud enviada: ${widget.kind.label}.')),
-      );
+      MonyFeedback.info(context, 'Solicitud enviada: ${widget.kind.label}.');
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Este launcher no permite agregar el widget directamente. Agrégalo desde su lista de widgets.'),
-        ),
+      MonyFeedback.info(
+        context,
+        'Este launcher no permite agregar el widget directamente. Agrégalo desde su lista de widgets.',
       );
     } finally {
       if (mounted) setState(() => _adding = false);

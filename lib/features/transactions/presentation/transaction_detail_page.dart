@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/mony_feedback.dart';
+import '../../../core/widgets/mony_confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -153,26 +156,21 @@ class TransactionDetailPage extends ConsumerWidget {
                       .duplicate(transaction.id);
                   if (context.mounted && id != null) {
                     context.goNamed('transactions');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Movimiento duplicado con la fecha de hoy.',
-                        ),
-                      ),
+                    MonyFeedback.success(
+                      context,
+                      'Movimiento duplicado con la fecha de hoy.',
                     );
                   } else if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('No encontramos el movimiento.'),
-                      ),
+                    MonyFeedback.error(
+                      context,
+                      'No encontramos el movimiento.',
                     );
                   }
                 } catch (_) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('No se pudo duplicar el movimiento.'),
-                      ),
+                    MonyFeedback.error(
+                      context,
+                      'No se pudo duplicar el movimiento.',
                     );
                   }
                 }
@@ -182,22 +180,12 @@ class TransactionDetailPage extends ConsumerWidget {
             ),
             TextButton.icon(
               onPressed: () async {
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Eliminar movimiento'),
-                    content: const Text('Esta acción no se puede deshacer.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancelar'),
-                      ),
-                      FilledButton.tonal(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Eliminar'),
-                      ),
-                    ],
-                  ),
+                final confirmed = await MonyConfirmDialog.show(
+                  context,
+                  title: 'Eliminar movimiento',
+                  message: 'Esta acción no se puede deshacer.',
+                  confirmLabel: 'Eliminar',
+                  destructive: true,
                 );
                 if (confirmed != true || !context.mounted) return;
                 try {
@@ -207,10 +195,9 @@ class TransactionDetailPage extends ConsumerWidget {
                   if (context.mounted) context.goNamed('transactions');
                 } catch (_) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('No se pudo eliminar el movimiento.'),
-                      ),
+                    MonyFeedback.error(
+                      context,
+                      'No se pudo eliminar el movimiento.',
                     );
                   }
                 }

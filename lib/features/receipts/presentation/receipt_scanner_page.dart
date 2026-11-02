@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/mony_feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -188,9 +190,7 @@ class _ReceiptScannerPageState extends ConsumerState<ReceiptScannerPage> {
             ),
           );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gasto del ticket guardado.')),
-      );
+      MonyFeedback.success(context, 'Gasto del ticket guardado.');
       context.goNamed('transactions');
     } on InvalidTransactionException catch (error) {
       _showMessage(error.message);
@@ -252,9 +252,7 @@ class _ReceiptScannerPageState extends ConsumerState<ReceiptScannerPage> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    MonyFeedback.info(context, message);
   }
 
   @override

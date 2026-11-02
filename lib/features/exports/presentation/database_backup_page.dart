@@ -2,6 +2,9 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/mony_feedback.dart';
+import '../../../core/widgets/mony_confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/encrypted_database_backup.dart';
@@ -49,9 +52,7 @@ class _DatabaseBackupPageState extends ConsumerState<DatabaseBackupPage> {
         dialogTitle: 'Guardar copia cifrada de Mony',
       );
       if (saved != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Copia cifrada guardada.')),
-        );
+        MonyFeedback.success(context, 'Copia cifrada guardada.');
       }
     });
   }
@@ -61,25 +62,13 @@ class _DatabaseBackupPageState extends ConsumerState<DatabaseBackupPage> {
       setState(() => _error = 'Escribe la contraseña de la copia.');
       return;
     }
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reemplazar los datos actuales'),
-        content: const Text(
-          'La restauración reemplaza todos los datos de Mony por los de la copia. '
-          'La operación se revierte automáticamente si falla la validación.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Continuar'),
-          ),
-        ],
-      ),
+    final confirmed = await MonyConfirmDialog.show(
+      context,
+      title: 'Reemplazar los datos actuales',
+      message:
+          'La restauración reemplaza todos los datos de Mony por los de la copia. La operación se revierte automáticamente si falla la validación.',
+      confirmLabel: 'Continuar',
+      destructive: true,
     );
     if (confirmed != true || !mounted) return;
     await _run(() async {
@@ -94,9 +83,7 @@ class _DatabaseBackupPageState extends ConsumerState<DatabaseBackupPage> {
           .read(encryptedDatabaseBackupProvider)
           .restore(Uint8List.fromList(bytes), _restorePassword.text);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Datos restaurados correctamente.')),
-        );
+        MonyFeedback.success(context, 'Datos restaurados correctamente.');
       }
     });
   }

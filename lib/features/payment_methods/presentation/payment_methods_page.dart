@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/mony_feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/payment_method.dart';
@@ -92,9 +94,7 @@ class _PaymentMethodsPageState extends ConsumerState<PaymentMethodsPage> {
 
   void _message(String text) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(text)));
+    MonyFeedback.info(context, text);
   }
 
   @override

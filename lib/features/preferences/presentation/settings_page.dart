@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/mony_feedback.dart';
+import '../../../core/widgets/mony_confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -37,35 +40,21 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   void _save(Future<void> Function() action) {
     action().catchError((_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('No se pudo guardar el ajuste. Inténtalo de nuevo.'),
-          ),
-        );
+      MonyFeedback.error(
+        context,
+        'No se pudo guardar el ajuste. Inténtalo de nuevo.',
+      );
     });
   }
 
   Future<void> _resetPreferences() async {
-    final shouldReset = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Restaurar preferencias'),
-        content: const Text(
+    final shouldReset = await MonyConfirmDialog.show(
+      context,
+      title: 'Restaurar preferencias',
+      message:
           'Se restablecerán el tema, los colores, el formato de moneda y los recordatorios.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Restaurar'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Restaurar',
+      destructive: true,
     );
 
     if (!mounted || shouldReset != true) return;
@@ -77,10 +66,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       if (enabled &&
           !await ref.read(notificationClientProvider).requestPermission()) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No se concedió el permiso para mostrar avisos.'),
-            ),
+          MonyFeedback.error(
+            context,
+            'No se concedió el permiso para mostrar avisos.',
           );
         }
         return;
@@ -90,9 +78,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           .setNotificationsEnabled(enabled);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo actualizar este ajuste.')),
-        );
+        MonyFeedback.error(context, 'No se pudo actualizar este ajuste.');
       }
     }
   }

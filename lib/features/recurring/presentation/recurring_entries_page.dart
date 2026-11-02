@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/mony_feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/money/money_formatter.dart';
 import '../../categories/domain/category.dart';
@@ -91,10 +93,9 @@ class RecurringEntriesPage extends ConsumerWidget {
             .toList(growable: false);
     final methods = ref.read(activePaymentMethodsProvider).value ?? const [];
     if (categories.isEmpty || methods.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Agrega una categoría y un método de pago primero.'),
-        ),
+      MonyFeedback.info(
+        context,
+        'Agrega una categoría y un método de pago primero.',
       );
       return;
     }
@@ -116,14 +117,11 @@ class RecurringEntriesPage extends ConsumerWidget {
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              existing == null
-                  ? 'No se pudo guardar la serie.'
-                  : 'No se pudo actualizar la serie.',
-            ),
-          ),
+        MonyFeedback.info(
+          context,
+          existing == null
+              ? 'No se pudo guardar la serie.'
+              : 'No se pudo actualizar la serie.',
         );
       }
     }

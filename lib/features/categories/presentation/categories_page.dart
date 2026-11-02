@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/mony_feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/money/money_formatter.dart';
@@ -80,12 +82,17 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
       }
     }
     try {
-      await ref
-          .read(categoriesRepositoryProvider)
-          .setActive(category.id, !category.isActive);
-      _message(
-        category.isActive ? 'Categoría archivada.' : 'Categoría restaurada.',
-      );
+      final repository = ref.read(categoriesRepositoryProvider);
+      await repository.setActive(category.id, !category.isActive);
+      if (category.isActive && mounted) {
+        MonyFeedback.undo(
+          context,
+          'Categoría archivada.',
+          onUndo: () => repository.setActive(category.id, true),
+        );
+      } else {
+        _message('Categoría restaurada.');
+      }
     } catch (_) {
       _message('No se pudo actualizar la categoría.');
     }
@@ -93,9 +100,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
 
   void _message(String value) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(value)));
+    MonyFeedback.info(context, value);
   }
 
   @override

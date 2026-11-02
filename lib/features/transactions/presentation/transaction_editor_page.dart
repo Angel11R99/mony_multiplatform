@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/mony_feedback.dart';
+import '../../../core/widgets/mony_confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -129,22 +132,12 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
   }
 
   Future<void> _confirmDiscard() async {
-    final discard = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Descartar cambios'),
-        content: const Text('Hay cambios sin guardar en este movimiento.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Seguir editando'),
-          ),
-          FilledButton.tonal(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Descartar'),
-          ),
-        ],
-      ),
+    final discard = await MonyConfirmDialog.show(
+      context,
+      title: 'Descartar cambios',
+      message: 'Hay cambios sin guardar en este movimiento.',
+      confirmLabel: 'Descartar',
+      cancelLabel: 'Seguir editando',
     );
     if (discard == true && mounted) Navigator.of(context).pop();
   }
@@ -209,19 +202,14 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
         await repository.update(transaction);
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              existing == null
-                  ? _type == TransactionType.income
-                        ? 'Ingreso registrado.'
-                        : 'Gasto registrado.'
-                  : 'Movimiento actualizado.',
-            ),
-          ),
-        );
+      MonyFeedback.success(
+        context,
+        existing == null
+            ? _type == TransactionType.income
+                  ? 'Ingreso registrado.'
+                  : 'Gasto registrado.'
+            : 'Movimiento actualizado.',
+      );
       context.goNamed('transactions');
     } on InvalidTransactionException catch (error) {
       _showMessage(error.message);
@@ -246,9 +234,7 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    MonyFeedback.info(context, message);
   }
 
   @override

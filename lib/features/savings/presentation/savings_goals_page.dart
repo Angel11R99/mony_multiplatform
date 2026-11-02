@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 import '../../../core/money/money_formatter.dart';
+import '../../../core/theme/mony_tokens.dart';
+import '../../../core/widgets/mony_feedback.dart';
+import '../../../core/widgets/mony_confirm_dialog.dart';
 import '../../preferences/domain/app_preferences.dart';
 import '../../preferences/presentation/preferences_controller.dart';
 import '../domain/savings_goal.dart';
@@ -105,16 +109,13 @@ class _SavingsGoalsPageState extends ConsumerState<SavingsGoalsPage> {
                       } on InvalidSavingsGoalException catch (error) {
                         if (!dialogContext.mounted) return;
                         setDialogState(() => saving = false);
-                        ScaffoldMessenger.of(
-                          dialogContext,
-                        ).showSnackBar(SnackBar(content: Text(error.message)));
+                        MonyFeedback.error(dialogContext, error.message);
                       } catch (_) {
                         if (!dialogContext.mounted) return;
                         setDialogState(() => saving = false);
-                        ScaffoldMessenger.of(dialogContext).showSnackBar(
-                          const SnackBar(
-                            content: Text('No se pudo guardar la meta.'),
-                          ),
+                        MonyFeedback.error(
+                          dialogContext,
+                          'No se pudo guardar la meta.',
                         );
                       }
                     },
@@ -210,16 +211,13 @@ class _SavingsGoalsPageState extends ConsumerState<SavingsGoalsPage> {
                       } on InvalidSavingsGoalException catch (error) {
                         if (!dialogContext.mounted) return;
                         setDialogState(() => saving = false);
-                        ScaffoldMessenger.of(
-                          dialogContext,
-                        ).showSnackBar(SnackBar(content: Text(error.message)));
+                        MonyFeedback.error(dialogContext, error.message);
                       } catch (_) {
                         if (!dialogContext.mounted) return;
                         setDialogState(() => saving = false);
-                        ScaffoldMessenger.of(dialogContext).showSnackBar(
-                          const SnackBar(
-                            content: Text('No se pudo registrar el aporte.'),
-                          ),
+                        MonyFeedback.error(
+                          dialogContext,
+                          'No se pudo registrar el aporte.',
                         );
                       }
                     },
@@ -240,22 +238,12 @@ class _SavingsGoalsPageState extends ConsumerState<SavingsGoalsPage> {
     Future<void> Function() action,
     String successMessage,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton.tonal(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(confirmText),
-          ),
-        ],
-      ),
+    final confirmed = await MonyConfirmDialog.show(
+      context,
+      title: title,
+      message: message,
+      confirmLabel: confirmText,
+      destructive: true,
     );
     if (confirmed != true || !mounted) return;
     try {
@@ -269,18 +257,15 @@ class _SavingsGoalsPageState extends ConsumerState<SavingsGoalsPage> {
   }
 
   void _openContributions(SavingsGoalProgress goal) {
-    showModalBottomSheet<void>(
+    showMaterialModalBottomSheet<void>(
       context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
+      duration: MonyMotion.durationFor(context, MonyMotion.standard),
       builder: (context) => _ContributionHistorySheet(goal: goal),
     );
   }
 
   void _notify(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    MonyFeedback.info(context, message);
   }
 
   @override
@@ -570,6 +555,17 @@ class _ContributionHistorySheet extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: Container(
+                width: 32,
+                height: 4,
+                margin: const EdgeInsets.only(top: MonySpace.x2),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(MonyRadius.small),
+                ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
               child: Column(
@@ -597,6 +593,7 @@ class _ContributionHistorySheet extends ConsumerWidget {
                         child: Text('Todavía no hay aportes para esta meta.'),
                       )
                     : ListView.separated(
+                        controller: ModalScrollController.of(context),
                         itemCount: items.length,
                         separatorBuilder: (context, index) =>
                             const Divider(height: 1),

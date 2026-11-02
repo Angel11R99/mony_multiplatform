@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/mony_feedback.dart';
+import '../../../core/widgets/mony_confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -224,24 +227,12 @@ Future<void> _duplicate(BuildContext context, WidgetRef ref, int id) async {
 }
 
 Future<void> _delete(BuildContext context, WidgetRef ref, int id) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Eliminar lista'),
-      content: const Text(
-        'Se eliminarán los productos y ajustes de esta lista.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext, false),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(dialogContext, true),
-          child: const Text('Eliminar'),
-        ),
-      ],
-    ),
+  final confirmed = await MonyConfirmDialog.show(
+    context,
+    title: 'Eliminar lista',
+    message: 'Se eliminarán los productos y ajustes de esta lista.',
+    confirmLabel: 'Eliminar',
+    destructive: true,
   );
   if (confirmed != true) return;
   try {
@@ -251,9 +242,8 @@ Future<void> _delete(BuildContext context, WidgetRef ref, int id) async {
   }
 }
 
-void _showMessage(BuildContext context, String message) => ScaffoldMessenger.of(
-  context,
-).showSnackBar(SnackBar(content: Text(message)));
+void _showMessage(BuildContext context, String message) =>
+    MonyFeedback.info(context, message);
 
 class _ShoppingListCard extends StatelessWidget {
   const _ShoppingListCard({

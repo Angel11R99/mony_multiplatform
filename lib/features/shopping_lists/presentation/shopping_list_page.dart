@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/mony_feedback.dart';
+import '../../../core/widgets/mony_confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -730,9 +733,7 @@ Future<void> _editList(
               if (dialogContext.mounted) Navigator.pop(dialogContext, true);
             } on ShoppingListException catch (error) {
               if (dialogContext.mounted) {
-                ScaffoldMessenger.of(
-                  dialogContext,
-                ).showSnackBar(SnackBar(content: Text(error.message)));
+                MonyFeedback.error(dialogContext, error.message);
               }
             }
           },
@@ -1006,10 +1007,9 @@ Future<void> _finalize(
       )
       .toList();
   if (categories.isEmpty || methods.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Activa una categoría de gasto y un método de pago.'),
-      ),
+    MonyFeedback.info(
+      context,
+      'Activa una categoría de gasto y un método de pago.',
     );
     return;
   }
@@ -1125,21 +1125,16 @@ Future<void> _finalize(
           paymentMethodId: methodId,
         );
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            payable
-                ? 'Compra registrada como pago pendiente · #$financialId'
-                : 'Compra finalizada y agregada a gastos.',
-          ),
-        ),
+      MonyFeedback.success(
+        context,
+        payable
+            ? 'Compra registrada como pago pendiente · #$financialId'
+            : 'Compra finalizada y agregada a gastos.',
       );
     }
   } on ShoppingListException catch (exception) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(exception.message)));
+      MonyFeedback.error(context, exception.message);
     }
   }
 }
@@ -1160,9 +1155,7 @@ Future<void> _startShopping(
         );
   } on ShoppingListException catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      MonyFeedback.error(context, error.message);
     }
   }
 }
@@ -1176,9 +1169,7 @@ Future<void> _saveItem(
     await ref.read(shoppingListRepositoryProvider).saveItem(item);
   } on ShoppingListException catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      MonyFeedback.error(context, error.message);
     }
   }
 }
@@ -1189,31 +1180,19 @@ Future<void> _deleteItem(
   int listId,
   int id,
 ) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Eliminar producto'),
-      content: const Text('¿Quieres quitar este producto de la lista?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext, false),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(dialogContext, true),
-          child: const Text('Eliminar'),
-        ),
-      ],
-    ),
+  final confirmed = await MonyConfirmDialog.show(
+    context,
+    title: 'Eliminar producto',
+    message: '¿Quieres quitar este producto de la lista?',
+    confirmLabel: 'Eliminar',
+    destructive: true,
   );
   if (confirmed != true) return;
   try {
     await ref.read(shoppingListRepositoryProvider).deleteItem(id);
   } on ShoppingListException catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      MonyFeedback.error(context, error.message);
     }
   }
 }
@@ -1223,63 +1202,38 @@ Future<void> _deleteAdjustment(
   WidgetRef ref,
   int id,
 ) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Eliminar ajuste'),
-      content: const Text('¿Quieres quitar este descuento o recargo?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext, false),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(dialogContext, true),
-          child: const Text('Eliminar'),
-        ),
-      ],
-    ),
+  final confirmed = await MonyConfirmDialog.show(
+    context,
+    title: 'Eliminar ajuste',
+    message: '¿Quieres quitar este descuento o recargo?',
+    confirmLabel: 'Eliminar',
+    destructive: true,
   );
   if (confirmed != true) return;
   try {
     await ref.read(shoppingListRepositoryProvider).deleteAdjustment(id);
   } on ShoppingListException catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      MonyFeedback.error(context, error.message);
     }
   }
 }
 
 Future<void> _reopen(BuildContext context, WidgetRef ref, int id) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Reabrir compra'),
-      content: const Text(
+  final confirmed = await MonyConfirmDialog.show(
+    context,
+    title: 'Reabrir compra',
+    message:
         'Se quitará el gasto o pago pendiente asociado. Los productos seguirán guardados.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext, false),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(dialogContext, true),
-          child: const Text('Reabrir'),
-        ),
-      ],
-    ),
+    confirmLabel: 'Reabrir',
+    destructive: true,
   );
   if (confirmed != true) return;
   try {
     await ref.read(shoppingListRepositoryProvider).reopen(id);
   } on ShoppingListException catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      MonyFeedback.error(context, error.message);
     }
   }
 }
@@ -1288,15 +1242,11 @@ Future<void> _duplicate(BuildContext context, WidgetRef ref, int id) async {
   try {
     final newId = await ref.read(shoppingListRepositoryProvider).duplicate(id);
     if (newId != null && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Lista duplicada.')));
+      MonyFeedback.success(context, 'Lista duplicada.');
     }
   } on ShoppingListException catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      MonyFeedback.error(context, error.message);
     }
   }
 }

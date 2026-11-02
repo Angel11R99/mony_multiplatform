@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/mony_feedback.dart';
+import '../../../core/widgets/mony_confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -75,24 +78,13 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     BuildContext context,
     FinanceTransaction transaction,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar movimiento'),
-        content: const Text(
-          'El movimiento se eliminará definitivamente. Esta acción no se puede deshacer.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton.tonal(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
+    final confirmed = await MonyConfirmDialog.show(
+      context,
+      title: 'Eliminar movimiento',
+      message:
+          '“${transaction.description ?? 'Movimiento'}” se eliminará definitivamente. Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      destructive: true,
     );
     if (confirmed != true || !context.mounted) return;
     try {
@@ -129,9 +121,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   }
 
   void _notify(BuildContext context, String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    MonyFeedback.info(context, message);
   }
 
   @override

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/mony_feedback.dart';
+import '../../../core/widgets/mony_confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -381,9 +384,7 @@ Future<void> _recordPayment(
   bool settle = false,
 }) async {
   if (methods.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Agrega un método de pago activo primero.')),
-    );
+    MonyFeedback.info(context, 'Agrega un método de pago activo primero.');
     return;
   }
   final amount = TextEditingController(
@@ -514,33 +515,19 @@ Future<void> _deletePayment(
   WidgetRef ref,
   ObligationPayment payment,
 ) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Eliminar abono'),
-      content: const Text(
-        'También se eliminará el movimiento que se creó para este abono.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext, false),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(dialogContext, true),
-          child: const Text('Eliminar'),
-        ),
-      ],
-    ),
+  final confirmed = await MonyConfirmDialog.show(
+    context,
+    title: 'Eliminar abono',
+    message: 'También se eliminará el movimiento que se creó para este abono.',
+    confirmLabel: 'Eliminar',
+    destructive: true,
   );
   if (confirmed != true) return;
   try {
     await ref.read(obligationRepositoryProvider).deletePayment(payment.id);
   } on ObligationException catch (exception) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(exception.message)));
+      MonyFeedback.error(context, exception.message);
     }
   }
 }
@@ -550,33 +537,20 @@ Future<void> _cancelObligation(
   WidgetRef ref,
   Obligation obligation,
 ) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Cancelar obligación'),
-      content: const Text(
-        'Se conservará en el historial y ya no aceptará abonos.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext, false),
-          child: const Text('Volver'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(dialogContext, true),
-          child: const Text('Cancelar obligación'),
-        ),
-      ],
-    ),
+  final confirmed = await MonyConfirmDialog.show(
+    context,
+    title: 'Cancelar obligación',
+    message: 'Se conservará en el historial y ya no aceptará abonos.',
+    confirmLabel: 'Cancelar obligación',
+    cancelLabel: 'Volver',
+    destructive: true,
   );
   if (confirmed != true) return;
   try {
     await ref.read(obligationRepositoryProvider).cancel(obligation.id);
   } on ObligationException catch (exception) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(exception.message)));
+      MonyFeedback.error(context, exception.message);
     }
   }
 }

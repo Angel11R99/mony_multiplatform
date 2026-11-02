@@ -2,6 +2,8 @@ import 'package:flutter/services.dart';
 
 import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/mony_feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
@@ -143,18 +145,13 @@ class _ExportsPageState extends ConsumerState<ExportsPage> {
         );
       }
       if (mounted && !share) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Archivo exportado correctamente.')),
-        );
+        MonyFeedback.success(context, 'Archivo exportado correctamente.');
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'No se pudo generar o guardar el archivo. Inténtalo de nuevo.',
-            ),
-          ),
+        MonyFeedback.error(
+          context,
+          'No se pudo generar o guardar el archivo. Inténtalo de nuevo.',
         );
       }
     } finally {

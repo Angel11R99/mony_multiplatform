@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/mony_feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -118,17 +120,11 @@ class _BarcodeScannerPageState extends ConsumerState<BarcodeScannerPage> {
             ),
           );
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$name agregado a la lista.')));
+      MonyFeedback.success(context, '$name agregado a la lista.');
       context.pop();
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No se pudo agregar el producto a la lista.'),
-        ),
-      );
+      MonyFeedback.error(context, 'No se pudo agregar el producto a la lista.');
     } finally {
       if (mounted) setState(() => _adding = false);
     }
