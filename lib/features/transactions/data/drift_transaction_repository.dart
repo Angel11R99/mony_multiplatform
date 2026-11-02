@@ -55,6 +55,11 @@ class DriftTransactionRepository implements TransactionRepository {
         'Este movimiento pertenece a un abono. Edítalo desde la obligación.',
       );
     }
+    if (existing.fixedEntryId != null) {
+      throw const InvalidTransactionException(
+        'Este movimiento pertenece a una serie recurrente. Edítalo desde la serie.',
+      );
+    }
     final normalized = TransactionValidator.normalize(transaction);
     if (existing.savingsGoalId != null &&
         normalized.type != TransactionType.expense) {
@@ -90,6 +95,11 @@ class DriftTransactionRepository implements TransactionRepository {
         'Este movimiento pertenece a un abono y no se puede duplicar por separado.',
       );
     }
+    if (original.fixedEntryId != null) {
+      throw const InvalidTransactionException(
+        'Este movimiento pertenece a una serie recurrente y no se puede duplicar por separado.',
+      );
+    }
     final now = DateTime.now();
     final originalModel = _fromRow(original);
     final duplicate = FinanceTransaction(
@@ -112,6 +122,14 @@ class DriftTransactionRepository implements TransactionRepository {
     if (await _isObligationPayment(id)) {
       throw const InvalidTransactionException(
         'Elimina el abono desde su obligación para revertir este movimiento.',
+      );
+    }
+    final row = await (_database.select(
+      _database.transactions,
+    )..where((item) => item.id.equals(id))).getSingleOrNull();
+    if (row?.fixedEntryId != null) {
+      throw const InvalidTransactionException(
+        'Este movimiento pertenece a una serie recurrente. Elimínalo desde la serie.',
       );
     }
     await (_database.delete(
