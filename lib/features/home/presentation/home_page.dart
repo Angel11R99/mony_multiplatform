@@ -10,6 +10,11 @@ class HomePage extends StatelessWidget {
       title: const Text('Mony'),
       actions: [
         IconButton(
+          tooltip: 'Apariencia y preferencias',
+          onPressed: () => context.goNamed('settings'),
+          icon: const Icon(Icons.tune),
+        ),
+        IconButton(
           tooltip: 'Acerca de Mony',
           onPressed: () => context.goNamed('about'),
           icon: const Icon(Icons.info_outline),

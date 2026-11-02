@@ -27,3 +27,7 @@ GitHub Actions ejecuta análisis estático y pruebas de Flutter en Ubuntu y macO
 ## Roadmap
 
 El alcance de los módulos está en [`docs/MONY_FLUTTER_ROADMAP.md`](docs/MONY_FLUTTER_ROADMAP.md).
+
+## Apariencia y preferencias
+
+Desde el botón de ajustes en Inicio puedes elegir tema del sistema, claro u oscuro; cambiar los colores principal y secundario con la paleta o el selector HSV; y elegir si DOP se muestra como `RD$` o `DOP`. Los ajustes se guardan localmente. Los importes se formatean desde unidades menores enteras y usan el locale dominicano.

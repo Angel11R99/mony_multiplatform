@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../core/config/app_config.dart';
 import '../core/routing/app_router.dart';
+import '../core/theme/mony_theme.dart';
+import '../features/preferences/domain/app_preferences.dart';
+import '../features/preferences/presentation/preferences_controller.dart';
 
 class MonyApp extends ConsumerWidget {
   const MonyApp({super.key});
@@ -12,17 +15,15 @@ class MonyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(appConfigProvider);
     final router = ref.watch(appRouterProvider);
+    final preferences =
+        ref.watch(appPreferencesProvider).value ?? AppPreferences.defaults;
 
     return MaterialApp.router(
       title: config.appName,
       debugShowCheckedModeBanner: config.showDebugBanner,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF176B5B),
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-      ),
+      theme: MonyTheme.light(preferences),
+      darkTheme: MonyTheme.dark(preferences),
+      themeMode: MonyTheme.themeMode(preferences.themeMode),
       routerConfig: router,
     );
   }

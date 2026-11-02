@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/home/presentation/home_page.dart';
+import '../../features/preferences/presentation/settings_page.dart';
 
 GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
   initialLocation: initialLocation,
@@ -15,6 +16,11 @@ GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
       path: '/about',
       name: 'about',
       builder: (context, state) => const AboutPage(),
+    ),
+    GoRoute(
+      path: '/settings',
+      name: 'settings',
+      builder: (context, state) => const SettingsPage(),
     ),
   ],
   errorBuilder: (context, state) => UnknownRoutePage(location: state.uri.path),
