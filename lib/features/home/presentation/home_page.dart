@@ -47,45 +47,74 @@ class _HomePageState extends ConsumerState<HomePage> {
       appBar: AppBar(
         title: const Text('Mony'),
         actions: [
-          IconButton(
-            tooltip: 'Métodos de pago',
-            onPressed: () => context.goNamed('paymentMethods'),
-            icon: const Icon(Icons.payment_outlined),
-          ),
-          IconButton(
-            tooltip: 'Administrar categorías',
-            onPressed: () => context.goNamed('categories'),
-            icon: const Icon(Icons.category_outlined),
-          ),
-          IconButton(
-            tooltip: 'Apariencia y preferencias',
-            onPressed: () => context.goNamed('settings'),
-            icon: const Icon(Icons.tune),
-          ),
-          IconButton(
-            tooltip: 'Exportar datos',
-            onPressed: () => context.goNamed('exports'),
-            icon: const Icon(Icons.file_download_outlined),
-          ),
-          IconButton(
-            tooltip: 'Escanear producto',
-            onPressed: () => context.pushNamed('barcodeScan'),
-            icon: const Icon(Icons.qr_code_scanner),
-          ),
-          IconButton(
-            tooltip: 'Escanear ticket',
-            onPressed: () => context.pushNamed('receiptScan'),
-            icon: const Icon(Icons.document_scanner_outlined),
-          ),
-          IconButton(
-            tooltip: 'Widgets de Mony',
-            onPressed: () => context.pushNamed('widgets'),
-            icon: const Icon(Icons.widgets_outlined),
-          ),
-          IconButton(
-            tooltip: 'Acerca de Mony',
-            onPressed: () => context.goNamed('about'),
-            icon: const Icon(Icons.info_outline),
+          PopupMenuButton<_HomeAction>(
+            tooltip: 'Más opciones',
+            onSelected: (action) {
+              switch (action) {
+                case _HomeAction.paymentMethods:
+                  context.goNamed('paymentMethods');
+                  break;
+                case _HomeAction.categories:
+                  context.goNamed('categories');
+                  break;
+                case _HomeAction.settings:
+                  context.pushNamed('settings');
+                  break;
+                case _HomeAction.exports:
+                  context.pushNamed('exports');
+                  break;
+                case _HomeAction.barcode:
+                  context.pushNamed('barcodeScan');
+                  break;
+                case _HomeAction.receipt:
+                  context.pushNamed('receiptScan');
+                  break;
+                case _HomeAction.widgets:
+                  context.pushNamed('widgets');
+                  break;
+                case _HomeAction.about:
+                  context.pushNamed('about');
+                  break;
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: _HomeAction.paymentMethods,
+                child: Text('Métodos de pago'),
+              ),
+              PopupMenuItem(
+                value: _HomeAction.categories,
+                child: Text('Administrar categorías'),
+              ),
+              PopupMenuItem(
+                value: _HomeAction.settings,
+                child: Text('Apariencia y preferencias'),
+              ),
+              PopupMenuItem(
+                value: _HomeAction.exports,
+                child: Text('Exportar datos'),
+              ),
+              PopupMenuItem(
+                value: _HomeAction.barcode,
+                child: Text('Escanear producto'),
+              ),
+              PopupMenuItem(
+                value: _HomeAction.receipt,
+                child: Text('Escanear ticket'),
+              ),
+              PopupMenuItem(
+                value: _HomeAction.widgets,
+                child: Text('Widgets de Mony'),
+              ),
+              PopupMenuItem(
+                value: _HomeAction.about,
+                child: Text('Acerca de Mony'),
+              ),
+            ],
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: MonySpace.x2),
+              child: Icon(Icons.more_vert),
+            ),
           ),
         ],
       ),
@@ -431,3 +460,14 @@ String _monthName(DateTime date) {
 
 String _dateLabel(DateTime date) =>
     '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+
+enum _HomeAction {
+  paymentMethods,
+  categories,
+  settings,
+  exports,
+  barcode,
+  receipt,
+  widgets,
+  about,
+}

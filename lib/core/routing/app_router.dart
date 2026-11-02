@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'mony_navigation_shell.dart';
 import '../../features/home/presentation/home_page.dart';
 import '../../features/budgets/presentation/budgets_page.dart';
 import '../../features/categories/presentation/categories_page.dart';
@@ -24,159 +25,206 @@ import '../../features/barcodes/presentation/barcode_scanner_page.dart';
 import '../../features/receipts/presentation/receipt_scanner_page.dart';
 import '../../features/widgets/presentation/widgets_page.dart';
 
-GoRouter createAppRouter({String initialLocation = '/'}) => GoRouter(
-  initialLocation: initialLocation,
-  routes: [
-    GoRoute(
-      path: '/',
-      name: 'home',
-      builder: (context, state) => const HomePage(),
-    ),
-    GoRoute(
-      path: '/about',
-      name: 'about',
-      builder: (context, state) => const AboutPage(),
-    ),
-    GoRoute(
-      path: '/settings',
-      name: 'settings',
-      builder: (context, state) => const SettingsPage(),
-    ),
-    GoRoute(
-      path: '/privacy',
-      name: 'privacy',
-      builder: (context, state) => const PrivacyPage(),
-    ),
-    GoRoute(
-      path: '/exports',
-      name: 'exports',
-      builder: (context, state) => const ExportsPage(),
-    ),
-    GoRoute(
-      path: '/backup',
-      name: 'backup',
-      builder: (context, state) => const DatabaseBackupPage(),
-    ),
-    GoRoute(
-      path: '/barcode-scan',
-      name: 'barcodeScan',
-      builder: (context, state) => BarcodeScannerPage(
-        shoppingListId: int.tryParse(state.uri.queryParameters['listId'] ?? ''),
+GoRouter createAppRouter({String initialLocation = '/'}) {
+  final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+  final homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
+  final transactionsNavigatorKey = GlobalKey<NavigatorState>(
+    debugLabel: 'transactions',
+  );
+  final categoriesNavigatorKey = GlobalKey<NavigatorState>(
+    debugLabel: 'categories',
+  );
+  final paymentMethodsNavigatorKey = GlobalKey<NavigatorState>(
+    debugLabel: 'paymentMethods',
+  );
+
+  return GoRouter(
+    navigatorKey: rootNavigatorKey,
+    initialLocation: initialLocation,
+    routes: [
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            MonyNavigationShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            navigatorKey: homeNavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/',
+                name: 'home',
+                builder: (context, state) => const HomePage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: transactionsNavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/transactions',
+                name: 'transactions',
+                builder: (context, state) => const TransactionsPage(),
+                routes: [
+                  GoRoute(
+                    path: 'new',
+                    name: 'transactionNew',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) => TransactionEditorPage(
+                      initialType: state.uri.queryParameters['type'] == 'income'
+                          ? TransactionType.income
+                          : TransactionType.expense,
+                    ),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    name: 'transactionDetail',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      final id = int.tryParse(state.pathParameters['id'] ?? '');
+                      return id == null
+                          ? UnknownRoutePage(location: state.uri.path)
+                          : TransactionDetailPage(transactionId: id);
+                    },
+                  ),
+                  GoRoute(
+                    path: ':id/edit',
+                    name: 'transactionEdit',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      final id = int.tryParse(state.pathParameters['id'] ?? '');
+                      return id == null
+                          ? UnknownRoutePage(location: state.uri.path)
+                          : TransactionEditorPage(transactionId: id);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: categoriesNavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/categories',
+                name: 'categories',
+                builder: (context, state) => const CategoriesPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: paymentMethodsNavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/payment-methods',
+                name: 'paymentMethods',
+                builder: (context, state) => const PaymentMethodsPage(),
+              ),
+            ],
+          ),
+        ],
       ),
-    ),
-    GoRoute(
-      path: '/receipt-scan',
-      name: 'receiptScan',
-      builder: (context, state) => const ReceiptScannerPage(),
-    ),
-    GoRoute(
-      path: '/widgets',
-      name: 'widgets',
-      builder: (context, state) => const WidgetsPage(),
-    ),
-    GoRoute(
-      path: '/categories',
-      name: 'categories',
-      builder: (context, state) => const CategoriesPage(),
-    ),
-    GoRoute(
-      path: '/payment-methods',
-      name: 'paymentMethods',
-      builder: (context, state) => const PaymentMethodsPage(),
-    ),
-    GoRoute(
-      path: '/savings-goals',
-      name: 'savingsGoals',
-      builder: (context, state) => const SavingsGoalsPage(),
-    ),
-    GoRoute(
-      path: '/budgets',
-      name: 'budgets',
-      builder: (context, state) => const BudgetsPage(),
-    ),
-    GoRoute(
-      path: '/statistics',
-      name: 'statistics',
-      builder: (context, state) => const StatisticsPage(),
-    ),
-    GoRoute(
-      path: '/shopping-lists',
-      name: 'shoppingLists',
-      builder: (context, state) => const ShoppingListsPage(),
-      routes: [
-        GoRoute(
-          path: ':id',
-          name: 'shoppingListDetail',
-          builder: (context, state) {
-            final id = int.tryParse(state.pathParameters['id'] ?? '');
-            return id == null
-                ? UnknownRoutePage(location: state.uri.path)
-                : ShoppingListPage(listId: id);
-          },
-        ),
-      ],
-    ),
-    GoRoute(
-      path: '/obligations',
-      name: 'obligations',
-      builder: (context, state) => const ObligationsPage(),
-      routes: [
-        GoRoute(
-          path: ':id',
-          name: 'obligationDetail',
-          builder: (context, state) {
-            final id = int.tryParse(state.pathParameters['id'] ?? '');
-            return id == null
-                ? UnknownRoutePage(location: state.uri.path)
-                : ObligationDetailPage(obligationId: id);
-          },
-        ),
-      ],
-    ),
-    GoRoute(
-      path: '/recurring',
-      name: 'recurringEntries',
-      builder: (context, state) => const RecurringEntriesPage(),
-    ),
-    GoRoute(
-      path: '/transactions',
-      name: 'transactions',
-      builder: (context, state) => const TransactionsPage(),
-      routes: [
-        GoRoute(
-          path: 'new',
-          name: 'transactionNew',
-          builder: (context, state) => TransactionEditorPage(
-            initialType: state.uri.queryParameters['type'] == 'income'
-                ? TransactionType.income
-                : TransactionType.expense,
+      GoRoute(
+        path: '/about',
+        name: 'about',
+        builder: (context, state) => const AboutPage(),
+      ),
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) => const SettingsPage(),
+      ),
+      GoRoute(
+        path: '/privacy',
+        name: 'privacy',
+        builder: (context, state) => const PrivacyPage(),
+      ),
+      GoRoute(
+        path: '/exports',
+        name: 'exports',
+        builder: (context, state) => const ExportsPage(),
+      ),
+      GoRoute(
+        path: '/backup',
+        name: 'backup',
+        builder: (context, state) => const DatabaseBackupPage(),
+      ),
+      GoRoute(
+        path: '/barcode-scan',
+        name: 'barcodeScan',
+        builder: (context, state) => BarcodeScannerPage(
+          shoppingListId: int.tryParse(
+            state.uri.queryParameters['listId'] ?? '',
           ),
         ),
-        GoRoute(
-          path: ':id',
-          name: 'transactionDetail',
-          builder: (context, state) {
-            final id = int.tryParse(state.pathParameters['id'] ?? '');
-            return id == null
-                ? UnknownRoutePage(location: state.uri.path)
-                : TransactionDetailPage(transactionId: id);
-          },
-        ),
-        GoRoute(
-          path: ':id/edit',
-          name: 'transactionEdit',
-          builder: (context, state) {
-            final id = int.tryParse(state.pathParameters['id'] ?? '');
-            return id == null
-                ? UnknownRoutePage(location: state.uri.path)
-                : TransactionEditorPage(transactionId: id);
-          },
-        ),
-      ],
-    ),
-  ],
-  errorBuilder: (context, state) => UnknownRoutePage(location: state.uri.path),
-);
+      ),
+      GoRoute(
+        path: '/receipt-scan',
+        name: 'receiptScan',
+        builder: (context, state) => const ReceiptScannerPage(),
+      ),
+      GoRoute(
+        path: '/widgets',
+        name: 'widgets',
+        builder: (context, state) => const WidgetsPage(),
+      ),
+      GoRoute(
+        path: '/savings-goals',
+        name: 'savingsGoals',
+        builder: (context, state) => const SavingsGoalsPage(),
+      ),
+      GoRoute(
+        path: '/budgets',
+        name: 'budgets',
+        builder: (context, state) => const BudgetsPage(),
+      ),
+      GoRoute(
+        path: '/statistics',
+        name: 'statistics',
+        builder: (context, state) => const StatisticsPage(),
+      ),
+      GoRoute(
+        path: '/shopping-lists',
+        name: 'shoppingLists',
+        builder: (context, state) => const ShoppingListsPage(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            name: 'shoppingListDetail',
+            builder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '');
+              return id == null
+                  ? UnknownRoutePage(location: state.uri.path)
+                  : ShoppingListPage(listId: id);
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/obligations',
+        name: 'obligations',
+        builder: (context, state) => const ObligationsPage(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            name: 'obligationDetail',
+            builder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '');
+              return id == null
+                  ? UnknownRoutePage(location: state.uri.path)
+                  : ObligationDetailPage(obligationId: id);
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/recurring',
+        name: 'recurringEntries',
+        builder: (context, state) => const RecurringEntriesPage(),
+      ),
+    ],
+    errorBuilder: (context, state) =>
+        UnknownRoutePage(location: state.uri.path),
+  );
+}
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
