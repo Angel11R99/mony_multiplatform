@@ -1,5 +1,13 @@
 # Historial de implementación
 
+## P12 — Estadísticas, gráficos y comparaciones — 2026-11-02
+- Resultado: APPROVED bajo la autorización persistente del usuario.
+- Gráfico lineal de evolución migrado del painter manual a `fl_chart` ya adoptado en P07; agrega tooltip táctil, leyenda, descripción semántica y tabla expandible de valores mensuales.
+- El rango seleccionado sincroniza métricas y tendencia; filtro de categoría aplicado a resumen, comparación, límites, desglose y serie. Los meses sin movimientos tienen cero y rangos largos se limitan visualmente a los 12 meses recientes con etiqueta explícita.
+- Comparaciones de mes/año usan acumulados equivalentes; ciclo compara longitud equivalente. Se documentan límites actuales: moneda única DOP, fechas civiles, sin semántica dedicada de transferencias/devoluciones/cancelaciones, sin caché ni agregación DAO.
+- `dart format`, `flutter analyze`, `git diff --check` y `flutter build web --release` completados. Pruebas automatizadas no ejecutadas; UAT y rendimiento con miles de filas quedan para el usuario/P14.
+- Commits de código y docs pendientes hasta la petición del siguiente paso; progreso en P13.
+
 ## P11 — Categorías, métodos e integridad referencial — 2026-11-02
 - Resultado: APPROVED bajo la autorización persistente del usuario.
 - `DriftCategoriesRepository` ahora valida en transacción alta/edición, existencia y protección de la última categoría de ingresos activa; `DriftPaymentMethodsRepository` valida duplicados, existencia y nombres sin datos sensibles.

@@ -16,7 +16,7 @@ Esta matriz se enlaza a los criterios AC-xx-y de cada documento; **no marcar com
 | P09 | Filtros combinados y búsqueda estable | APPROVED — `P09_SEARCH_FILTERS_REPORT.md`; análisis y build web OK; validación manual de volumen queda para el usuario |
 | P10 | Inclusión de fechas/locale/hora verificada | APPROVED — calendario `table_calendar` y fechas civiles centralizadas; analyze y build web OK; prueba visual manual queda para el usuario |
 | P11 | Integridad referencial categorías/métodos | APPROVED — validaciones redundantes en repositorios, archivado sin huérfanos y campos sensibles bloqueados; analyze y build web OK; pruebas existentes no ejecutadas |
-| P12 | Fórmulas estadísticas y chart tests | TODO |
+| P12 | Fórmulas y límites documentados; `fl_chart`, filtros sincronizados y datos accesibles implementados. Analyze y build web OK; UAT manual y medición con miles de filas pendientes | APPROVED — `P12_ANALYTICS_REPORT.md`; pruebas automatizadas no ejecutadas |
 | P13 | Privacy review y controles documentados | TODO |
 | P14 | Pruebas, perf, accesibilidad y plataformas | TODO |
 | P15 | Release checklist, UAT y rollback | TODO |
