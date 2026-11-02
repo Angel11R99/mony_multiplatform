@@ -5805,6 +5805,1350 @@ class ShoppingPayablesCompanion extends UpdateCompanion<ShoppingPayableRow> {
   }
 }
 
+class $ObligationsTable extends Obligations
+    with TableInfo<$ObligationsTable, ObligationRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ObligationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _directionMeta = const VerificationMeta(
+    'direction',
+  );
+  @override
+  late final GeneratedColumn<String> direction = GeneratedColumn<String>(
+    'direction',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 12,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 120,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _counterpartyMeta = const VerificationMeta(
+    'counterparty',
+  );
+  @override
+  late final GeneratedColumn<String> counterparty = GeneratedColumn<String>(
+    'counterparty',
+    aliasedName,
+    true,
+    additionalChecks: GeneratedColumn.checkTextLength(maxTextLength: 100),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _amountInCentsMeta = const VerificationMeta(
+    'amountInCents',
+  );
+  @override
+  late final GeneratedColumn<int> amountInCents = GeneratedColumn<int>(
+    'amount_in_cents',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(amountInCents).isBiggerThanValue(0),
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dueDateEpochDayMeta = const VerificationMeta(
+    'dueDateEpochDay',
+  );
+  @override
+  late final GeneratedColumn<int> dueDateEpochDay = GeneratedColumn<int>(
+    'due_date_epoch_day',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<int> categoryId = GeneratedColumn<int>(
+    'category_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES categories (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _defaultPaymentMethodIdMeta =
+      const VerificationMeta('defaultPaymentMethodId');
+  @override
+  late final GeneratedColumn<int> defaultPaymentMethodId = GeneratedColumn<int>(
+    'default_payment_method_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES payment_methods (id) ON DELETE SET NULL',
+    ),
+  );
+  static const VerificationMeta _sourceShoppingListIdMeta =
+      const VerificationMeta('sourceShoppingListId');
+  @override
+  late final GeneratedColumn<int> sourceShoppingListId = GeneratedColumn<int>(
+    'source_shopping_list_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'UNIQUE REFERENCES shopping_lists (id) ON DELETE SET NULL',
+    ),
+  );
+  static const VerificationMeta _isCancelledMeta = const VerificationMeta(
+    'isCancelled',
+  );
+  @override
+  late final GeneratedColumn<bool> isCancelled = GeneratedColumn<bool>(
+    'is_cancelled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_cancelled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    direction,
+    title,
+    counterparty,
+    amountInCents,
+    dueDateEpochDay,
+    categoryId,
+    defaultPaymentMethodId,
+    sourceShoppingListId,
+    isCancelled,
+    notes,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'obligations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ObligationRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('direction')) {
+      context.handle(
+        _directionMeta,
+        direction.isAcceptableOrUnknown(data['direction']!, _directionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_directionMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('counterparty')) {
+      context.handle(
+        _counterpartyMeta,
+        counterparty.isAcceptableOrUnknown(
+          data['counterparty']!,
+          _counterpartyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('amount_in_cents')) {
+      context.handle(
+        _amountInCentsMeta,
+        amountInCents.isAcceptableOrUnknown(
+          data['amount_in_cents']!,
+          _amountInCentsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_amountInCentsMeta);
+    }
+    if (data.containsKey('due_date_epoch_day')) {
+      context.handle(
+        _dueDateEpochDayMeta,
+        dueDateEpochDay.isAcceptableOrUnknown(
+          data['due_date_epoch_day']!,
+          _dueDateEpochDayMeta,
+        ),
+      );
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryIdMeta);
+    }
+    if (data.containsKey('default_payment_method_id')) {
+      context.handle(
+        _defaultPaymentMethodIdMeta,
+        defaultPaymentMethodId.isAcceptableOrUnknown(
+          data['default_payment_method_id']!,
+          _defaultPaymentMethodIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('source_shopping_list_id')) {
+      context.handle(
+        _sourceShoppingListIdMeta,
+        sourceShoppingListId.isAcceptableOrUnknown(
+          data['source_shopping_list_id']!,
+          _sourceShoppingListIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_cancelled')) {
+      context.handle(
+        _isCancelledMeta,
+        isCancelled.isAcceptableOrUnknown(
+          data['is_cancelled']!,
+          _isCancelledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ObligationRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ObligationRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      direction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}direction'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      counterparty: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}counterparty'],
+      ),
+      amountInCents: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_in_cents'],
+      )!,
+      dueDateEpochDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}due_date_epoch_day'],
+      ),
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}category_id'],
+      )!,
+      defaultPaymentMethodId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}default_payment_method_id'],
+      ),
+      sourceShoppingListId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}source_shopping_list_id'],
+      ),
+      isCancelled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_cancelled'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ObligationsTable createAlias(String alias) {
+    return $ObligationsTable(attachedDatabase, alias);
+  }
+}
+
+class ObligationRow extends DataClass implements Insertable<ObligationRow> {
+  final int id;
+  final String direction;
+  final String title;
+  final String? counterparty;
+  final int amountInCents;
+  final int? dueDateEpochDay;
+  final int categoryId;
+  final int? defaultPaymentMethodId;
+  final int? sourceShoppingListId;
+  final bool isCancelled;
+  final String? notes;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const ObligationRow({
+    required this.id,
+    required this.direction,
+    required this.title,
+    this.counterparty,
+    required this.amountInCents,
+    this.dueDateEpochDay,
+    required this.categoryId,
+    this.defaultPaymentMethodId,
+    this.sourceShoppingListId,
+    required this.isCancelled,
+    this.notes,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['direction'] = Variable<String>(direction);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || counterparty != null) {
+      map['counterparty'] = Variable<String>(counterparty);
+    }
+    map['amount_in_cents'] = Variable<int>(amountInCents);
+    if (!nullToAbsent || dueDateEpochDay != null) {
+      map['due_date_epoch_day'] = Variable<int>(dueDateEpochDay);
+    }
+    map['category_id'] = Variable<int>(categoryId);
+    if (!nullToAbsent || defaultPaymentMethodId != null) {
+      map['default_payment_method_id'] = Variable<int>(defaultPaymentMethodId);
+    }
+    if (!nullToAbsent || sourceShoppingListId != null) {
+      map['source_shopping_list_id'] = Variable<int>(sourceShoppingListId);
+    }
+    map['is_cancelled'] = Variable<bool>(isCancelled);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  ObligationsCompanion toCompanion(bool nullToAbsent) {
+    return ObligationsCompanion(
+      id: Value(id),
+      direction: Value(direction),
+      title: Value(title),
+      counterparty: counterparty == null && nullToAbsent
+          ? const Value.absent()
+          : Value(counterparty),
+      amountInCents: Value(amountInCents),
+      dueDateEpochDay: dueDateEpochDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueDateEpochDay),
+      categoryId: Value(categoryId),
+      defaultPaymentMethodId: defaultPaymentMethodId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(defaultPaymentMethodId),
+      sourceShoppingListId: sourceShoppingListId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceShoppingListId),
+      isCancelled: Value(isCancelled),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory ObligationRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ObligationRow(
+      id: serializer.fromJson<int>(json['id']),
+      direction: serializer.fromJson<String>(json['direction']),
+      title: serializer.fromJson<String>(json['title']),
+      counterparty: serializer.fromJson<String?>(json['counterparty']),
+      amountInCents: serializer.fromJson<int>(json['amountInCents']),
+      dueDateEpochDay: serializer.fromJson<int?>(json['dueDateEpochDay']),
+      categoryId: serializer.fromJson<int>(json['categoryId']),
+      defaultPaymentMethodId: serializer.fromJson<int?>(
+        json['defaultPaymentMethodId'],
+      ),
+      sourceShoppingListId: serializer.fromJson<int?>(
+        json['sourceShoppingListId'],
+      ),
+      isCancelled: serializer.fromJson<bool>(json['isCancelled']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'direction': serializer.toJson<String>(direction),
+      'title': serializer.toJson<String>(title),
+      'counterparty': serializer.toJson<String?>(counterparty),
+      'amountInCents': serializer.toJson<int>(amountInCents),
+      'dueDateEpochDay': serializer.toJson<int?>(dueDateEpochDay),
+      'categoryId': serializer.toJson<int>(categoryId),
+      'defaultPaymentMethodId': serializer.toJson<int?>(defaultPaymentMethodId),
+      'sourceShoppingListId': serializer.toJson<int?>(sourceShoppingListId),
+      'isCancelled': serializer.toJson<bool>(isCancelled),
+      'notes': serializer.toJson<String?>(notes),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  ObligationRow copyWith({
+    int? id,
+    String? direction,
+    String? title,
+    Value<String?> counterparty = const Value.absent(),
+    int? amountInCents,
+    Value<int?> dueDateEpochDay = const Value.absent(),
+    int? categoryId,
+    Value<int?> defaultPaymentMethodId = const Value.absent(),
+    Value<int?> sourceShoppingListId = const Value.absent(),
+    bool? isCancelled,
+    Value<String?> notes = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => ObligationRow(
+    id: id ?? this.id,
+    direction: direction ?? this.direction,
+    title: title ?? this.title,
+    counterparty: counterparty.present ? counterparty.value : this.counterparty,
+    amountInCents: amountInCents ?? this.amountInCents,
+    dueDateEpochDay: dueDateEpochDay.present
+        ? dueDateEpochDay.value
+        : this.dueDateEpochDay,
+    categoryId: categoryId ?? this.categoryId,
+    defaultPaymentMethodId: defaultPaymentMethodId.present
+        ? defaultPaymentMethodId.value
+        : this.defaultPaymentMethodId,
+    sourceShoppingListId: sourceShoppingListId.present
+        ? sourceShoppingListId.value
+        : this.sourceShoppingListId,
+    isCancelled: isCancelled ?? this.isCancelled,
+    notes: notes.present ? notes.value : this.notes,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  ObligationRow copyWithCompanion(ObligationsCompanion data) {
+    return ObligationRow(
+      id: data.id.present ? data.id.value : this.id,
+      direction: data.direction.present ? data.direction.value : this.direction,
+      title: data.title.present ? data.title.value : this.title,
+      counterparty: data.counterparty.present
+          ? data.counterparty.value
+          : this.counterparty,
+      amountInCents: data.amountInCents.present
+          ? data.amountInCents.value
+          : this.amountInCents,
+      dueDateEpochDay: data.dueDateEpochDay.present
+          ? data.dueDateEpochDay.value
+          : this.dueDateEpochDay,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      defaultPaymentMethodId: data.defaultPaymentMethodId.present
+          ? data.defaultPaymentMethodId.value
+          : this.defaultPaymentMethodId,
+      sourceShoppingListId: data.sourceShoppingListId.present
+          ? data.sourceShoppingListId.value
+          : this.sourceShoppingListId,
+      isCancelled: data.isCancelled.present
+          ? data.isCancelled.value
+          : this.isCancelled,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ObligationRow(')
+          ..write('id: $id, ')
+          ..write('direction: $direction, ')
+          ..write('title: $title, ')
+          ..write('counterparty: $counterparty, ')
+          ..write('amountInCents: $amountInCents, ')
+          ..write('dueDateEpochDay: $dueDateEpochDay, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('defaultPaymentMethodId: $defaultPaymentMethodId, ')
+          ..write('sourceShoppingListId: $sourceShoppingListId, ')
+          ..write('isCancelled: $isCancelled, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    direction,
+    title,
+    counterparty,
+    amountInCents,
+    dueDateEpochDay,
+    categoryId,
+    defaultPaymentMethodId,
+    sourceShoppingListId,
+    isCancelled,
+    notes,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ObligationRow &&
+          other.id == this.id &&
+          other.direction == this.direction &&
+          other.title == this.title &&
+          other.counterparty == this.counterparty &&
+          other.amountInCents == this.amountInCents &&
+          other.dueDateEpochDay == this.dueDateEpochDay &&
+          other.categoryId == this.categoryId &&
+          other.defaultPaymentMethodId == this.defaultPaymentMethodId &&
+          other.sourceShoppingListId == this.sourceShoppingListId &&
+          other.isCancelled == this.isCancelled &&
+          other.notes == this.notes &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class ObligationsCompanion extends UpdateCompanion<ObligationRow> {
+  final Value<int> id;
+  final Value<String> direction;
+  final Value<String> title;
+  final Value<String?> counterparty;
+  final Value<int> amountInCents;
+  final Value<int?> dueDateEpochDay;
+  final Value<int> categoryId;
+  final Value<int?> defaultPaymentMethodId;
+  final Value<int?> sourceShoppingListId;
+  final Value<bool> isCancelled;
+  final Value<String?> notes;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const ObligationsCompanion({
+    this.id = const Value.absent(),
+    this.direction = const Value.absent(),
+    this.title = const Value.absent(),
+    this.counterparty = const Value.absent(),
+    this.amountInCents = const Value.absent(),
+    this.dueDateEpochDay = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.defaultPaymentMethodId = const Value.absent(),
+    this.sourceShoppingListId = const Value.absent(),
+    this.isCancelled = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  ObligationsCompanion.insert({
+    this.id = const Value.absent(),
+    required String direction,
+    required String title,
+    this.counterparty = const Value.absent(),
+    required int amountInCents,
+    this.dueDateEpochDay = const Value.absent(),
+    required int categoryId,
+    this.defaultPaymentMethodId = const Value.absent(),
+    this.sourceShoppingListId = const Value.absent(),
+    this.isCancelled = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  }) : direction = Value(direction),
+       title = Value(title),
+       amountInCents = Value(amountInCents),
+       categoryId = Value(categoryId);
+  static Insertable<ObligationRow> custom({
+    Expression<int>? id,
+    Expression<String>? direction,
+    Expression<String>? title,
+    Expression<String>? counterparty,
+    Expression<int>? amountInCents,
+    Expression<int>? dueDateEpochDay,
+    Expression<int>? categoryId,
+    Expression<int>? defaultPaymentMethodId,
+    Expression<int>? sourceShoppingListId,
+    Expression<bool>? isCancelled,
+    Expression<String>? notes,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (direction != null) 'direction': direction,
+      if (title != null) 'title': title,
+      if (counterparty != null) 'counterparty': counterparty,
+      if (amountInCents != null) 'amount_in_cents': amountInCents,
+      if (dueDateEpochDay != null) 'due_date_epoch_day': dueDateEpochDay,
+      if (categoryId != null) 'category_id': categoryId,
+      if (defaultPaymentMethodId != null)
+        'default_payment_method_id': defaultPaymentMethodId,
+      if (sourceShoppingListId != null)
+        'source_shopping_list_id': sourceShoppingListId,
+      if (isCancelled != null) 'is_cancelled': isCancelled,
+      if (notes != null) 'notes': notes,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  ObligationsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? direction,
+    Value<String>? title,
+    Value<String?>? counterparty,
+    Value<int>? amountInCents,
+    Value<int?>? dueDateEpochDay,
+    Value<int>? categoryId,
+    Value<int?>? defaultPaymentMethodId,
+    Value<int?>? sourceShoppingListId,
+    Value<bool>? isCancelled,
+    Value<String?>? notes,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+  }) {
+    return ObligationsCompanion(
+      id: id ?? this.id,
+      direction: direction ?? this.direction,
+      title: title ?? this.title,
+      counterparty: counterparty ?? this.counterparty,
+      amountInCents: amountInCents ?? this.amountInCents,
+      dueDateEpochDay: dueDateEpochDay ?? this.dueDateEpochDay,
+      categoryId: categoryId ?? this.categoryId,
+      defaultPaymentMethodId:
+          defaultPaymentMethodId ?? this.defaultPaymentMethodId,
+      sourceShoppingListId: sourceShoppingListId ?? this.sourceShoppingListId,
+      isCancelled: isCancelled ?? this.isCancelled,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (direction.present) {
+      map['direction'] = Variable<String>(direction.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (counterparty.present) {
+      map['counterparty'] = Variable<String>(counterparty.value);
+    }
+    if (amountInCents.present) {
+      map['amount_in_cents'] = Variable<int>(amountInCents.value);
+    }
+    if (dueDateEpochDay.present) {
+      map['due_date_epoch_day'] = Variable<int>(dueDateEpochDay.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<int>(categoryId.value);
+    }
+    if (defaultPaymentMethodId.present) {
+      map['default_payment_method_id'] = Variable<int>(
+        defaultPaymentMethodId.value,
+      );
+    }
+    if (sourceShoppingListId.present) {
+      map['source_shopping_list_id'] = Variable<int>(
+        sourceShoppingListId.value,
+      );
+    }
+    if (isCancelled.present) {
+      map['is_cancelled'] = Variable<bool>(isCancelled.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ObligationsCompanion(')
+          ..write('id: $id, ')
+          ..write('direction: $direction, ')
+          ..write('title: $title, ')
+          ..write('counterparty: $counterparty, ')
+          ..write('amountInCents: $amountInCents, ')
+          ..write('dueDateEpochDay: $dueDateEpochDay, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('defaultPaymentMethodId: $defaultPaymentMethodId, ')
+          ..write('sourceShoppingListId: $sourceShoppingListId, ')
+          ..write('isCancelled: $isCancelled, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ObligationPaymentsTable extends ObligationPayments
+    with TableInfo<$ObligationPaymentsTable, ObligationPaymentRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ObligationPaymentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _obligationIdMeta = const VerificationMeta(
+    'obligationId',
+  );
+  @override
+  late final GeneratedColumn<int> obligationId = GeneratedColumn<int>(
+    'obligation_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES obligations (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _amountInCentsMeta = const VerificationMeta(
+    'amountInCents',
+  );
+  @override
+  late final GeneratedColumn<int> amountInCents = GeneratedColumn<int>(
+    'amount_in_cents',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(amountInCents).isBiggerThanValue(0),
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateEpochDayMeta = const VerificationMeta(
+    'dateEpochDay',
+  );
+  @override
+  late final GeneratedColumn<int> dateEpochDay = GeneratedColumn<int>(
+    'date_epoch_day',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _paymentMethodIdMeta = const VerificationMeta(
+    'paymentMethodId',
+  );
+  @override
+  late final GeneratedColumn<int> paymentMethodId = GeneratedColumn<int>(
+    'payment_method_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES payment_methods (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _transactionIdMeta = const VerificationMeta(
+    'transactionId',
+  );
+  @override
+  late final GeneratedColumn<int> transactionId = GeneratedColumn<int>(
+    'transaction_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'UNIQUE REFERENCES transactions (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    additionalChecks: GeneratedColumn.checkTextLength(maxTextLength: 120),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    obligationId,
+    amountInCents,
+    dateEpochDay,
+    paymentMethodId,
+    transactionId,
+    note,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'obligation_payments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ObligationPaymentRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('obligation_id')) {
+      context.handle(
+        _obligationIdMeta,
+        obligationId.isAcceptableOrUnknown(
+          data['obligation_id']!,
+          _obligationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_obligationIdMeta);
+    }
+    if (data.containsKey('amount_in_cents')) {
+      context.handle(
+        _amountInCentsMeta,
+        amountInCents.isAcceptableOrUnknown(
+          data['amount_in_cents']!,
+          _amountInCentsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_amountInCentsMeta);
+    }
+    if (data.containsKey('date_epoch_day')) {
+      context.handle(
+        _dateEpochDayMeta,
+        dateEpochDay.isAcceptableOrUnknown(
+          data['date_epoch_day']!,
+          _dateEpochDayMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_dateEpochDayMeta);
+    }
+    if (data.containsKey('payment_method_id')) {
+      context.handle(
+        _paymentMethodIdMeta,
+        paymentMethodId.isAcceptableOrUnknown(
+          data['payment_method_id']!,
+          _paymentMethodIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_paymentMethodIdMeta);
+    }
+    if (data.containsKey('transaction_id')) {
+      context.handle(
+        _transactionIdMeta,
+        transactionId.isAcceptableOrUnknown(
+          data['transaction_id']!,
+          _transactionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ObligationPaymentRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ObligationPaymentRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      obligationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}obligation_id'],
+      )!,
+      amountInCents: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_in_cents'],
+      )!,
+      dateEpochDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}date_epoch_day'],
+      )!,
+      paymentMethodId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}payment_method_id'],
+      )!,
+      transactionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}transaction_id'],
+      ),
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ObligationPaymentsTable createAlias(String alias) {
+    return $ObligationPaymentsTable(attachedDatabase, alias);
+  }
+}
+
+class ObligationPaymentRow extends DataClass
+    implements Insertable<ObligationPaymentRow> {
+  final int id;
+  final int obligationId;
+  final int amountInCents;
+  final int dateEpochDay;
+  final int paymentMethodId;
+  final int? transactionId;
+  final String? note;
+  final DateTime createdAt;
+  const ObligationPaymentRow({
+    required this.id,
+    required this.obligationId,
+    required this.amountInCents,
+    required this.dateEpochDay,
+    required this.paymentMethodId,
+    this.transactionId,
+    this.note,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['obligation_id'] = Variable<int>(obligationId);
+    map['amount_in_cents'] = Variable<int>(amountInCents);
+    map['date_epoch_day'] = Variable<int>(dateEpochDay);
+    map['payment_method_id'] = Variable<int>(paymentMethodId);
+    if (!nullToAbsent || transactionId != null) {
+      map['transaction_id'] = Variable<int>(transactionId);
+    }
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  ObligationPaymentsCompanion toCompanion(bool nullToAbsent) {
+    return ObligationPaymentsCompanion(
+      id: Value(id),
+      obligationId: Value(obligationId),
+      amountInCents: Value(amountInCents),
+      dateEpochDay: Value(dateEpochDay),
+      paymentMethodId: Value(paymentMethodId),
+      transactionId: transactionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(transactionId),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory ObligationPaymentRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ObligationPaymentRow(
+      id: serializer.fromJson<int>(json['id']),
+      obligationId: serializer.fromJson<int>(json['obligationId']),
+      amountInCents: serializer.fromJson<int>(json['amountInCents']),
+      dateEpochDay: serializer.fromJson<int>(json['dateEpochDay']),
+      paymentMethodId: serializer.fromJson<int>(json['paymentMethodId']),
+      transactionId: serializer.fromJson<int?>(json['transactionId']),
+      note: serializer.fromJson<String?>(json['note']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'obligationId': serializer.toJson<int>(obligationId),
+      'amountInCents': serializer.toJson<int>(amountInCents),
+      'dateEpochDay': serializer.toJson<int>(dateEpochDay),
+      'paymentMethodId': serializer.toJson<int>(paymentMethodId),
+      'transactionId': serializer.toJson<int?>(transactionId),
+      'note': serializer.toJson<String?>(note),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  ObligationPaymentRow copyWith({
+    int? id,
+    int? obligationId,
+    int? amountInCents,
+    int? dateEpochDay,
+    int? paymentMethodId,
+    Value<int?> transactionId = const Value.absent(),
+    Value<String?> note = const Value.absent(),
+    DateTime? createdAt,
+  }) => ObligationPaymentRow(
+    id: id ?? this.id,
+    obligationId: obligationId ?? this.obligationId,
+    amountInCents: amountInCents ?? this.amountInCents,
+    dateEpochDay: dateEpochDay ?? this.dateEpochDay,
+    paymentMethodId: paymentMethodId ?? this.paymentMethodId,
+    transactionId: transactionId.present
+        ? transactionId.value
+        : this.transactionId,
+    note: note.present ? note.value : this.note,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  ObligationPaymentRow copyWithCompanion(ObligationPaymentsCompanion data) {
+    return ObligationPaymentRow(
+      id: data.id.present ? data.id.value : this.id,
+      obligationId: data.obligationId.present
+          ? data.obligationId.value
+          : this.obligationId,
+      amountInCents: data.amountInCents.present
+          ? data.amountInCents.value
+          : this.amountInCents,
+      dateEpochDay: data.dateEpochDay.present
+          ? data.dateEpochDay.value
+          : this.dateEpochDay,
+      paymentMethodId: data.paymentMethodId.present
+          ? data.paymentMethodId.value
+          : this.paymentMethodId,
+      transactionId: data.transactionId.present
+          ? data.transactionId.value
+          : this.transactionId,
+      note: data.note.present ? data.note.value : this.note,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ObligationPaymentRow(')
+          ..write('id: $id, ')
+          ..write('obligationId: $obligationId, ')
+          ..write('amountInCents: $amountInCents, ')
+          ..write('dateEpochDay: $dateEpochDay, ')
+          ..write('paymentMethodId: $paymentMethodId, ')
+          ..write('transactionId: $transactionId, ')
+          ..write('note: $note, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    obligationId,
+    amountInCents,
+    dateEpochDay,
+    paymentMethodId,
+    transactionId,
+    note,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ObligationPaymentRow &&
+          other.id == this.id &&
+          other.obligationId == this.obligationId &&
+          other.amountInCents == this.amountInCents &&
+          other.dateEpochDay == this.dateEpochDay &&
+          other.paymentMethodId == this.paymentMethodId &&
+          other.transactionId == this.transactionId &&
+          other.note == this.note &&
+          other.createdAt == this.createdAt);
+}
+
+class ObligationPaymentsCompanion
+    extends UpdateCompanion<ObligationPaymentRow> {
+  final Value<int> id;
+  final Value<int> obligationId;
+  final Value<int> amountInCents;
+  final Value<int> dateEpochDay;
+  final Value<int> paymentMethodId;
+  final Value<int?> transactionId;
+  final Value<String?> note;
+  final Value<DateTime> createdAt;
+  const ObligationPaymentsCompanion({
+    this.id = const Value.absent(),
+    this.obligationId = const Value.absent(),
+    this.amountInCents = const Value.absent(),
+    this.dateEpochDay = const Value.absent(),
+    this.paymentMethodId = const Value.absent(),
+    this.transactionId = const Value.absent(),
+    this.note = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  ObligationPaymentsCompanion.insert({
+    this.id = const Value.absent(),
+    required int obligationId,
+    required int amountInCents,
+    required int dateEpochDay,
+    required int paymentMethodId,
+    this.transactionId = const Value.absent(),
+    this.note = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : obligationId = Value(obligationId),
+       amountInCents = Value(amountInCents),
+       dateEpochDay = Value(dateEpochDay),
+       paymentMethodId = Value(paymentMethodId);
+  static Insertable<ObligationPaymentRow> custom({
+    Expression<int>? id,
+    Expression<int>? obligationId,
+    Expression<int>? amountInCents,
+    Expression<int>? dateEpochDay,
+    Expression<int>? paymentMethodId,
+    Expression<int>? transactionId,
+    Expression<String>? note,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (obligationId != null) 'obligation_id': obligationId,
+      if (amountInCents != null) 'amount_in_cents': amountInCents,
+      if (dateEpochDay != null) 'date_epoch_day': dateEpochDay,
+      if (paymentMethodId != null) 'payment_method_id': paymentMethodId,
+      if (transactionId != null) 'transaction_id': transactionId,
+      if (note != null) 'note': note,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  ObligationPaymentsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? obligationId,
+    Value<int>? amountInCents,
+    Value<int>? dateEpochDay,
+    Value<int>? paymentMethodId,
+    Value<int?>? transactionId,
+    Value<String?>? note,
+    Value<DateTime>? createdAt,
+  }) {
+    return ObligationPaymentsCompanion(
+      id: id ?? this.id,
+      obligationId: obligationId ?? this.obligationId,
+      amountInCents: amountInCents ?? this.amountInCents,
+      dateEpochDay: dateEpochDay ?? this.dateEpochDay,
+      paymentMethodId: paymentMethodId ?? this.paymentMethodId,
+      transactionId: transactionId ?? this.transactionId,
+      note: note ?? this.note,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (obligationId.present) {
+      map['obligation_id'] = Variable<int>(obligationId.value);
+    }
+    if (amountInCents.present) {
+      map['amount_in_cents'] = Variable<int>(amountInCents.value);
+    }
+    if (dateEpochDay.present) {
+      map['date_epoch_day'] = Variable<int>(dateEpochDay.value);
+    }
+    if (paymentMethodId.present) {
+      map['payment_method_id'] = Variable<int>(paymentMethodId.value);
+    }
+    if (transactionId.present) {
+      map['transaction_id'] = Variable<int>(transactionId.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ObligationPaymentsCompanion(')
+          ..write('id: $id, ')
+          ..write('obligationId: $obligationId, ')
+          ..write('amountInCents: $amountInCents, ')
+          ..write('dateEpochDay: $dateEpochDay, ')
+          ..write('paymentMethodId: $paymentMethodId, ')
+          ..write('transactionId: $transactionId, ')
+          ..write('note: $note, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5822,6 +7166,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ShoppingPayablesTable shoppingPayables = $ShoppingPayablesTable(
     this,
   );
+  late final $ObligationsTable obligations = $ObligationsTable(this);
+  late final $ObligationPaymentsTable obligationPayments =
+      $ObligationPaymentsTable(this);
   late final Index paymentMethodsSingleDefault = Index(
     'payment_methods_single_default',
     'CREATE UNIQUE INDEX payment_methods_single_default ON payment_methods (is_default) WHERE is_default = 1',
@@ -5866,6 +7213,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'shopping_adjustments_list_idx',
     'CREATE INDEX shopping_adjustments_list_idx ON shopping_adjustments (shopping_list_id)',
   );
+  late final Index obligationPaymentsObligationIdx = Index(
+    'obligation_payments_obligation_idx',
+    'CREATE INDEX obligation_payments_obligation_idx ON obligation_payments (obligation_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5881,6 +7232,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     shoppingListItems,
     shoppingAdjustments,
     shoppingPayables,
+    obligations,
+    obligationPayments,
     paymentMethodsSingleDefault,
     transactionsDateIdx,
     transactionsCategoryIdx,
@@ -5892,6 +7245,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     shoppingListsExpenseIdx,
     shoppingListItemsListIdx,
     shoppingAdjustmentsListIdx,
+    obligationPaymentsObligationIdx,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -5943,6 +7297,27 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('shopping_payables', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'payment_methods',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('obligations', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'shopping_lists',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('obligations', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'obligations',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('obligation_payments', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -6027,6 +7402,24 @@ final class $$CategoriesTableReferences
     final cache = $_typedResult.readTableOrNull(
       _shoppingPayablesRefsTable($_db),
     );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$ObligationsTable, List<ObligationRow>>
+  _obligationsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.obligations,
+    aliasName: 'categories__id__obligations__category_id',
+  );
+
+  $$ObligationsTableProcessedTableManager get obligationsRefs {
+    final manager = $$ObligationsTableTableManager(
+      $_db,
+      $_db.obligations,
+    ).filter((f) => f.categoryId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_obligationsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -6153,6 +7546,31 @@ class $$CategoriesTableFilterComposer
           }) => $$ShoppingPayablesTableFilterComposer(
             $db: $db,
             $table: $db.shoppingPayables,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> obligationsRefs(
+    Expression<bool> Function($$ObligationsTableFilterComposer f) f,
+  ) {
+    final $$ObligationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.obligations,
+      getReferencedColumn: (t) => t.categoryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ObligationsTableFilterComposer(
+            $db: $db,
+            $table: $db.obligations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6332,6 +7750,31 @@ class $$CategoriesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> obligationsRefs<T extends Object>(
+    Expression<T> Function($$ObligationsTableAnnotationComposer a) f,
+  ) {
+    final $$ObligationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.obligations,
+      getReferencedColumn: (t) => t.categoryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ObligationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.obligations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$CategoriesTableTableManager
@@ -6351,6 +7794,7 @@ class $$CategoriesTableTableManager
             bool transactionsRefs,
             bool shoppingListsRefs,
             bool shoppingPayablesRefs,
+            bool obligationsRefs,
           })
         > {
   $$CategoriesTableTableManager(_$AppDatabase db, $CategoriesTable table)
@@ -6421,6 +7865,7 @@ class $$CategoriesTableTableManager
                 transactionsRefs = false,
                 shoppingListsRefs = false,
                 shoppingPayablesRefs = false,
+                obligationsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -6428,6 +7873,7 @@ class $$CategoriesTableTableManager
                     if (transactionsRefs) db.transactions,
                     if (shoppingListsRefs) db.shoppingLists,
                     if (shoppingPayablesRefs) db.shoppingPayables,
+                    if (obligationsRefs) db.obligations,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -6492,6 +7938,26 @@ class $$CategoriesTableTableManager
                           referencedColumn: 'category_id',
                           typedResults: items,
                         ),
+                      if (obligationsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          CategoryRow,
+                          $CategoriesTable,
+                          ObligationRow,
+                          $ObligationsTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CategoriesTableReferences
+                              ._obligationsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CategoriesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).obligationsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'category_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -6516,6 +7982,7 @@ typedef $$CategoriesTableProcessedTableManager =
         bool transactionsRefs,
         bool shoppingListsRefs,
         bool shoppingPayablesRefs,
+        bool obligationsRefs,
       })
     >;
 typedef $$PaymentMethodsTableCreateCompanionBuilder =
@@ -6600,6 +8067,50 @@ final class $$PaymentMethodsTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _shoppingPayablesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$ObligationsTable, List<ObligationRow>>
+  _obligationsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.obligations,
+    aliasName: 'payment_methods__id__obligations__default_payment_method_id',
+  );
+
+  $$ObligationsTableProcessedTableManager get obligationsRefs {
+    final manager = $$ObligationsTableTableManager($_db, $_db.obligations)
+        .filter(
+          (f) =>
+              f.defaultPaymentMethodId.id.sqlEquals($_itemColumn<int>('id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(_obligationsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $ObligationPaymentsTable,
+    List<ObligationPaymentRow>
+  >
+  _obligationPaymentsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.obligationPayments,
+        aliasName:
+            'payment_methods__id__obligation_payments__payment_method_id',
+      );
+
+  $$ObligationPaymentsTableProcessedTableManager get obligationPaymentsRefs {
+    final manager = $$ObligationPaymentsTableTableManager(
+      $_db,
+      $_db.obligationPayments,
+    ).filter((f) => f.paymentMethodId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _obligationPaymentsRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -6722,6 +8233,56 @@ class $$PaymentMethodsTableFilterComposer
           }) => $$ShoppingPayablesTableFilterComposer(
             $db: $db,
             $table: $db.shoppingPayables,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> obligationsRefs(
+    Expression<bool> Function($$ObligationsTableFilterComposer f) f,
+  ) {
+    final $$ObligationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.obligations,
+      getReferencedColumn: (t) => t.defaultPaymentMethodId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ObligationsTableFilterComposer(
+            $db: $db,
+            $table: $db.obligations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> obligationPaymentsRefs(
+    Expression<bool> Function($$ObligationPaymentsTableFilterComposer f) f,
+  ) {
+    final $$ObligationPaymentsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.obligationPayments,
+      getReferencedColumn: (t) => t.paymentMethodId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ObligationPaymentsTableFilterComposer(
+            $db: $db,
+            $table: $db.obligationPayments,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6891,6 +8452,57 @@ class $$PaymentMethodsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> obligationsRefs<T extends Object>(
+    Expression<T> Function($$ObligationsTableAnnotationComposer a) f,
+  ) {
+    final $$ObligationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.obligations,
+      getReferencedColumn: (t) => t.defaultPaymentMethodId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ObligationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.obligations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> obligationPaymentsRefs<T extends Object>(
+    Expression<T> Function($$ObligationPaymentsTableAnnotationComposer a) f,
+  ) {
+    final $$ObligationPaymentsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.obligationPayments,
+          getReferencedColumn: (t) => t.paymentMethodId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ObligationPaymentsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.obligationPayments,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$PaymentMethodsTableTableManager
@@ -6910,6 +8522,8 @@ class $$PaymentMethodsTableTableManager
             bool transactionsRefs,
             bool shoppingListsRefs,
             bool shoppingPayablesRefs,
+            bool obligationsRefs,
+            bool obligationPaymentsRefs,
           })
         > {
   $$PaymentMethodsTableTableManager(
@@ -6978,6 +8592,8 @@ class $$PaymentMethodsTableTableManager
                 transactionsRefs = false,
                 shoppingListsRefs = false,
                 shoppingPayablesRefs = false,
+                obligationsRefs = false,
+                obligationPaymentsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -6985,6 +8601,8 @@ class $$PaymentMethodsTableTableManager
                     if (transactionsRefs) db.transactions,
                     if (shoppingListsRefs) db.shoppingLists,
                     if (shoppingPayablesRefs) db.shoppingPayables,
+                    if (obligationsRefs) db.obligations,
+                    if (obligationPaymentsRefs) db.obligationPayments,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -7049,6 +8667,46 @@ class $$PaymentMethodsTableTableManager
                           referencedColumn: 'payment_method_id',
                           typedResults: items,
                         ),
+                      if (obligationsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          PaymentMethodRow,
+                          $PaymentMethodsTable,
+                          ObligationRow,
+                          $ObligationsTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$PaymentMethodsTableReferences
+                              ._obligationsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$PaymentMethodsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).obligationsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'default_payment_method_id',
+                          typedResults: items,
+                        ),
+                      if (obligationPaymentsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          PaymentMethodRow,
+                          $PaymentMethodsTable,
+                          ObligationPaymentRow,
+                          $ObligationPaymentsTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$PaymentMethodsTableReferences
+                              ._obligationPaymentsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$PaymentMethodsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).obligationPaymentsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'payment_method_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -7073,6 +8731,8 @@ typedef $$PaymentMethodsTableProcessedTableManager =
         bool transactionsRefs,
         bool shoppingListsRefs,
         bool shoppingPayablesRefs,
+        bool obligationsRefs,
+        bool obligationPaymentsRefs,
       })
     >;
 typedef $$TransactionsTableCreateCompanionBuilder =
@@ -7180,6 +8840,30 @@ final class $$TransactionsTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _shoppingPayablesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $ObligationPaymentsTable,
+    List<ObligationPaymentRow>
+  >
+  _obligationPaymentsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.obligationPayments,
+        aliasName: 'transactions__id__obligation_payments__transaction_id',
+      );
+
+  $$ObligationPaymentsTableProcessedTableManager get obligationPaymentsRefs {
+    final manager = $$ObligationPaymentsTableTableManager(
+      $_db,
+      $_db.obligationPayments,
+    ).filter((f) => f.transactionId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _obligationPaymentsRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -7328,6 +9012,31 @@ class $$TransactionsTableFilterComposer
           }) => $$ShoppingPayablesTableFilterComposer(
             $db: $db,
             $table: $db.shoppingPayables,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> obligationPaymentsRefs(
+    Expression<bool> Function($$ObligationPaymentsTableFilterComposer f) f,
+  ) {
+    final $$ObligationPaymentsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.obligationPayments,
+      getReferencedColumn: (t) => t.transactionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ObligationPaymentsTableFilterComposer(
+            $db: $db,
+            $table: $db.obligationPayments,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7580,6 +9289,32 @@ class $$TransactionsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> obligationPaymentsRefs<T extends Object>(
+    Expression<T> Function($$ObligationPaymentsTableAnnotationComposer a) f,
+  ) {
+    final $$ObligationPaymentsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.obligationPayments,
+          getReferencedColumn: (t) => t.transactionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ObligationPaymentsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.obligationPayments,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$TransactionsTableTableManager
@@ -7600,6 +9335,7 @@ class $$TransactionsTableTableManager
             bool paymentMethodId,
             bool shoppingListsRefs,
             bool shoppingPayablesRefs,
+            bool obligationPaymentsRefs,
           })
         > {
   $$TransactionsTableTableManager(_$AppDatabase db, $TransactionsTable table)
@@ -7679,12 +9415,14 @@ class $$TransactionsTableTableManager
                 paymentMethodId = false,
                 shoppingListsRefs = false,
                 shoppingPayablesRefs = false,
+                obligationPaymentsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (shoppingListsRefs) db.shoppingLists,
                     if (shoppingPayablesRefs) db.shoppingPayables,
+                    if (obligationPaymentsRefs) db.obligationPayments,
                   ],
                   addJoins:
                       <
@@ -7777,6 +9515,26 @@ class $$TransactionsTableTableManager
                           referencedColumn: 'transaction_id',
                           typedResults: items,
                         ),
+                      if (obligationPaymentsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          FinanceTransactionRow,
+                          $TransactionsTable,
+                          ObligationPaymentRow,
+                          $ObligationPaymentsTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$TransactionsTableReferences
+                              ._obligationPaymentsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$TransactionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).obligationPaymentsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'transaction_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -7802,6 +9560,7 @@ typedef $$TransactionsTableProcessedTableManager =
         bool paymentMethodId,
         bool shoppingListsRefs,
         bool shoppingPayablesRefs,
+        bool obligationPaymentsRefs,
       })
     >;
 typedef $$SavingsGoalsTableCreateCompanionBuilder =
@@ -8734,6 +10493,24 @@ final class $$ShoppingListsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$ObligationsTable, List<ObligationRow>>
+  _obligationsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.obligations,
+    aliasName: 'shopping_lists__id__obligations__source_shopping_list_id',
+  );
+
+  $$ObligationsTableProcessedTableManager get obligationsRefs {
+    final manager = $$ObligationsTableTableManager($_db, $_db.obligations)
+        .filter(
+          (f) => f.sourceShoppingListId.id.sqlEquals($_itemColumn<int>('id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(_obligationsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$ShoppingListsTableFilterComposer
@@ -8925,6 +10702,31 @@ class $$ShoppingListsTableFilterComposer
           }) => $$ShoppingPayablesTableFilterComposer(
             $db: $db,
             $table: $db.shoppingPayables,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> obligationsRefs(
+    Expression<bool> Function($$ObligationsTableFilterComposer f) f,
+  ) {
+    final $$ObligationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.obligations,
+      getReferencedColumn: (t) => t.sourceShoppingListId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ObligationsTableFilterComposer(
+            $db: $db,
+            $table: $db.obligations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -9246,6 +11048,31 @@ class $$ShoppingListsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> obligationsRefs<T extends Object>(
+    Expression<T> Function($$ObligationsTableAnnotationComposer a) f,
+  ) {
+    final $$ObligationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.obligations,
+      getReferencedColumn: (t) => t.sourceShoppingListId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ObligationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.obligations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ShoppingListsTableTableManager
@@ -9268,6 +11095,7 @@ class $$ShoppingListsTableTableManager
             bool shoppingListItemsRefs,
             bool shoppingAdjustmentsRefs,
             bool shoppingPayablesRefs,
+            bool obligationsRefs,
           })
         > {
   $$ShoppingListsTableTableManager(_$AppDatabase db, $ShoppingListsTable table)
@@ -9353,6 +11181,7 @@ class $$ShoppingListsTableTableManager
                 shoppingListItemsRefs = false,
                 shoppingAdjustmentsRefs = false,
                 shoppingPayablesRefs = false,
+                obligationsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -9360,6 +11189,7 @@ class $$ShoppingListsTableTableManager
                     if (shoppingListItemsRefs) db.shoppingListItems,
                     if (shoppingAdjustmentsRefs) db.shoppingAdjustments,
                     if (shoppingPayablesRefs) db.shoppingPayables,
+                    if (obligationsRefs) db.obligations,
                   ],
                   addJoins:
                       <
@@ -9487,6 +11317,26 @@ class $$ShoppingListsTableTableManager
                           referencedColumn: 'shopping_list_id',
                           typedResults: items,
                         ),
+                      if (obligationsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          ShoppingListRow,
+                          $ShoppingListsTable,
+                          ObligationRow,
+                          $ObligationsTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ShoppingListsTableReferences
+                              ._obligationsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ShoppingListsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).obligationsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'source_shopping_list_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -9514,6 +11364,7 @@ typedef $$ShoppingListsTableProcessedTableManager =
         bool shoppingListItemsRefs,
         bool shoppingAdjustmentsRefs,
         bool shoppingPayablesRefs,
+        bool obligationsRefs,
       })
     >;
 typedef $$ShoppingListItemsTableCreateCompanionBuilder =
@@ -11033,6 +12884,1359 @@ typedef $$ShoppingPayablesTableProcessedTableManager =
         bool transactionId,
       })
     >;
+typedef $$ObligationsTableCreateCompanionBuilder =
+    ObligationsCompanion Function({
+      Value<int> id,
+      required String direction,
+      required String title,
+      Value<String?> counterparty,
+      required int amountInCents,
+      Value<int?> dueDateEpochDay,
+      required int categoryId,
+      Value<int?> defaultPaymentMethodId,
+      Value<int?> sourceShoppingListId,
+      Value<bool> isCancelled,
+      Value<String?> notes,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+    });
+typedef $$ObligationsTableUpdateCompanionBuilder =
+    ObligationsCompanion Function({
+      Value<int> id,
+      Value<String> direction,
+      Value<String> title,
+      Value<String?> counterparty,
+      Value<int> amountInCents,
+      Value<int?> dueDateEpochDay,
+      Value<int> categoryId,
+      Value<int?> defaultPaymentMethodId,
+      Value<int?> sourceShoppingListId,
+      Value<bool> isCancelled,
+      Value<String?> notes,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+    });
+
+final class $$ObligationsTableReferences
+    extends BaseReferences<_$AppDatabase, $ObligationsTable, ObligationRow> {
+  $$ObligationsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $CategoriesTable _categoryIdTable(_$AppDatabase db) =>
+      db.categories.createAlias('obligations__category_id__categories__id');
+
+  $$CategoriesTableProcessedTableManager get categoryId {
+    final $_column = $_itemColumn<int>('category_id')!;
+
+    final manager = $$CategoriesTableTableManager(
+      $_db,
+      $_db.categories,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $PaymentMethodsTable _defaultPaymentMethodIdTable(_$AppDatabase db) =>
+      db.paymentMethods.createAlias(
+        'obligations__default_payment_method_id__payment_methods__id',
+      );
+
+  $$PaymentMethodsTableProcessedTableManager? get defaultPaymentMethodId {
+    final $_column = $_itemColumn<int>('default_payment_method_id');
+    if ($_column == null) return null;
+    final manager = $$PaymentMethodsTableTableManager(
+      $_db,
+      $_db.paymentMethods,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(
+      _defaultPaymentMethodIdTable($_db),
+    );
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ShoppingListsTable _sourceShoppingListIdTable(_$AppDatabase db) => db
+      .shoppingLists
+      .createAlias('obligations__source_shopping_list_id__shopping_lists__id');
+
+  $$ShoppingListsTableProcessedTableManager? get sourceShoppingListId {
+    final $_column = $_itemColumn<int>('source_shopping_list_id');
+    if ($_column == null) return null;
+    final manager = $$ShoppingListsTableTableManager(
+      $_db,
+      $_db.shoppingLists,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(
+      _sourceShoppingListIdTable($_db),
+    );
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $ObligationPaymentsTable,
+    List<ObligationPaymentRow>
+  >
+  _obligationPaymentsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.obligationPayments,
+        aliasName: 'obligations__id__obligation_payments__obligation_id',
+      );
+
+  $$ObligationPaymentsTableProcessedTableManager get obligationPaymentsRefs {
+    final manager = $$ObligationPaymentsTableTableManager(
+      $_db,
+      $_db.obligationPayments,
+    ).filter((f) => f.obligationId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _obligationPaymentsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$ObligationsTableFilterComposer
+    extends Composer<_$AppDatabase, $ObligationsTable> {
+  $$ObligationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get direction => $composableBuilder(
+    column: $table.direction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get counterparty => $composableBuilder(
+    column: $table.counterparty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountInCents => $composableBuilder(
+    column: $table.amountInCents,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dueDateEpochDay => $composableBuilder(
+    column: $table.dueDateEpochDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCancelled => $composableBuilder(
+    column: $table.isCancelled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CategoriesTableFilterComposer get categoryId {
+    final $$CategoriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PaymentMethodsTableFilterComposer get defaultPaymentMethodId {
+    final $$PaymentMethodsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.defaultPaymentMethodId,
+      referencedTable: $db.paymentMethods,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PaymentMethodsTableFilterComposer(
+            $db: $db,
+            $table: $db.paymentMethods,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ShoppingListsTableFilterComposer get sourceShoppingListId {
+    final $$ShoppingListsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sourceShoppingListId,
+      referencedTable: $db.shoppingLists,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShoppingListsTableFilterComposer(
+            $db: $db,
+            $table: $db.shoppingLists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> obligationPaymentsRefs(
+    Expression<bool> Function($$ObligationPaymentsTableFilterComposer f) f,
+  ) {
+    final $$ObligationPaymentsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.obligationPayments,
+      getReferencedColumn: (t) => t.obligationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ObligationPaymentsTableFilterComposer(
+            $db: $db,
+            $table: $db.obligationPayments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$ObligationsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ObligationsTable> {
+  $$ObligationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get direction => $composableBuilder(
+    column: $table.direction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get counterparty => $composableBuilder(
+    column: $table.counterparty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountInCents => $composableBuilder(
+    column: $table.amountInCents,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dueDateEpochDay => $composableBuilder(
+    column: $table.dueDateEpochDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCancelled => $composableBuilder(
+    column: $table.isCancelled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CategoriesTableOrderingComposer get categoryId {
+    final $$CategoriesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableOrderingComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PaymentMethodsTableOrderingComposer get defaultPaymentMethodId {
+    final $$PaymentMethodsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.defaultPaymentMethodId,
+      referencedTable: $db.paymentMethods,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PaymentMethodsTableOrderingComposer(
+            $db: $db,
+            $table: $db.paymentMethods,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ShoppingListsTableOrderingComposer get sourceShoppingListId {
+    final $$ShoppingListsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sourceShoppingListId,
+      referencedTable: $db.shoppingLists,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShoppingListsTableOrderingComposer(
+            $db: $db,
+            $table: $db.shoppingLists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ObligationsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ObligationsTable> {
+  $$ObligationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get counterparty => $composableBuilder(
+    column: $table.counterparty,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get amountInCents => $composableBuilder(
+    column: $table.amountInCents,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get dueDateEpochDay => $composableBuilder(
+    column: $table.dueDateEpochDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isCancelled => $composableBuilder(
+    column: $table.isCancelled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$CategoriesTableAnnotationComposer get categoryId {
+    final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PaymentMethodsTableAnnotationComposer get defaultPaymentMethodId {
+    final $$PaymentMethodsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.defaultPaymentMethodId,
+      referencedTable: $db.paymentMethods,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PaymentMethodsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.paymentMethods,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ShoppingListsTableAnnotationComposer get sourceShoppingListId {
+    final $$ShoppingListsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sourceShoppingListId,
+      referencedTable: $db.shoppingLists,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShoppingListsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.shoppingLists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> obligationPaymentsRefs<T extends Object>(
+    Expression<T> Function($$ObligationPaymentsTableAnnotationComposer a) f,
+  ) {
+    final $$ObligationPaymentsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.obligationPayments,
+          getReferencedColumn: (t) => t.obligationId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ObligationPaymentsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.obligationPayments,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$ObligationsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ObligationsTable,
+          ObligationRow,
+          $$ObligationsTableFilterComposer,
+          $$ObligationsTableOrderingComposer,
+          $$ObligationsTableAnnotationComposer,
+          $$ObligationsTableCreateCompanionBuilder,
+          $$ObligationsTableUpdateCompanionBuilder,
+          (ObligationRow, $$ObligationsTableReferences),
+          ObligationRow,
+          PrefetchHooks Function({
+            bool categoryId,
+            bool defaultPaymentMethodId,
+            bool sourceShoppingListId,
+            bool obligationPaymentsRefs,
+          })
+        > {
+  $$ObligationsTableTableManager(_$AppDatabase db, $ObligationsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ObligationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ObligationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ObligationsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> direction = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> counterparty = const Value.absent(),
+                Value<int> amountInCents = const Value.absent(),
+                Value<int?> dueDateEpochDay = const Value.absent(),
+                Value<int> categoryId = const Value.absent(),
+                Value<int?> defaultPaymentMethodId = const Value.absent(),
+                Value<int?> sourceShoppingListId = const Value.absent(),
+                Value<bool> isCancelled = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => ObligationsCompanion(
+                id: id,
+                direction: direction,
+                title: title,
+                counterparty: counterparty,
+                amountInCents: amountInCents,
+                dueDateEpochDay: dueDateEpochDay,
+                categoryId: categoryId,
+                defaultPaymentMethodId: defaultPaymentMethodId,
+                sourceShoppingListId: sourceShoppingListId,
+                isCancelled: isCancelled,
+                notes: notes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String direction,
+                required String title,
+                Value<String?> counterparty = const Value.absent(),
+                required int amountInCents,
+                Value<int?> dueDateEpochDay = const Value.absent(),
+                required int categoryId,
+                Value<int?> defaultPaymentMethodId = const Value.absent(),
+                Value<int?> sourceShoppingListId = const Value.absent(),
+                Value<bool> isCancelled = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => ObligationsCompanion.insert(
+                id: id,
+                direction: direction,
+                title: title,
+                counterparty: counterparty,
+                amountInCents: amountInCents,
+                dueDateEpochDay: dueDateEpochDay,
+                categoryId: categoryId,
+                defaultPaymentMethodId: defaultPaymentMethodId,
+                sourceShoppingListId: sourceShoppingListId,
+                isCancelled: isCancelled,
+                notes: notes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ObligationsTable, ObligationRow>(table),
+                  $$ObligationsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                categoryId = false,
+                defaultPaymentMethodId = false,
+                sourceShoppingListId = false,
+                obligationPaymentsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (obligationPaymentsRefs) db.obligationPayments,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (categoryId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.categoryId,
+                                    referencedTable:
+                                        $$ObligationsTableReferences
+                                            ._categoryIdTable(db),
+                                    referencedColumn:
+                                        $$ObligationsTableReferences
+                                            ._categoryIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (defaultPaymentMethodId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.defaultPaymentMethodId,
+                                    referencedTable:
+                                        $$ObligationsTableReferences
+                                            ._defaultPaymentMethodIdTable(db),
+                                    referencedColumn:
+                                        $$ObligationsTableReferences
+                                            ._defaultPaymentMethodIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (sourceShoppingListId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.sourceShoppingListId,
+                                    referencedTable:
+                                        $$ObligationsTableReferences
+                                            ._sourceShoppingListIdTable(db),
+                                    referencedColumn:
+                                        $$ObligationsTableReferences
+                                            ._sourceShoppingListIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (obligationPaymentsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          ObligationRow,
+                          $ObligationsTable,
+                          ObligationPaymentRow,
+                          $ObligationPaymentsTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ObligationsTableReferences
+                              ._obligationPaymentsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ObligationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).obligationPaymentsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'obligation_id',
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$ObligationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ObligationsTable,
+      ObligationRow,
+      $$ObligationsTableFilterComposer,
+      $$ObligationsTableOrderingComposer,
+      $$ObligationsTableAnnotationComposer,
+      $$ObligationsTableCreateCompanionBuilder,
+      $$ObligationsTableUpdateCompanionBuilder,
+      (ObligationRow, $$ObligationsTableReferences),
+      ObligationRow,
+      PrefetchHooks Function({
+        bool categoryId,
+        bool defaultPaymentMethodId,
+        bool sourceShoppingListId,
+        bool obligationPaymentsRefs,
+      })
+    >;
+typedef $$ObligationPaymentsTableCreateCompanionBuilder =
+    ObligationPaymentsCompanion Function({
+      Value<int> id,
+      required int obligationId,
+      required int amountInCents,
+      required int dateEpochDay,
+      required int paymentMethodId,
+      Value<int?> transactionId,
+      Value<String?> note,
+      Value<DateTime> createdAt,
+    });
+typedef $$ObligationPaymentsTableUpdateCompanionBuilder =
+    ObligationPaymentsCompanion Function({
+      Value<int> id,
+      Value<int> obligationId,
+      Value<int> amountInCents,
+      Value<int> dateEpochDay,
+      Value<int> paymentMethodId,
+      Value<int?> transactionId,
+      Value<String?> note,
+      Value<DateTime> createdAt,
+    });
+
+final class $$ObligationPaymentsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $ObligationPaymentsTable,
+          ObligationPaymentRow
+        > {
+  $$ObligationPaymentsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ObligationsTable _obligationIdTable(_$AppDatabase db) => db
+      .obligations
+      .createAlias('obligation_payments__obligation_id__obligations__id');
+
+  $$ObligationsTableProcessedTableManager get obligationId {
+    final $_column = $_itemColumn<int>('obligation_id')!;
+
+    final manager = $$ObligationsTableTableManager(
+      $_db,
+      $_db.obligations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_obligationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $PaymentMethodsTable _paymentMethodIdTable(_$AppDatabase db) =>
+      db.paymentMethods.createAlias(
+        'obligation_payments__payment_method_id__payment_methods__id',
+      );
+
+  $$PaymentMethodsTableProcessedTableManager get paymentMethodId {
+    final $_column = $_itemColumn<int>('payment_method_id')!;
+
+    final manager = $$PaymentMethodsTableTableManager(
+      $_db,
+      $_db.paymentMethods,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_paymentMethodIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $TransactionsTable _transactionIdTable(_$AppDatabase db) => db
+      .transactions
+      .createAlias('obligation_payments__transaction_id__transactions__id');
+
+  $$TransactionsTableProcessedTableManager? get transactionId {
+    final $_column = $_itemColumn<int>('transaction_id');
+    if ($_column == null) return null;
+    final manager = $$TransactionsTableTableManager(
+      $_db,
+      $_db.transactions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_transactionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ObligationPaymentsTableFilterComposer
+    extends Composer<_$AppDatabase, $ObligationPaymentsTable> {
+  $$ObligationPaymentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountInCents => $composableBuilder(
+    column: $table.amountInCents,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dateEpochDay => $composableBuilder(
+    column: $table.dateEpochDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ObligationsTableFilterComposer get obligationId {
+    final $$ObligationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.obligationId,
+      referencedTable: $db.obligations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ObligationsTableFilterComposer(
+            $db: $db,
+            $table: $db.obligations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PaymentMethodsTableFilterComposer get paymentMethodId {
+    final $$PaymentMethodsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.paymentMethodId,
+      referencedTable: $db.paymentMethods,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PaymentMethodsTableFilterComposer(
+            $db: $db,
+            $table: $db.paymentMethods,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$TransactionsTableFilterComposer get transactionId {
+    final $$TransactionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.transactionId,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ObligationPaymentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ObligationPaymentsTable> {
+  $$ObligationPaymentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountInCents => $composableBuilder(
+    column: $table.amountInCents,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dateEpochDay => $composableBuilder(
+    column: $table.dateEpochDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ObligationsTableOrderingComposer get obligationId {
+    final $$ObligationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.obligationId,
+      referencedTable: $db.obligations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ObligationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.obligations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PaymentMethodsTableOrderingComposer get paymentMethodId {
+    final $$PaymentMethodsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.paymentMethodId,
+      referencedTable: $db.paymentMethods,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PaymentMethodsTableOrderingComposer(
+            $db: $db,
+            $table: $db.paymentMethods,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$TransactionsTableOrderingComposer get transactionId {
+    final $$TransactionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.transactionId,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ObligationPaymentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ObligationPaymentsTable> {
+  $$ObligationPaymentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get amountInCents => $composableBuilder(
+    column: $table.amountInCents,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get dateEpochDay => $composableBuilder(
+    column: $table.dateEpochDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$ObligationsTableAnnotationComposer get obligationId {
+    final $$ObligationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.obligationId,
+      referencedTable: $db.obligations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ObligationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.obligations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PaymentMethodsTableAnnotationComposer get paymentMethodId {
+    final $$PaymentMethodsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.paymentMethodId,
+      referencedTable: $db.paymentMethods,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PaymentMethodsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.paymentMethods,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$TransactionsTableAnnotationComposer get transactionId {
+    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.transactionId,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ObligationPaymentsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ObligationPaymentsTable,
+          ObligationPaymentRow,
+          $$ObligationPaymentsTableFilterComposer,
+          $$ObligationPaymentsTableOrderingComposer,
+          $$ObligationPaymentsTableAnnotationComposer,
+          $$ObligationPaymentsTableCreateCompanionBuilder,
+          $$ObligationPaymentsTableUpdateCompanionBuilder,
+          (ObligationPaymentRow, $$ObligationPaymentsTableReferences),
+          ObligationPaymentRow,
+          PrefetchHooks Function({
+            bool obligationId,
+            bool paymentMethodId,
+            bool transactionId,
+          })
+        > {
+  $$ObligationPaymentsTableTableManager(
+    _$AppDatabase db,
+    $ObligationPaymentsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ObligationPaymentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ObligationPaymentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ObligationPaymentsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> obligationId = const Value.absent(),
+                Value<int> amountInCents = const Value.absent(),
+                Value<int> dateEpochDay = const Value.absent(),
+                Value<int> paymentMethodId = const Value.absent(),
+                Value<int?> transactionId = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => ObligationPaymentsCompanion(
+                id: id,
+                obligationId: obligationId,
+                amountInCents: amountInCents,
+                dateEpochDay: dateEpochDay,
+                paymentMethodId: paymentMethodId,
+                transactionId: transactionId,
+                note: note,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int obligationId,
+                required int amountInCents,
+                required int dateEpochDay,
+                required int paymentMethodId,
+                Value<int?> transactionId = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => ObligationPaymentsCompanion.insert(
+                id: id,
+                obligationId: obligationId,
+                amountInCents: amountInCents,
+                dateEpochDay: dateEpochDay,
+                paymentMethodId: paymentMethodId,
+                transactionId: transactionId,
+                note: note,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ObligationPaymentsTable, ObligationPaymentRow>(
+                    table,
+                  ),
+                  $$ObligationPaymentsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                obligationId = false,
+                paymentMethodId = false,
+                transactionId = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (obligationId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.obligationId,
+                                    referencedTable:
+                                        $$ObligationPaymentsTableReferences
+                                            ._obligationIdTable(db),
+                                    referencedColumn:
+                                        $$ObligationPaymentsTableReferences
+                                            ._obligationIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (paymentMethodId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.paymentMethodId,
+                                    referencedTable:
+                                        $$ObligationPaymentsTableReferences
+                                            ._paymentMethodIdTable(db),
+                                    referencedColumn:
+                                        $$ObligationPaymentsTableReferences
+                                            ._paymentMethodIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (transactionId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.transactionId,
+                                    referencedTable:
+                                        $$ObligationPaymentsTableReferences
+                                            ._transactionIdTable(db),
+                                    referencedColumn:
+                                        $$ObligationPaymentsTableReferences
+                                            ._transactionIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$ObligationPaymentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ObligationPaymentsTable,
+      ObligationPaymentRow,
+      $$ObligationPaymentsTableFilterComposer,
+      $$ObligationPaymentsTableOrderingComposer,
+      $$ObligationPaymentsTableAnnotationComposer,
+      $$ObligationPaymentsTableCreateCompanionBuilder,
+      $$ObligationPaymentsTableUpdateCompanionBuilder,
+      (ObligationPaymentRow, $$ObligationPaymentsTableReferences),
+      ObligationPaymentRow,
+      PrefetchHooks Function({
+        bool obligationId,
+        bool paymentMethodId,
+        bool transactionId,
+      })
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -11057,4 +14261,8 @@ class $AppDatabaseManager {
       $$ShoppingAdjustmentsTableTableManager(_db, _db.shoppingAdjustments);
   $$ShoppingPayablesTableTableManager get shoppingPayables =>
       $$ShoppingPayablesTableTableManager(_db, _db.shoppingPayables);
+  $$ObligationsTableTableManager get obligations =>
+      $$ObligationsTableTableManager(_db, _db.obligations);
+  $$ObligationPaymentsTableTableManager get obligationPayments =>
+      $$ObligationPaymentsTableTableManager(_db, _db.obligationPayments);
 }

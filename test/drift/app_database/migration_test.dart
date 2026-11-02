@@ -11,6 +11,7 @@ import 'generated/schema_v3.dart' as v3;
 import 'generated/schema_v4.dart' as v4;
 import 'generated/schema_v5.dart' as v5;
 import 'generated/schema_v6.dart' as v6;
+import 'generated/schema_v7.dart' as v7;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -337,4 +338,139 @@ void main() {
       );
     },
   );
+
+  test('v6 to v7 carries credit shopping purchases into obligations', () async {
+    const categories = <v6.CategoriesData>[
+      v6.CategoriesData(
+        id: 315,
+        name: 'Mercado',
+        normalizedName: 'mercado',
+        type: 'expense',
+        icon: 'shopping_cart',
+        colorArgb: 0xFF3B82F6,
+        isActive: 1,
+        createdAt: 1_762_000_000,
+      ),
+    ];
+    const paymentMethods = <v6.PaymentMethodsData>[
+      v6.PaymentMethodsData(
+        id: 91,
+        name: 'Crédito',
+        normalizedName: 'credito',
+        icon: 'credit_card',
+        colorArgb: 0xFF9333EA,
+        isActive: 1,
+        isDefault: 0,
+        createdAt: 1_762_000_000,
+      ),
+    ];
+    const lists = <v6.ShoppingListsData>[
+      v6.ShoppingListsData(
+        id: 74,
+        name: 'Compra semanal',
+        status: 'completed',
+        payableId: 82,
+        purchaseDateEpochDay: 20600,
+        paymentMethodId: 91,
+        expenseCategoryId: 315,
+        createdAt: 1_762_000_000,
+        updatedAt: 1_762_000_100,
+      ),
+      v6.ShoppingListsData(
+        id: 75,
+        name: 'Factura antigua',
+        status: 'completed',
+        payableId: 83,
+        purchaseDateEpochDay: 20610,
+        paymentMethodId: 91,
+        expenseCategoryId: 315,
+        createdAt: 1_762_000_200,
+        updatedAt: 1_762_000_300,
+      ),
+    ];
+    const payables = <v6.ShoppingPayablesData>[
+      v6.ShoppingPayablesData(
+        id: 82,
+        shoppingListId: 74,
+        amountInCents: 4567,
+        categoryId: 315,
+        paymentMethodId: 91,
+        dateEpochDay: 20600,
+        description: 'Compra semanal',
+        isSettled: 0,
+        createdAt: 1_762_000_100,
+        updatedAt: 1_762_000_100,
+      ),
+      v6.ShoppingPayablesData(
+        id: 83,
+        shoppingListId: 75,
+        amountInCents: 8000,
+        categoryId: 315,
+        paymentMethodId: 91,
+        dateEpochDay: 20610,
+        description: 'Factura antigua',
+        isSettled: 1,
+        transactionId: 94,
+        createdAt: 1_762_000_200,
+        updatedAt: 1_762_000_300,
+      ),
+    ];
+    const transactions = <v6.TransactionsData>[
+      v6.TransactionsData(
+        id: 94,
+        amountInCents: 8000,
+        type: 'expense',
+        categoryId: 315,
+        paymentMethodId: 91,
+        description: 'Factura antigua',
+        dateEpochDay: 20610,
+        createdAt: 1_762_000_200,
+        updatedAt: 1_762_000_300,
+        fixedEntryId: null,
+        savingsGoalId: null,
+      ),
+    ];
+
+    await verifier.testWithDataIntegrity(
+      oldVersion: 6,
+      newVersion: 7,
+      createOld: v6.DatabaseAtV6.new,
+      createNew: v7.DatabaseAtV7.new,
+      openTestedDatabase: AppDatabase.new,
+      createItems: (batch, oldDatabase) {
+        batch.insertAll(oldDatabase.categories, categories);
+        batch.insertAll(oldDatabase.paymentMethods, paymentMethods);
+        batch.insertAll(oldDatabase.shoppingLists, lists);
+        batch.insertAll(oldDatabase.transactions, transactions);
+        batch.insertAll(oldDatabase.shoppingPayables, payables);
+      },
+      validateItems: (database) async {
+        final obligations = await (database.select(
+          database.obligations,
+        )..orderBy([(row) => OrderingTerm.asc(row.id)])).get();
+        final obligation = obligations.first;
+        expect(obligation.id, 82);
+        expect(obligation.sourceShoppingListId, 74);
+        expect(obligation.direction, 'payable');
+        expect(obligation.amountInCents, 4567);
+        expect(obligation.dueDateEpochDay, isNull);
+        expect(obligation.isCancelled, 0);
+        expect(obligations, hasLength(2));
+        final migratedPayment = await database
+            .select(database.obligationPayments)
+            .getSingle();
+        expect(migratedPayment.obligationId, 83);
+        expect(migratedPayment.amountInCents, 8000);
+        expect(migratedPayment.transactionId, 94);
+        final migratedList = await (database.select(
+          database.shoppingLists,
+        )..where((row) => row.id.equals(74))).getSingle();
+        expect(migratedList.payableId, 82);
+        expect(
+          await database.select(database.transactions).get(),
+          hasLength(1),
+        );
+      },
+    );
+  });
 }

@@ -7,6 +7,7 @@ import '../../features/categories/domain/category.dart';
 import '../../features/payment_methods/data/payment_methods_table.dart';
 import '../../features/savings/data/savings_goals_table.dart';
 import '../../features/shopping_lists/data/shopping_lists_table.dart';
+import '../../features/obligations/data/obligations_table.dart';
 import '../../features/transactions/data/transactions_table.dart';
 import 'app_database.steps.dart';
 
@@ -24,6 +25,8 @@ part 'app_database.g.dart';
     ShoppingListItems,
     ShoppingAdjustments,
     ShoppingPayables,
+    Obligations,
+    ObligationPayments,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -93,6 +96,34 @@ class AppDatabase extends _$AppDatabase {
         await migrator.create(schema.shoppingAdjustmentsListIdx);
         await migrator.createTable(schema.shoppingPayables);
       },
+      from6To7: (migrator, schema) async {
+        await migrator.createTable(schema.obligations);
+        await migrator.createTable(schema.obligationPayments);
+        await migrator.create(schema.obligationPaymentsObligationIdx);
+        await customStatement('''
+          INSERT INTO obligations (
+            id, direction, title, counterparty, amount_in_cents,
+            due_date_epoch_day, category_id, default_payment_method_id,
+            source_shopping_list_id, is_cancelled, notes, created_at, updated_at
+          )
+          SELECT id, 'payable', description, NULL, amount_in_cents,
+            NULL, category_id, payment_method_id, shopping_list_id, 0, NULL,
+            created_at, updated_at
+          FROM shopping_payables
+        ''');
+        await customStatement('''
+          INSERT INTO obligation_payments (
+            obligation_id, amount_in_cents, date_epoch_day, payment_method_id,
+            transaction_id, note, created_at
+          )
+          SELECT payables.id, payables.amount_in_cents, transactions.date_epoch_day,
+            transactions.payment_method_id, transactions.id,
+            'Liquidación anterior', payables.updated_at
+          FROM shopping_payables AS payables
+          INNER JOIN transactions ON transactions.id = payables.transaction_id
+          WHERE payables.is_settled = 1
+        ''');
+      },
     ),
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -100,7 +131,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 }
 
 const _initialCategories = <(String, CategoryType, String, int)>[
