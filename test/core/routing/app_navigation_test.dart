@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:native_glass_navbar/native_glass_navbar.dart';
+import 'package:nav_bar/nav_bar.dart';
 import 'package:mony_multiplatform/core/database/app_database.dart';
 import 'package:mony_multiplatform/core/database/app_database_provider.dart';
 import 'package:mony_multiplatform/core/routing/app_router.dart';
@@ -33,8 +33,7 @@ void main() {
 
     await _pumpApp(tester, router, database);
     expect(find.text('Tus finanzas, en un solo lugar'), findsOneWidget);
-    expect(find.byType(NativeGlassNavBar), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(FuturisticNavBar), findsOneWidget);
     expect(find.byKey(const ValueKey('main-nav-home')), findsOneWidget);
     expect(find.bySemanticsLabel('Inicio'), findsNWidgets(2));
     expect(find.bySemanticsLabel('Historial'), findsOneWidget);
