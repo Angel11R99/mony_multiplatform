@@ -157,312 +157,6 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     }
   }
 
-  Future<void> _chooseBoundaryDate({required bool start}) async {
-    final current = start ? _startDate : _endDate;
-    final other = start ? _endDate : _startDate;
-    final selected = await showDatePicker(
-      context: context,
-      initialDate: current ?? other ?? DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2100),
-      helpText: start ? 'Fecha desde' : 'Fecha hasta',
-    );
-    if (selected == null || !mounted) return;
-    _updateFilter(() {
-      final date = DateTime(selected.year, selected.month, selected.day);
-      if (start) {
-        _startDate = date;
-      } else {
-        _endDate = date;
-      }
-    });
-  }
-
-  Future<void> _openAdvancedFilters(
-    List<Category> categories,
-    List<PaymentMethod> methods,
-  ) {
-    final budget = ref.read(budgetConfigProvider).value;
-    final cycles =
-        ref.read(budgetHistoryProvider).value ?? const <BudgetCycle>[];
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (sheetContext) => FractionallySizedBox(
-        heightFactor: 0.82,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Theme.of(sheetContext).colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Filtros',
-                style: Theme.of(sheetContext).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Ajusta categorías, pagos, fechas e importes.',
-                style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(sheetContext).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: ListView(
-                  children: [
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        OutlinedButton.icon(
-                          onPressed: () async {
-                            final selected = await _selectIds(
-                              title: 'Categorías',
-                              values: categories
-                                  .where(
-                                    (item) =>
-                                        _type == null ||
-                                        item.type.name == _type!.name,
-                                  )
-                                  .map((item) => (item.id, item.name))
-                                  .toList(),
-                              selected: _categoryIds,
-                            );
-                            if (selected != null) {
-                              _updateFilter(() => _categoryIds = selected);
-                            }
-                          },
-                          icon: const Icon(Icons.category_outlined),
-                          label: Text(
-                            _categoryIds.isEmpty
-                                ? 'Categorías'
-                                : 'Categorías (${_categoryIds.length})',
-                          ),
-                        ),
-                        OutlinedButton.icon(
-                          onPressed: () async {
-                            final selected = await _selectIds(
-                              title: 'Métodos de pago',
-                              values: methods
-                                  .map((item) => (item.id, item.name))
-                                  .toList(),
-                              selected: _paymentMethodIds,
-                            );
-                            if (selected != null) {
-                              _updateFilter(() => _paymentMethodIds = selected);
-                            }
-                          },
-                          icon: const Icon(Icons.payments_outlined),
-                          label: Text(
-                            _paymentMethodIds.isEmpty
-                                ? 'Métodos de pago'
-                                : 'Métodos (${_paymentMethodIds.length})',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Rango de importe',
-                      style: Theme.of(sheetContext).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _minimumAmount,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            decoration: const InputDecoration(
-                              labelText: 'Mínimo RD\$',
-                              border: OutlineInputBorder(),
-                            ),
-                            onSubmitted: (_) => _applyAmountRange(),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            controller: _maximumAmount,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            decoration: const InputDecoration(
-                              labelText: 'Máximo RD\$',
-                              border: OutlineInputBorder(),
-                            ),
-                            onSubmitted: (_) => _applyAmountRange(),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: FilledButton.tonal(
-                        onPressed: _applyAmountRange,
-                        child: const Text('Aplicar importe'),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Período',
-                      style: Theme.of(sheetContext).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      initialValue: _cycleFilterId,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Ciclo financiero',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: [
-                        const DropdownMenuItem(
-                          value: 'all',
-                          child: Text('Todos los ciclos'),
-                        ),
-                        const DropdownMenuItem(
-                          value: 'current',
-                          child: Text('Ciclo actual'),
-                        ),
-                        const DropdownMenuItem(
-                          value: 'previous',
-                          child: Text('Ciclo anterior'),
-                        ),
-                        for (final cycle in cycles)
-                          DropdownMenuItem(
-                            value: 'history-${cycle.id}',
-                            child: Text(
-                              '${_dateLabel(cycle.startDate)} – ${_dateLabel(cycle.endDate)}',
-                            ),
-                          ),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          _selectCycle(value, budget, cycles);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final preset in _DateRangePreset.values)
-                          if (preset != _DateRangePreset.custom)
-                            ActionChip(
-                              label: Text(switch (preset) {
-                                _DateRangePreset.today => 'Hoy',
-                                _DateRangePreset.week => 'Esta semana',
-                                _DateRangePreset.month => 'Este mes',
-                                _DateRangePreset.year => 'Este año',
-                                _DateRangePreset.custom => 'Personalizado',
-                              }),
-                              onPressed: () => _applyDatePreset(preset),
-                            ),
-                        OutlinedButton.icon(
-                          onPressed: _chooseRange,
-                          icon: const Icon(Icons.date_range),
-                          label: Text(
-                            _rangeLabel == 'Todas las fechas'
-                                ? 'Personalizado'
-                                : _rangeLabel,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => _chooseBoundaryDate(start: true),
-                            icon: const Icon(Icons.south_west),
-                            label: Text(
-                              _startDate == null
-                                  ? 'Desde'
-                                  : 'Desde ${_dateLabel(_startDate!)}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => _chooseBoundaryDate(start: false),
-                            icon: const Icon(Icons.north_west),
-                            label: Text(
-                              _endDate == null
-                                  ? 'Hasta'
-                                  : 'Hasta ${_dateLabel(_endDate!)}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (_startDate != null || _endDate != null)
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          if (_startDate != null)
-                            InputChip(
-                              label: Text('Desde ${_dateLabel(_startDate!)}'),
-                              onDeleted: () =>
-                                  _updateFilter(() => _startDate = null),
-                            ),
-                          if (_endDate != null)
-                            InputChip(
-                              label: Text('Hasta ${_dateLabel(_endDate!)}'),
-                              onDeleted: () =>
-                                  _updateFilter(() => _endDate = null),
-                            ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      _clearFilters();
-                      Navigator.pop(sheetContext);
-                    },
-                    child: const Text('Limpiar'),
-                  ),
-                  const Spacer(),
-                  FilledButton(
-                    onPressed: () => Navigator.pop(sheetContext),
-                    child: const Text('Listo'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<void> _openActivityCalendar() async {
     final initialDate = _startDate ?? DateTime.now();
     final selected = await showModalBottomSheet<DateTime>(
@@ -576,27 +270,23 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     });
   }
 
-  void _clearFilters() {
-    _search.clear();
-    _minimumAmount.clear();
-    _maximumAmount.clear();
-    _appliedQuery = '';
-    _updateFilter(() {
-      _type = null;
-      _categoryIds = {};
-      _paymentMethodIds = {};
-      _minimumAmountInCents = null;
-      _maximumAmountInCents = null;
-      _startDate = null;
-      _endDate = null;
-      _sortOrder = TransactionSortOrder.newest;
-    });
-  }
-
   Future<void> _openAdvancedFilters(
     List<Category> categories,
     List<PaymentMethod> methods,
   ) async {
+    final budget = ref.read(budgetConfigProvider).value;
+    final cycles =
+        ref.read(budgetHistoryProvider).value ?? const <BudgetCycle>[];
+    final cycleOptions = <(String, String)>[
+      ('all', 'Todos los ciclos'),
+      ('current', 'Ciclo actual'),
+      ('previous', 'Ciclo anterior'),
+      for (final cycle in cycles)
+        (
+          'history-${cycle.id}',
+          '${_dateLabel(cycle.startDate)} – ${_dateLabel(cycle.endDate)}',
+        ),
+    ];
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -615,6 +305,10 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
               ? 'Métodos de pago'
               : 'Métodos (${_paymentMethodIds.length})',
           dateLabel: _rangeLabel,
+          cycleSelection: _cycleFilterId,
+          cycleOptions: cycleOptions,
+          onCycleChanged: (selection) =>
+              _selectCycle(selection, budget, cycles),
           hasFilters:
               _filter.hasCriteria || _sortOrder != TransactionSortOrder.newest,
           minimumAmount: _minimumAmount,
@@ -869,7 +563,6 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         ),
       );
     }
-    final wide = MediaQuery.sizeOf(context).width >= 720;
     return Column(
       children: [
         Padding(
@@ -1201,6 +894,8 @@ String _sortLabel(TransactionSortOrder value) => switch (value) {
   TransactionSortOrder.oldest => 'Más antiguos',
   TransactionSortOrder.amountHighToLow => 'Mayor importe',
   TransactionSortOrder.amountLowToHigh => 'Menor importe',
+  TransactionSortOrder.categoryAscending => 'Categoría (A–Z)',
+  TransactionSortOrder.categoryDescending => 'Categoría (Z–A)',
 };
 
 class _SortDropdown extends StatelessWidget {
@@ -1235,6 +930,9 @@ class _AdvancedTransactionFilters extends StatelessWidget {
     required this.categoryLabel,
     required this.methodLabel,
     required this.dateLabel,
+    required this.cycleSelection,
+    required this.cycleOptions,
+    required this.onCycleChanged,
     required this.hasFilters,
     required this.minimumAmount,
     required this.maximumAmount,
@@ -1248,10 +946,13 @@ class _AdvancedTransactionFilters extends StatelessWidget {
   });
   final ScrollController scrollController;
   final String categoryLabel, methodLabel, dateLabel;
+  final String cycleSelection;
+  final List<(String, String)> cycleOptions;
   final bool hasFilters;
   final TextEditingController minimumAmount, maximumAmount;
   final TransactionSortOrder sortOrder;
   final VoidCallback onCategories, onMethods, onApplyAmount, onClear;
+  final ValueChanged<String> onCycleChanged;
   final ValueChanged<_DateRangePreset> onDatePreset;
   final ValueChanged<TransactionSortOrder> onSort;
 
@@ -1331,6 +1032,23 @@ class _AdvancedTransactionFilters extends StatelessWidget {
       ),
       const SizedBox(height: 14),
       Text('Período', style: Theme.of(context).textTheme.titleSmall),
+      const SizedBox(height: 8),
+      DropdownButtonFormField<String>(
+        initialValue: cycleSelection,
+        isExpanded: true,
+        decoration: const InputDecoration(
+          labelText: 'Ciclo financiero',
+          isDense: true,
+        ),
+        items: [
+          for (final (value, label) in cycleOptions)
+            DropdownMenuItem(value: value, child: Text(label)),
+        ],
+        onChanged: (value) {
+          if (value != null) onCycleChanged(value);
+        },
+      ),
+      const SizedBox(height: 8),
       Wrap(
         spacing: 8,
         children: [
@@ -1342,9 +1060,7 @@ class _AdvancedTransactionFilters extends StatelessWidget {
             (_DateRangePreset.custom, 'Personalizado'),
           ])
             ActionChip(
-              label: Text(
-                entry.$1 == _DateRangePreset.custom ? entry.$2 : entry.$2,
-              ),
+              label: Text(entry.$2),
               onPressed: () => onDatePreset(entry.$1),
             ),
         ],
@@ -1711,9 +1427,7 @@ class _DateHeading extends StatelessWidget {
 
 class _TransactionsEmpty extends StatelessWidget {
   const _TransactionsEmpty({this.filtered = false, this.onClear});
-  const _TransactionsEmpty({this.filtered = false, this.onClear});
   final bool filtered;
-  final VoidCallback? onClear;
   final VoidCallback? onClear;
 
   @override
