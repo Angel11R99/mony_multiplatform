@@ -34,13 +34,10 @@ void main() {
     await _pumpApp(tester, router, database);
     expect(find.text('Tus finanzas, en un solo lugar'), findsOneWidget);
     expect(find.byType(FuturisticNavBar), findsOneWidget);
-    expect(find.byKey(const ValueKey('main-nav-home')), findsOneWidget);
-    expect(find.bySemanticsLabel('Inicio'), findsNWidgets(2));
-    expect(find.bySemanticsLabel('Historial'), findsOneWidget);
     expect(find.byType(MonyNavigationShell), findsOneWidget);
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.byKey(const ValueKey('main-nav-transactions')));
+    await _tapNavigationItem(tester, 7);
     await tester.pumpAndSettle();
     expect(find.text('Buscar movimientos'), findsOneWidget);
     expect(find.text('Todavía no hay movimientos.'), findsOneWidget);
@@ -48,16 +45,16 @@ void main() {
 
     await tester.enterText(find.byType(TextField).first, 'supermercado');
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('main-nav-home')));
+    await _tapNavigationItem(tester, 0);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('main-nav-transactions')));
+    await _tapNavigationItem(tester, 7);
     await tester.pumpAndSettle();
     expect(
       tester.widget<TextField>(find.byType(TextField).first).controller!.text,
       'supermercado',
     );
 
-    await tester.tap(find.byKey(const ValueKey('main-nav-home')));
+    await _tapNavigationItem(tester, 0);
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Más opciones'));
     await tester.pumpAndSettle();
@@ -84,7 +81,7 @@ void main() {
 
     await _pumpApp(tester, router, database);
     expect(find.byType(CategoriesPage), findsOneWidget);
-    expect(find.byKey(const ValueKey('main-nav-home')), findsNothing);
+    expect(find.byType(FuturisticNavBar), findsNothing);
   });
 
   testWidgets('uses a navigation rail on a wide viewport', (tester) async {
@@ -102,7 +99,7 @@ void main() {
 
     await _pumpApp(tester, router, database);
     expect(find.byType(NavigationRail), findsOneWidget);
-    expect(find.byKey(const ValueKey('main-nav-home')), findsNothing);
+    expect(find.byType(FuturisticNavBar), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -120,12 +117,12 @@ void main() {
     router.push('/transactions/not-a-number');
     await tester.pumpAndSettle();
     expect(find.text('Página no encontrada'), findsOneWidget);
-    expect(find.byKey(const ValueKey('main-nav-home')), findsNothing);
+    expect(find.byType(FuturisticNavBar), findsNothing);
 
     router.pop();
     await tester.pumpAndSettle();
     expect(find.text('Tus finanzas, en un solo lugar'), findsOneWidget);
-    expect(find.byKey(const ValueKey('main-nav-home')), findsOneWidget);
+    expect(find.byType(FuturisticNavBar), findsOneWidget);
   });
 
   testWidgets('warns before discarding an edited transaction form', (
@@ -183,6 +180,14 @@ Future<void> _pumpApp(
     ),
   );
   await tester.pumpAndSettle();
+}
+
+Future<void> _tapNavigationItem(WidgetTester tester, int index) async {
+  final rect = tester.getRect(find.byType(FuturisticNavBar));
+  final itemWidth = rect.width / defaultNavigationModuleIds.length;
+  await tester.tapAt(
+    Offset(rect.left + itemWidth * (index + 0.5), rect.top + rect.height / 2),
+  );
 }
 
 class _MemoryPreferencesRepository implements PreferencesRepository {

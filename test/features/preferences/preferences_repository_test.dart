@@ -20,8 +20,6 @@ void main() {
       currencyFormatStyle: CurrencyFormatStyle.code,
       notificationsEnabled: true,
       visibleNavigationModules: ['home', 'statistics', 'transactions'],
-      showNavigationLabels: true,
-      navigationLabelScale: 0.75,
     );
     await repository.save(changed);
 

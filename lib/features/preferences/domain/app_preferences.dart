@@ -22,8 +22,6 @@ class AppPreferences {
     this.currencyFormatStyle = CurrencyFormatStyle.symbol,
     this.notificationsEnabled = false,
     this.visibleNavigationModules = defaultNavigationModuleIds,
-    this.showNavigationLabels = false,
-    this.navigationLabelScale = 0.85,
   });
 
   static const defaults = AppPreferences();
@@ -35,8 +33,6 @@ class AppPreferences {
   final CurrencyFormatStyle currencyFormatStyle;
   final bool notificationsEnabled;
   final List<String> visibleNavigationModules;
-  final bool showNavigationLabels;
-  final double navigationLabelScale;
 
   AppPreferences copyWith({
     AppThemeMode? themeMode,
@@ -46,8 +42,6 @@ class AppPreferences {
     CurrencyFormatStyle? currencyFormatStyle,
     bool? notificationsEnabled,
     List<String>? visibleNavigationModules,
-    bool? showNavigationLabels,
-    double? navigationLabelScale,
   }) => AppPreferences(
     themeMode: themeMode ?? this.themeMode,
     primaryColorArgb: primaryColorArgb ?? this.primaryColorArgb,
@@ -57,8 +51,6 @@ class AppPreferences {
     notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
     visibleNavigationModules:
         visibleNavigationModules ?? this.visibleNavigationModules,
-    showNavigationLabels: showNavigationLabels ?? this.showNavigationLabels,
-    navigationLabelScale: navigationLabelScale ?? this.navigationLabelScale,
   );
 
   @override
@@ -71,9 +63,7 @@ class AppPreferences {
           currencyCode == other.currencyCode &&
           currencyFormatStyle == other.currencyFormatStyle &&
           notificationsEnabled == other.notificationsEnabled &&
-          _sameList(visibleNavigationModules, other.visibleNavigationModules) &&
-          showNavigationLabels == other.showNavigationLabels &&
-          navigationLabelScale == other.navigationLabelScale;
+          _sameList(visibleNavigationModules, other.visibleNavigationModules);
 
   @override
   int get hashCode => Object.hash(
@@ -84,8 +74,6 @@ class AppPreferences {
     currencyFormatStyle,
     notificationsEnabled,
     Object.hashAll(visibleNavigationModules),
-    showNavigationLabels,
-    navigationLabelScale,
   );
 
   static bool _sameList(List<String> a, List<String> b) {

@@ -20,7 +20,7 @@ class MonyNavigationShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final preferences = ref.watch(appPreferencesProvider).value;
     final visibleIndices = <int>[
-      for (var index = 0; index < _labels.length; index++)
+      for (var index = 0; index < _moduleIds.length; index++)
         if (preferences?.visibleNavigationModules.contains(_moduleIds[index]) ??
             true)
           index,
@@ -39,7 +39,6 @@ class MonyNavigationShell extends ConsumerWidget {
     final wide = MediaQuery.sizeOf(context).width >= MonyBreakpoints.expanded;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final accent = scheme.primary;
 
     if (wide) {
       return Scaffold(
@@ -64,105 +63,24 @@ class MonyNavigationShell extends ConsumerWidget {
     }
 
     final items = <NavBarItem>[
-      for (final index in visibleIndices)
-        NavBarItem(
-          customIcon: Icon(_iconData[index], color: scheme.onSurfaceVariant),
-          label: _labels[index],
-        ),
+      for (final index in visibleIndices) NavBarItem(icon: _iconData[index]),
     ];
 
     return Scaffold(
-      extendBody: true,
       body: navigationShell,
       bottomNavigationBar: SafeArea(
         top: false,
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.topCenter,
-          children: [
-            FuturisticNavBar(
-              selectedIndex: selectedVisibleIndex,
-              onItemSelected: (index) => _selectBranch(visibleIndices[index]),
-              items: items,
-              style: NavBarStyle.floating,
-              animationDuration: MonyMotion.standard,
-              iconAnimationType: IconAnimationType.scale,
-              iconSize: 25,
-              showGlow: false,
-              showLiquid: false,
-              theme: FuturisticTheme(
-                name: 'Mony',
-                glowGradient: LinearGradient(colors: [accent, accent]),
-                accentColor: accent,
-                baseColor: scheme.surfaceContainer,
-                particleColor: accent,
-                backgroundColor: Colors.transparent,
-                customColors: {
-                  'baseColor': scheme.surfaceContainer,
-                  'glowColor': accent,
-                  'borderColor': scheme.outlineVariant,
-                  'shadowColor': Colors.black,
-                  'indicatorColor': accent.withValues(alpha: 0.2),
-                  'indicatorHighlightColor': accent,
-                },
-                effectToggles: const {
-                  'showShadow': false,
-                  'showGlow': false,
-                  'showBorder': true,
-                  'showIndicator': true,
-                },
-              ),
-              textStyle: theme.textTheme.labelSmall?.copyWith(
-                color: scheme.onSurface,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-              barBackgroundColor: scheme.surface,
-              barElevation: 0,
-            ),
-            Positioned(
-              left: 20,
-              right: 20,
-              top: 0,
-              bottom: 20,
-              child: Row(
-                children: [
-                  for (
-                    var position = 0;
-                    position < visibleIndices.length;
-                    position++
-                  )
-                    Expanded(
-                      child: Semantics(
-                        key: ValueKey(
-                          'main-nav-${_moduleIds[visibleIndices[position]]}',
-                        ),
-                        label: _labels[visibleIndices[position]],
-                        button: true,
-                        selected: position == selectedVisibleIndex,
-                        onTap: () => _selectBranch(visibleIndices[position]),
-                        child: const SizedBox.expand(),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
+        child: FuturisticNavBar(
+          selectedIndex: selectedVisibleIndex,
+          onItemSelected: (index) => _selectBranch(visibleIndices[index]),
+          items: items,
+          style: NavBarStyle.floating,
+          iconAnimationType: IconAnimationType.fade,
+          showGlow: false,
         ),
       ),
     );
   }
-
-  static const _labels = [
-    'Inicio',
-    'Fijos',
-    'Recordatorios',
-    'Ahorros',
-    'Lista',
-    'Estadísticas',
-    'Plan de ciclo',
-    'Historial',
-  ];
 
   static const _moduleIds = [
     'home',

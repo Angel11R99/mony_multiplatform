@@ -234,49 +234,6 @@ class NavigationSettingsPage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Card(
-              child: SwitchListTile.adaptive(
-                title: const Text('Mostrar nombres'),
-                subtitle: const Text(
-                  'Muestra etiquetas junto a los iconos cuando haya espacio.',
-                ),
-                value: value.showNavigationLabels,
-                onChanged: (enabled) => ref
-                    .read(appPreferencesProvider.notifier)
-                    .setShowNavigationLabels(enabled),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Tamaño de las etiquetas'),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        for (final (scale, label) in <(double, String)>[
-                          (0.75, 'Pequeño'),
-                          (0.85, 'Mediano'),
-                          (1.0, 'Grande'),
-                        ])
-                          ChoiceChip(
-                            label: Text(label),
-                            selected: value.navigationLabelScale == scale,
-                            onSelected: (_) => ref
-                                .read(appPreferencesProvider.notifier)
-                                .setNavigationLabelScale(scale),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
             Text(
               'La barra conserva al menos un módulo visible.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
