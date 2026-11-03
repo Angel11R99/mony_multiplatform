@@ -70,13 +70,19 @@ class MonyNavigationShell extends ConsumerWidget {
       body: navigationShell,
       bottomNavigationBar: SafeArea(
         top: false,
-        child: FuturisticNavBar(
-          selectedIndex: selectedVisibleIndex,
-          onItemSelected: (index) => _selectBranch(visibleIndices[index]),
-          items: items,
-          style: NavBarStyle.floating,
-          iconAnimationType: IconAnimationType.fade,
-          showGlow: false,
+        child: Transform.translate(
+          offset: const Offset(0, 10),
+          child: FuturisticNavBar(
+            selectedIndex: selectedVisibleIndex,
+            onItemSelected: (index) => _selectBranch(visibleIndices[index]),
+            items: items,
+            style: NavBarStyle.floating,
+            iconAnimationType: IconAnimationType.fade,
+            showGlow: false,
+            theme: FuturisticTheme.cyberpunk().copyWith(
+              effectToggles: const {'showIndicator': false},
+            ),
+          ),
         ),
       ),
     );
