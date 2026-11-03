@@ -657,10 +657,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: typeFilter,
-                        ),
+                        SizedBox(width: double.infinity, child: typeFilter),
                         const SizedBox(height: 8),
                         Row(
                           children: [
