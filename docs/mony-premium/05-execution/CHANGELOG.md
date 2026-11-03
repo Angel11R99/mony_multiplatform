@@ -1,5 +1,11 @@
 # Historial de implementación
 
+## P14 — Pruebas, accesibilidad y rendimiento — 2026-11-02
+- Resultado: BLOCKED; no se inició P15.
+- `flutter analyze` pasa. La suite llega a 162 aprobadas y muestra 15 fallidas antes de quedarse bloqueada; los traces incluyen layout/interacción a 320 px, temporizadores de Toastification y expectativas de UI. La repetición serial tampoco terminó.
+- Solo Linux desktop está disponible; Android SDK y Chrome faltan. Accesibilidad/contraste y rendimiento no cuentan aún con medición aceptable.
+- Reporte y trabajo de desbloqueo: `P14_TESTING_PERFORMANCE_REPORT.md`. Se preservó el cambio preexistente en `pubspec.lock`.
+
 ## P13 — Privacidad, seguridad y manejo de datos — 2026-11-02
 - Resultado: APPROVED bajo la autorización persistente del usuario.
 - Integrado `screenshot_shield` 0.2.0 para difuminar la vista en app switcher Android/iOS/Windows; capturas comunes continúan permitidas. Retirados del manifest merge los permisos transitivos de detección/capturas no usados.
