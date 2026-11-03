@@ -1,41 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'mony_navigation_shell.dart';
-import '../../features/home/presentation/home_page.dart';
+import '../../features/barcodes/presentation/barcode_scanner_page.dart';
 import '../../features/budgets/presentation/budgets_page.dart';
 import '../../features/categories/presentation/categories_page.dart';
+import '../../features/exports/presentation/database_backup_page.dart';
+import '../../features/exports/presentation/exports_page.dart';
+import '../../features/home/presentation/home_page.dart';
+import '../../features/obligations/presentation/obligation_detail_page.dart';
+import '../../features/obligations/presentation/obligations_page.dart';
 import '../../features/payment_methods/presentation/payment_methods_page.dart';
+import '../../features/preferences/presentation/privacy_page.dart';
+import '../../features/preferences/presentation/settings_page.dart';
+import '../../features/receipts/presentation/receipt_scanner_page.dart';
+import '../../features/recurring/presentation/recurring_entries_page.dart';
 import '../../features/savings/presentation/savings_goals_page.dart';
+import '../../features/shopping_lists/presentation/shopping_list_page.dart';
+import '../../features/shopping_lists/presentation/shopping_lists_page.dart';
+import '../../features/statistics/presentation/statistics_page.dart';
 import '../../features/transactions/domain/transaction.dart';
 import '../../features/transactions/presentation/transaction_detail_page.dart';
 import '../../features/transactions/presentation/transaction_editor_page.dart';
 import '../../features/transactions/presentation/transactions_page.dart';
-import '../../features/preferences/presentation/settings_page.dart';
-import '../../features/preferences/presentation/privacy_page.dart';
-import '../../features/statistics/presentation/statistics_page.dart';
-import '../../features/shopping_lists/presentation/shopping_list_page.dart';
-import '../../features/shopping_lists/presentation/shopping_lists_page.dart';
-import '../../features/obligations/presentation/obligation_detail_page.dart';
-import '../../features/obligations/presentation/obligations_page.dart';
-import '../../features/recurring/presentation/recurring_entries_page.dart';
-import '../../features/exports/presentation/exports_page.dart';
-import '../../features/exports/presentation/database_backup_page.dart';
-import '../../features/barcodes/presentation/barcode_scanner_page.dart';
-import '../../features/receipts/presentation/receipt_scanner_page.dart';
 import '../../features/widgets/presentation/widgets_page.dart';
+import 'mony_navigation_shell.dart';
 
 GoRouter createAppRouter({String initialLocation = '/'}) {
   final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
-  final homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
-  final transactionsNavigatorKey = GlobalKey<NavigatorState>(
-    debugLabel: 'transactions',
-  );
-  final categoriesNavigatorKey = GlobalKey<NavigatorState>(
-    debugLabel: 'categories',
-  );
-  final paymentMethodsNavigatorKey = GlobalKey<NavigatorState>(
-    debugLabel: 'paymentMethods',
+  final branchKeys = List.generate(
+    8,
+    (index) => GlobalKey<NavigatorState>(debugLabel: 'module-$index'),
   );
 
   return GoRouter(
@@ -47,7 +41,7 @@ GoRouter createAppRouter({String initialLocation = '/'}) {
             MonyNavigationShell(navigationShell: navigationShell),
         branches: [
           StatefulShellBranch(
-            navigatorKey: homeNavigatorKey,
+            navigatorKey: branchKeys[0],
             routes: [
               GoRoute(
                 path: '/',
@@ -57,7 +51,93 @@ GoRouter createAppRouter({String initialLocation = '/'}) {
             ],
           ),
           StatefulShellBranch(
-            navigatorKey: transactionsNavigatorKey,
+            navigatorKey: branchKeys[1],
+            routes: [
+              GoRoute(
+                path: '/recurring',
+                name: 'recurringEntries',
+                builder: (context, state) => const RecurringEntriesPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: branchKeys[2],
+            routes: [
+              GoRoute(
+                path: '/obligations',
+                name: 'obligations',
+                builder: (context, state) => const ObligationsPage(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    name: 'obligationDetail',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      final id = int.tryParse(state.pathParameters['id'] ?? '');
+                      return id == null
+                          ? UnknownRoutePage(location: state.uri.path)
+                          : ObligationDetailPage(obligationId: id);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: branchKeys[3],
+            routes: [
+              GoRoute(
+                path: '/savings-goals',
+                name: 'savingsGoals',
+                builder: (context, state) => const SavingsGoalsPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: branchKeys[4],
+            routes: [
+              GoRoute(
+                path: '/shopping-lists',
+                name: 'shoppingLists',
+                builder: (context, state) => const ShoppingListsPage(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    name: 'shoppingListDetail',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      final id = int.tryParse(state.pathParameters['id'] ?? '');
+                      return id == null
+                          ? UnknownRoutePage(location: state.uri.path)
+                          : ShoppingListPage(listId: id);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: branchKeys[5],
+            routes: [
+              GoRoute(
+                path: '/statistics',
+                name: 'statistics',
+                builder: (context, state) => const StatisticsPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: branchKeys[6],
+            routes: [
+              GoRoute(
+                path: '/budgets',
+                name: 'budgets',
+                builder: (context, state) => const BudgetsPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: branchKeys[7],
             routes: [
               GoRoute(
                 path: '/transactions',
@@ -100,27 +180,17 @@ GoRouter createAppRouter({String initialLocation = '/'}) {
               ),
             ],
           ),
-          StatefulShellBranch(
-            navigatorKey: categoriesNavigatorKey,
-            routes: [
-              GoRoute(
-                path: '/categories',
-                name: 'categories',
-                builder: (context, state) => const CategoriesPage(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            navigatorKey: paymentMethodsNavigatorKey,
-            routes: [
-              GoRoute(
-                path: '/payment-methods',
-                name: 'paymentMethods',
-                builder: (context, state) => const PaymentMethodsPage(),
-              ),
-            ],
-          ),
         ],
+      ),
+      GoRoute(
+        path: '/categories',
+        name: 'categories',
+        builder: (context, state) => const CategoriesPage(),
+      ),
+      GoRoute(
+        path: '/payment-methods',
+        name: 'paymentMethods',
+        builder: (context, state) => const PaymentMethodsPage(),
       ),
       GoRoute(
         path: '/about',
@@ -131,6 +201,28 @@ GoRouter createAppRouter({String initialLocation = '/'}) {
         path: '/settings',
         name: 'settings',
         builder: (context, state) => const SettingsPage(),
+        routes: [
+          GoRoute(
+            path: 'personalization',
+            name: 'settingsPersonalization',
+            builder: (context, state) => const PersonalizationSettingsPage(),
+          ),
+          GoRoute(
+            path: 'navigation',
+            name: 'settingsNavigation',
+            builder: (context, state) => const NavigationSettingsPage(),
+          ),
+          GoRoute(
+            path: 'finance',
+            name: 'settingsFinance',
+            builder: (context, state) => const BudgetsPage(),
+          ),
+          GoRoute(
+            path: 'categories',
+            name: 'settingsCategories',
+            builder: (context, state) => const CategoriesPage(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/privacy',
@@ -165,60 +257,6 @@ GoRouter createAppRouter({String initialLocation = '/'}) {
         path: '/widgets',
         name: 'widgets',
         builder: (context, state) => const WidgetsPage(),
-      ),
-      GoRoute(
-        path: '/savings-goals',
-        name: 'savingsGoals',
-        builder: (context, state) => const SavingsGoalsPage(),
-      ),
-      GoRoute(
-        path: '/budgets',
-        name: 'budgets',
-        builder: (context, state) => const BudgetsPage(),
-      ),
-      GoRoute(
-        path: '/statistics',
-        name: 'statistics',
-        builder: (context, state) => const StatisticsPage(),
-      ),
-      GoRoute(
-        path: '/shopping-lists',
-        name: 'shoppingLists',
-        builder: (context, state) => const ShoppingListsPage(),
-        routes: [
-          GoRoute(
-            path: ':id',
-            name: 'shoppingListDetail',
-            builder: (context, state) {
-              final id = int.tryParse(state.pathParameters['id'] ?? '');
-              return id == null
-                  ? UnknownRoutePage(location: state.uri.path)
-                  : ShoppingListPage(listId: id);
-            },
-          ),
-        ],
-      ),
-      GoRoute(
-        path: '/obligations',
-        name: 'obligations',
-        builder: (context, state) => const ObligationsPage(),
-        routes: [
-          GoRoute(
-            path: ':id',
-            name: 'obligationDetail',
-            builder: (context, state) {
-              final id = int.tryParse(state.pathParameters['id'] ?? '');
-              return id == null
-                  ? UnknownRoutePage(location: state.uri.path)
-                  : ObligationDetailPage(obligationId: id);
-            },
-          ),
-        ],
-      ),
-      GoRoute(
-        path: '/recurring',
-        name: 'recurringEntries',
-        builder: (context, state) => const RecurringEntriesPage(),
       ),
     ],
     errorBuilder: (context, state) =>

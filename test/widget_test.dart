@@ -33,7 +33,11 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Apariencia y preferencias'));
+    await tester.tap(find.byTooltip('Más opciones'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ajustes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Personalización'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('Activar notificaciones'),
@@ -67,7 +71,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Tus finanzas, en un solo lugar'), findsOneWidget);
-    await tester.tap(find.byTooltip('Apariencia y preferencias'));
+    await tester.tap(find.byTooltip('Más opciones'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ajustes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Personalización'));
     await tester.pumpAndSettle();
 
     expect(find.text('Haz Mony tuya'), findsOneWidget);
@@ -80,6 +88,42 @@ void main() {
 
     expect(repository.saved.themeMode, AppThemeMode.dark);
     expect(repository.saved.primaryColorArgb, 0xFFEF4444);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('navigation preferences hide modules and persist', (
+    tester,
+  ) async {
+    final repository = _FakePreferencesRepository();
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(database),
+          preferencesRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: const MonyApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Más opciones'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ajustes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Navegación'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Estadísticas'));
+    await tester.pumpAndSettle();
+
+    expect(
+      repository.saved.visibleNavigationModules,
+      isNot(contains('statistics')),
+    );
+    expect(find.byTooltip('Ajustes'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));
   });

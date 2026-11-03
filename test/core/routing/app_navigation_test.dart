@@ -34,29 +34,38 @@ void main() {
     await _pumpApp(tester, router, database);
     expect(find.text('Tus finanzas, en un solo lugar'), findsOneWidget);
     expect(find.byType(CircleNavBar), findsOneWidget);
-    expect(find.bySemanticsLabel('Inicio'), findsOneWidget);
+    expect(find.bySemanticsLabel('Inicio'), findsNWidgets(2));
+    expect(find.bySemanticsLabel('Historial'), findsOneWidget);
     expect(find.byType(MonyNavigationShell), findsOneWidget);
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.byIcon(Icons.receipt_long_outlined));
+    await tester.tap(find.byKey(const ValueKey('main-nav-transactions')));
     await tester.pumpAndSettle();
     expect(find.text('Buscar movimientos'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField).first, 'supermercado');
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.home_outlined));
+    await tester.tap(find.byKey(const ValueKey('main-nav-home')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.receipt_long_outlined));
+    await tester.tap(find.byKey(const ValueKey('main-nav-transactions')));
     await tester.pumpAndSettle();
     expect(
       tester.widget<TextField>(find.byType(TextField).first).controller!.text,
       'supermercado',
     );
 
-    await tester.tap(find.byIcon(Icons.category_outlined));
+    await tester.tap(find.byKey(const ValueKey('main-nav-home')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Más opciones'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Administrar categorías'));
     await tester.pumpAndSettle();
     expect(find.byType(CategoriesPage), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.payment_outlined));
+    router.pop();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Más opciones'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Métodos de pago'));
     await tester.pumpAndSettle();
     expect(find.byType(PaymentMethodsPage), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -72,7 +81,7 @@ void main() {
 
     await _pumpApp(tester, router, database);
     expect(find.byType(CategoriesPage), findsOneWidget);
-    expect(find.byType(CircleNavBar), findsOneWidget);
+    expect(find.byType(CircleNavBar), findsNothing);
   });
 
   testWidgets('uses a navigation rail on a wide viewport', (tester) async {
@@ -155,6 +164,10 @@ Future<void> _pumpApp(
   GoRouter router,
   AppDatabase database,
 ) async {
+  addTearDown(() async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
+  });
   await tester.pumpWidget(
     ProviderScope(
       overrides: [

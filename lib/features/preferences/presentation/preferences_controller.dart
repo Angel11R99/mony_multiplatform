@@ -38,6 +38,20 @@ class AppPreferencesController extends AsyncNotifier<AppPreferences> {
   Future<void> setNotificationsEnabled(bool value) =>
       _update((current) => current.copyWith(notificationsEnabled: value));
 
+  Future<void> setVisibleNavigationModules(List<String> value) => _update(
+    (current) =>
+        current.copyWith(visibleNavigationModules: List.unmodifiable(value)),
+  );
+
+  Future<void> setShowNavigationLabels(bool value) =>
+      _update((current) => current.copyWith(showNavigationLabels: value));
+
+  Future<void> setNavigationLabelScale(double value) => _update(
+    (current) => current.copyWith(
+      navigationLabelScale: value.clamp(0.75, 1.2).toDouble(),
+    ),
+  );
+
   Future<void> reset() => _update((_) => AppPreferences.defaults);
 
   Future<void> _update(

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../theme/mony_tokens.dart';
+import '../../features/preferences/presentation/preferences_controller.dart';
 
-class MonyNavigationShell extends StatelessWidget {
+class MonyNavigationShell extends ConsumerWidget {
   const MonyNavigationShell({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
@@ -16,17 +18,43 @@ class MonyNavigationShell extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final preferences = ref.watch(appPreferencesProvider).value;
+    final visibleIndices = <int>[
+      for (var index = 0; index < _labels.length; index++)
+        if (preferences?.visibleNavigationModules.contains(_moduleIds[index]) ??
+            true)
+          index,
+      if (preferences != null &&
+          !preferences.visibleNavigationModules.contains(
+            _moduleIds[navigationShell.currentIndex],
+          ))
+        navigationShell.currentIndex,
+    ]..sort();
+    final selectedVisibleIndex = visibleIndices.indexOf(
+      navigationShell.currentIndex,
+    );
+    final activeIcons = [
+      for (final index in visibleIndices) _activeIcons[index],
+    ];
+    final inactiveIcons = [
+      for (final index in visibleIndices) _inactiveIcons[index],
+    ];
+    final destinations = [
+      for (final index in visibleIndices) _railDestinations[index],
+    ];
+    final showLabels = preferences?.showNavigationLabels ?? false;
     final wide = MediaQuery.sizeOf(context).width >= MonyBreakpoints.expanded;
     if (wide) {
       return Scaffold(
         body: Row(
           children: [
             NavigationRail(
-              selectedIndex: navigationShell.currentIndex,
-              onDestinationSelected: _selectBranch,
+              selectedIndex: selectedVisibleIndex,
+              onDestinationSelected: (index) =>
+                  _selectBranch(visibleIndices[index]),
               labelType: NavigationRailLabelType.all,
-              destinations: _railDestinations,
+              destinations: destinations,
             ),
             VerticalDivider(
               width: 1,
@@ -49,19 +77,19 @@ class MonyNavigationShell extends StatelessWidget {
             children: [
               ExcludeSemantics(
                 child: CircleNavBar(
-                  activeIndex: navigationShell.currentIndex,
-                  onTap: _selectBranch,
-                  activeIcons: _activeIcons,
-                  inactiveIcons: _inactiveIcons,
-                  levels: _labels,
-                  activeLevelsStyle: Theme.of(context).textTheme.labelSmall
-                      ?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                  inactiveLevelsStyle: Theme.of(context).textTheme.labelSmall
-                      ?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                  activeIndex: selectedVisibleIndex,
+                  onTap: (index) => _selectBranch(visibleIndices[index]),
+                  activeIcons: activeIcons,
+                  inactiveIcons: inactiveIcons,
+                  levels: showLabels
+                      ? [for (final index in visibleIndices) _labels[index]]
+                      : null,
+                  activeLevelsStyle: TextStyle(
+                    fontSize: 12 * (preferences?.navigationLabelScale ?? 0.85),
+                  ),
+                  inactiveLevelsStyle: TextStyle(
+                    fontSize: 12 * (preferences?.navigationLabelScale ?? 0.85),
+                  ),
                   height: 70,
                   circleWidth: 56,
                   color: Theme.of(context).colorScheme.surfaceContainer,
@@ -85,16 +113,26 @@ class MonyNavigationShell extends StatelessWidget {
               Positioned.fill(
                 child: Row(
                   children: [
-                    for (var index = 0; index < _labels.length; index++)
+                    for (
+                      var itemIndex = 0;
+                      itemIndex < visibleIndices.length;
+                      itemIndex++
+                    )
                       Expanded(
                         child: Semantics(
-                          label: _labels[index],
+                          key: ValueKey(
+                            'main-nav-${_moduleIds[visibleIndices[itemIndex]]}',
+                          ),
+                          label: _labels[visibleIndices[itemIndex]],
                           button: true,
-                          selected: navigationShell.currentIndex == index,
-                          onTap: () => _selectBranch(index),
+                          selected:
+                              navigationShell.currentIndex ==
+                              visibleIndices[itemIndex],
+                          onTap: () => _selectBranch(visibleIndices[itemIndex]),
                           child: ExcludeSemantics(
                             child: InkWell(
-                              onTap: () => _selectBranch(index),
+                              onTap: () =>
+                                  _selectBranch(visibleIndices[itemIndex]),
                               excludeFromSemantics: true,
                               canRequestFocus: true,
                               focusColor: Theme.of(
@@ -115,20 +153,48 @@ class MonyNavigationShell extends StatelessWidget {
     );
   }
 
-  static const _labels = ['Inicio', 'Movimientos', 'Categorías', 'Métodos'];
+  static const _labels = [
+    'Inicio',
+    'Fijos',
+    'Recordatorios',
+    'Ahorros',
+    'Lista',
+    'Estadísticas',
+    'Plan de ciclo',
+    'Historial',
+  ];
+
+  static const _moduleIds = [
+    'home',
+    'recurring',
+    'obligations',
+    'savings',
+    'shoppingLists',
+    'statistics',
+    'cyclePlan',
+    'transactions',
+  ];
 
   static const _activeIcons = <Widget>[
     Icon(Icons.home, size: 26),
+    Icon(Icons.repeat, size: 26),
+    Icon(Icons.notifications_active, size: 26),
+    Icon(Icons.savings, size: 26),
+    Icon(Icons.shopping_cart, size: 26),
+    Icon(Icons.query_stats, size: 26),
+    Icon(Icons.account_balance_wallet, size: 26),
     Icon(Icons.receipt_long, size: 26),
-    Icon(Icons.category, size: 26),
-    Icon(Icons.payment, size: 26),
   ];
 
   static const _inactiveIcons = <Widget>[
     Icon(Icons.home_outlined, size: 24),
+    Icon(Icons.repeat_outlined, size: 24),
+    Icon(Icons.notifications_outlined, size: 24),
+    Icon(Icons.savings_outlined, size: 24),
+    Icon(Icons.shopping_cart_outlined, size: 24),
+    Icon(Icons.query_stats_outlined, size: 24),
+    Icon(Icons.account_balance_wallet_outlined, size: 24),
     Icon(Icons.receipt_long_outlined, size: 24),
-    Icon(Icons.category_outlined, size: 24),
-    Icon(Icons.payment_outlined, size: 24),
   ];
 
   static const _railDestinations = <NavigationRailDestination>[
@@ -138,19 +204,39 @@ class MonyNavigationShell extends StatelessWidget {
       label: Text('Inicio'),
     ),
     NavigationRailDestination(
+      icon: Icon(Icons.repeat_outlined),
+      selectedIcon: Icon(Icons.repeat),
+      label: Text('Fijos'),
+    ),
+    NavigationRailDestination(
+      icon: Icon(Icons.notifications_outlined),
+      selectedIcon: Icon(Icons.notifications_active),
+      label: Text('Recordatorios'),
+    ),
+    NavigationRailDestination(
+      icon: Icon(Icons.savings_outlined),
+      selectedIcon: Icon(Icons.savings),
+      label: Text('Ahorros'),
+    ),
+    NavigationRailDestination(
+      icon: Icon(Icons.shopping_cart_outlined),
+      selectedIcon: Icon(Icons.shopping_cart),
+      label: Text('Lista'),
+    ),
+    NavigationRailDestination(
+      icon: Icon(Icons.query_stats_outlined),
+      selectedIcon: Icon(Icons.query_stats),
+      label: Text('Estadísticas'),
+    ),
+    NavigationRailDestination(
+      icon: Icon(Icons.account_balance_wallet_outlined),
+      selectedIcon: Icon(Icons.account_balance_wallet),
+      label: Text('Plan de ciclo'),
+    ),
+    NavigationRailDestination(
       icon: Icon(Icons.receipt_long_outlined),
       selectedIcon: Icon(Icons.receipt_long),
-      label: Text('Movimientos'),
-    ),
-    NavigationRailDestination(
-      icon: Icon(Icons.category_outlined),
-      selectedIcon: Icon(Icons.category),
-      label: Text('Categorías'),
-    ),
-    NavigationRailDestination(
-      icon: Icon(Icons.payment_outlined),
-      selectedIcon: Icon(Icons.payment),
-      label: Text('Métodos'),
+      label: Text('Historial'),
     ),
   ];
 }

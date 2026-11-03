@@ -48,6 +48,14 @@ class SharedPreferencesRepository implements PreferencesRepository {
             ) ??
             AppPreferences.defaults.currencyFormatStyle,
         notificationsEnabled: decoded['notificationsEnabled'] == true,
+        visibleNavigationModules: _visibleNavigationModules(
+          decoded['visibleNavigationModules'],
+        ),
+        showNavigationLabels: decoded['showNavigationLabels'] == true,
+        navigationLabelScale: _doubleValue(
+          decoded['navigationLabelScale'],
+          AppPreferences.defaults.navigationLabelScale,
+        ).clamp(0.75, 1.2).toDouble(),
       );
     } on FormatException {
       return AppPreferences.defaults;
@@ -66,6 +74,9 @@ class SharedPreferencesRepository implements PreferencesRepository {
         'currencyCode': preferences.currencyCode,
         'currencyFormatStyle': preferences.currencyFormatStyle.name,
         'notificationsEnabled': preferences.notificationsEnabled,
+        'visibleNavigationModules': preferences.visibleNavigationModules,
+        'showNavigationLabels': preferences.showNavigationLabels,
+        'navigationLabelScale': preferences.navigationLabelScale,
       }),
     );
     if (!saved) throw StateError('Preferences could not be persisted.');
@@ -81,7 +92,19 @@ class SharedPreferencesRepository implements PreferencesRepository {
 
   int _intValue(Object? value, int fallback) => value is int ? value : fallback;
 
+  double _doubleValue(Object? value, double fallback) =>
+      value is num ? value.toDouble() : fallback;
+
   String _currencyCode(Object? value) => value is String && value == 'DOP'
       ? value
       : AppPreferences.defaults.currencyCode;
+
+  List<String> _visibleNavigationModules(Object? value) {
+    if (value is! List) return defaultNavigationModuleIds;
+    final selected = value.whereType<String>().toSet();
+    final valid = defaultNavigationModuleIds
+        .where(selected.contains)
+        .toList(growable: false);
+    return valid.isEmpty ? defaultNavigationModuleIds : valid;
+  }
 }

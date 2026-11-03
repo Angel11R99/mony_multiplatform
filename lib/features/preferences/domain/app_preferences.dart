@@ -2,6 +2,17 @@ enum AppThemeMode { system, light, dark }
 
 enum CurrencyFormatStyle { symbol, code }
 
+const defaultNavigationModuleIds = <String>[
+  'home',
+  'recurring',
+  'obligations',
+  'savings',
+  'shoppingLists',
+  'statistics',
+  'cyclePlan',
+  'transactions',
+];
+
 class AppPreferences {
   const AppPreferences({
     this.themeMode = AppThemeMode.system,
@@ -10,6 +21,9 @@ class AppPreferences {
     this.currencyCode = 'DOP',
     this.currencyFormatStyle = CurrencyFormatStyle.symbol,
     this.notificationsEnabled = false,
+    this.visibleNavigationModules = defaultNavigationModuleIds,
+    this.showNavigationLabels = false,
+    this.navigationLabelScale = 0.85,
   });
 
   static const defaults = AppPreferences();
@@ -20,6 +34,9 @@ class AppPreferences {
   final String currencyCode;
   final CurrencyFormatStyle currencyFormatStyle;
   final bool notificationsEnabled;
+  final List<String> visibleNavigationModules;
+  final bool showNavigationLabels;
+  final double navigationLabelScale;
 
   AppPreferences copyWith({
     AppThemeMode? themeMode,
@@ -28,6 +45,9 @@ class AppPreferences {
     String? currencyCode,
     CurrencyFormatStyle? currencyFormatStyle,
     bool? notificationsEnabled,
+    List<String>? visibleNavigationModules,
+    bool? showNavigationLabels,
+    double? navigationLabelScale,
   }) => AppPreferences(
     themeMode: themeMode ?? this.themeMode,
     primaryColorArgb: primaryColorArgb ?? this.primaryColorArgb,
@@ -35,6 +55,10 @@ class AppPreferences {
     currencyCode: currencyCode ?? this.currencyCode,
     currencyFormatStyle: currencyFormatStyle ?? this.currencyFormatStyle,
     notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+    visibleNavigationModules:
+        visibleNavigationModules ?? this.visibleNavigationModules,
+    showNavigationLabels: showNavigationLabels ?? this.showNavigationLabels,
+    navigationLabelScale: navigationLabelScale ?? this.navigationLabelScale,
   );
 
   @override
@@ -46,7 +70,10 @@ class AppPreferences {
           accentColorArgb == other.accentColorArgb &&
           currencyCode == other.currencyCode &&
           currencyFormatStyle == other.currencyFormatStyle &&
-          notificationsEnabled == other.notificationsEnabled;
+          notificationsEnabled == other.notificationsEnabled &&
+          _sameList(visibleNavigationModules, other.visibleNavigationModules) &&
+          showNavigationLabels == other.showNavigationLabels &&
+          navigationLabelScale == other.navigationLabelScale;
 
   @override
   int get hashCode => Object.hash(
@@ -56,5 +83,17 @@ class AppPreferences {
     currencyCode,
     currencyFormatStyle,
     notificationsEnabled,
+    Object.hashAll(visibleNavigationModules),
+    showNavigationLabels,
+    navigationLabelScale,
   );
+
+  static bool _sameList(List<String> a, List<String> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var index = 0; index < a.length; index++) {
+      if (a[index] != b[index]) return false;
+    }
+    return true;
+  }
 }

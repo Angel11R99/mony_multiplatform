@@ -10,14 +10,217 @@ import '../domain/app_preferences.dart';
 import 'preferences_controller.dart';
 import '../../notifications/presentation/notifications_providers.dart';
 
-class SettingsPage extends ConsumerStatefulWidget {
+class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
-  ConsumerState<SettingsPage> createState() => _SettingsPageState();
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Ajustes')),
+    body: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Text(
+              '¿Qué quieres configurar?',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+            Card(
+              child: Column(
+                children: [
+                  _SettingsDestination(
+                    icon: Icons.palette_outlined,
+                    title: 'Personalización',
+                    subtitle: 'Tema, colores y formato de moneda',
+                    routeName: 'settingsPersonalization',
+                  ),
+                  const Divider(height: 1),
+                  _SettingsDestination(
+                    icon: Icons.navigation_outlined,
+                    title: 'Navegación',
+                    subtitle: 'Módulos y etiquetas de la barra',
+                    routeName: 'settingsNavigation',
+                  ),
+                  const Divider(height: 1),
+                  _SettingsDestination(
+                    icon: Icons.account_balance_outlined,
+                    title: 'Finanzas',
+                    subtitle: 'Presupuesto, ciclos y alertas',
+                    routeName: 'settingsFinance',
+                  ),
+                  const Divider(height: 1),
+                  _SettingsDestination(
+                    icon: Icons.category_outlined,
+                    title: 'Categorías',
+                    subtitle: 'Administrar categorías de gastos e ingresos',
+                    routeName: 'settingsCategories',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => context.pushNamed('privacy'),
+              icon: const Icon(Icons.privacy_tip_outlined),
+              label: const Text('Privacidad y datos'),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
-class _SettingsPageState extends ConsumerState<SettingsPage> {
+class _SettingsDestination extends StatelessWidget {
+  const _SettingsDestination({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.routeName,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String routeName;
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+    leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+    title: Text(title),
+    subtitle: Text(subtitle),
+    trailing: const Icon(Icons.chevron_right),
+    onTap: () => context.pushNamed(routeName),
+  );
+}
+
+class NavigationSettingsPage extends ConsumerWidget {
+  const NavigationSettingsPage({super.key});
+
+  static const _titles = <String, (String, String)>{
+    'home': ('Inicio', 'Resumen financiero y movimientos recientes'),
+    'recurring': ('Fijos', 'Compromisos recurrentes'),
+    'obligations': ('Recordatorios', 'Pagos y cobros pendientes'),
+    'savings': ('Ahorros', 'Metas y aportaciones'),
+    'shoppingLists': ('Lista', 'Listas de compras'),
+    'statistics': ('Estadísticas', 'Reportes del período'),
+    'cyclePlan': ('Plan de ciclo', 'Presupuesto y planificación'),
+    'transactions': ('Historial', 'Movimientos y filtros'),
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final preferences = ref.watch(appPreferencesProvider);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Navegación')),
+      body: preferences.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => const Center(
+          child: Text('No pudimos cargar las preferencias de navegación.'),
+        ),
+        data: (value) => ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Text(
+              'Elige los módulos que aparecen en la barra principal.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: Column(
+                children: [
+                  for (final id in defaultNavigationModuleIds)
+                    SwitchListTile.adaptive(
+                      title: Text(_titles[id]!.$1),
+                      subtitle: Text(_titles[id]!.$2),
+                      value: value.visibleNavigationModules.contains(id),
+                      onChanged: (enabled) {
+                        final modules = [...value.visibleNavigationModules];
+                        if (enabled) {
+                          modules.add(id);
+                        } else if (modules.length > 1) {
+                          modules.remove(id);
+                        }
+                        ref
+                            .read(appPreferencesProvider.notifier)
+                            .setVisibleNavigationModules(
+                              defaultNavigationModuleIds
+                                  .where(modules.contains)
+                                  .toList(),
+                            );
+                      },
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Card(
+              child: SwitchListTile.adaptive(
+                title: const Text('Mostrar nombres'),
+                subtitle: const Text(
+                  'Muestra etiquetas junto a los iconos cuando haya espacio.',
+                ),
+                value: value.showNavigationLabels,
+                onChanged: (enabled) => ref
+                    .read(appPreferencesProvider.notifier)
+                    .setShowNavigationLabels(enabled),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Tamaño de las etiquetas'),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        for (final (scale, label) in <(double, String)>[
+                          (0.75, 'Pequeño'),
+                          (0.85, 'Mediano'),
+                          (1.0, 'Grande'),
+                        ])
+                          ChoiceChip(
+                            label: Text(label),
+                            selected: value.navigationLabelScale == scale,
+                            onSelected: (_) => ref
+                                .read(appPreferencesProvider.notifier)
+                                .setNavigationLabelScale(scale),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'La barra conserva al menos un módulo visible.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PersonalizationSettingsPage extends ConsumerStatefulWidget {
+  const PersonalizationSettingsPage({super.key});
+
+  @override
+  ConsumerState<PersonalizationSettingsPage> createState() =>
+      _SettingsPageState();
+}
+
+class _SettingsPageState extends ConsumerState<PersonalizationSettingsPage> {
   static const _colorOptions = <_ColorOption>[
     _ColorOption('Lavanda Mony', 0xFFC8A8F4),
     _ColorOption('Rojo', 0xFFEF4444),
@@ -89,10 +292,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Apariencia y preferencias'),
+        title: const Text('Personalización'),
         leading: IconButton(
-          tooltip: 'Volver al inicio',
-          onPressed: () => context.goNamed('home'),
+          tooltip: 'Volver a Ajustes',
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.goNamed('settings'),
           icon: const Icon(Icons.arrow_back),
         ),
       ),
