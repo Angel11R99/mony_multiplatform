@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mony_multiplatform/features/budgets/domain/budget.dart';
 import 'package:mony_multiplatform/features/dashboard/domain/financial_dashboard_summary.dart';
 import 'package:mony_multiplatform/features/transactions/domain/transaction.dart';
 
@@ -44,6 +45,27 @@ void main() {
     expect(empty.expenseInCents, 0);
     expect(empty.balanceInCents, 0);
     expect(empty.recentTransactions, isEmpty);
+  });
+
+  test('summarizes a configured cycle across month boundaries', () {
+    final range = DateRange(
+      start: DateTime(2026, 10, 30),
+      endInclusive: DateTime(2026, 11, 5),
+    );
+    final summary = FinancialDashboardSummary.fromTransactions(
+      [
+        _movement(1, TransactionType.expense, 500, DateTime(2026, 10, 31)),
+        _movement(2, TransactionType.income, 2000, DateTime(2026, 11, 1)),
+        _movement(3, TransactionType.income, 9000, DateTime(2026, 11, 8)),
+      ],
+      month: range.start,
+      selectedPeriod: range,
+    );
+
+    expect(summary.period, range);
+    expect(summary.transactionCount, 2);
+    expect(summary.incomeInCents, 2000);
+    expect(summary.expenseInCents, 500);
   });
 }
 

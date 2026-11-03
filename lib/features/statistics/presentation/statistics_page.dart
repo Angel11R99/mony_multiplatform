@@ -6,6 +6,7 @@ import 'package:fl_chart/fl_chart.dart';
 
 import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/money/money_formatter.dart';
+import '../../../core/widgets/mony_settings_action.dart';
 import '../../budgets/domain/budget.dart';
 import '../../budgets/presentation/budgets_providers.dart';
 import '../../categories/domain/category.dart';
@@ -26,6 +27,7 @@ class StatisticsPage extends ConsumerStatefulWidget {
 class _StatisticsPageState extends ConsumerState<StatisticsPage> {
   StatisticsRange _range = StatisticsRange.currentBudget;
   int? _cycleIndex;
+  int? _historyCycleId;
   int? _categoryId;
   DateTime? _customStart;
   DateTime? _customEnd;
@@ -46,6 +48,7 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
       setState(() {
         _range = StatisticsRange.custom;
         _cycleIndex = null;
+        _historyCycleId = null;
         _customStart = range.start;
         _customEnd = range.end;
       });
@@ -57,26 +60,35 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
     final transactionState = ref.watch(transactionsProvider);
     final categoryState = ref.watch(categoriesProvider);
     final budgetState = ref.watch(budgetConfigProvider);
+    final cycleHistoryState = ref.watch(budgetHistoryProvider);
     final preferences =
         ref.watch(appPreferencesProvider).value ?? AppPreferences.defaults;
 
     if (transactionState.hasError ||
         categoryState.hasError ||
-        budgetState.hasError) {
+        budgetState.hasError ||
+        cycleHistoryState.hasError) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Estadísticas')),
+        appBar: AppBar(
+          title: const Text('Estadísticas'),
+          actions: const [MonySettingsAction()],
+        ),
         body: _StatisticsError(
           onRetry: () {
             ref.invalidate(transactionsProvider);
             ref.invalidate(categoriesProvider);
             ref.invalidate(budgetConfigProvider);
+            ref.invalidate(budgetHistoryProvider);
           },
         ),
       );
     }
     if (!transactionState.hasValue || !categoryState.hasValue) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Estadísticas')),
+        appBar: AppBar(
+          title: const Text('Estadísticas'),
+          actions: const [MonySettingsAction()],
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -84,6 +96,13 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
     final transactions = transactionState.requireValue;
     final categories = categoryState.requireValue;
     final budget = budgetState.value;
+    final cycleHistory = cycleHistoryState.value ?? const <BudgetCycle>[];
+    final selectedHistoryCycle = cycleHistory
+        .where((item) => item.id == _historyCycleId)
+        .firstOrNull;
+    if (_historyCycleId != null && selectedHistoryCycle == null) {
+      _historyCycleId = null;
+    }
     final now = DateTime.now();
     final schedules =
         budget?.cycleSchedules ??
@@ -92,7 +111,12 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
       _cycleIndex = null;
     }
     final cycle = _cycleIndex == null ? null : schedules[_cycleIndex!];
-    final period = cycle == null
+    final period = selectedHistoryCycle != null
+        ? StatisticsPeriod(
+            start: selectedHistoryCycle.startDate,
+            endInclusive: selectedHistoryCycle.endDate,
+          )
+        : cycle == null
         ? statisticsPeriod(
             range: _range,
             today: now,
@@ -110,7 +134,9 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
       period: period,
     );
     final isComparable =
-        _range != StatisticsRange.allTime && _range != StatisticsRange.custom;
+        _historyCycleId == null &&
+        _range != StatisticsRange.allTime &&
+        _range != StatisticsRange.custom;
     final previous = isComparable
         ? calculateFinancialStatistics(
             transactions: scopedTransactions,
@@ -154,7 +180,10 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
           );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Estadísticas')),
+      appBar: AppBar(
+        title: const Text('Estadísticas'),
+        actions: const [MonySettingsAction()],
+      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final maxWidth = constraints.maxWidth > 900
@@ -175,6 +204,33 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
                   ),
                   const SizedBox(height: 12),
                   _rangeSelector(schedules, now),
+                  if (cycleHistory.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<int?>(
+                      initialValue: _historyCycleId,
+                      decoration: const InputDecoration(
+                        labelText: 'Mis ciclos',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: [
+                        const DropdownMenuItem<int?>(
+                          value: null,
+                          child: Text('Sin ciclo histórico'),
+                        ),
+                        for (final savedCycle in cycleHistory)
+                          DropdownMenuItem<int?>(
+                            value: savedCycle.id,
+                            child: Text(
+                              '${_dateLabel(savedCycle.startDate)} – ${_dateLabel(savedCycle.endDate)}',
+                            ),
+                          ),
+                      ],
+                      onChanged: (value) => setState(() {
+                        _historyCycleId = value;
+                        _cycleIndex = null;
+                      }),
+                    ),
+                  ],
                   if (_range == StatisticsRange.custom)
                     Align(
                       alignment: Alignment.centerLeft,
@@ -272,7 +328,7 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
                   if (limitInsights.isEmpty)
                     const _EmptyPanel(
                       message:
-                          'Asigna límites a tus categorías desde Presupuestos para ver alertas aquí.',
+                          'Asigna límites a tus categorías desde Plan de ciclo para ver alertas aquí.',
                     )
                   else
                     ...limitInsights.map(
@@ -321,6 +377,7 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
                   selected: _cycleIndex == index,
                   onSelected: (_) => setState(() {
                     _cycleIndex = index;
+                    _historyCycleId = null;
                     _range = StatisticsRange.currentBudget;
                   }),
                 ),
@@ -343,6 +400,7 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
       }
       setState(() {
         _cycleIndex = null;
+        _historyCycleId = null;
         _range = range;
       });
     },

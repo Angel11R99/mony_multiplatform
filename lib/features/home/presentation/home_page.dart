@@ -12,6 +12,8 @@ import '../../../core/theme/mony_finance_colors.dart';
 import '../../../core/widgets/mony_finance_widgets.dart';
 import '../../../core/widgets/mony_layout.dart';
 import '../../../core/widgets/mony_states.dart';
+import '../../budgets/domain/budget.dart';
+import '../../budgets/presentation/budgets_providers.dart';
 import '../../categories/domain/category.dart';
 import '../../categories/presentation/categories_providers.dart';
 import '../../preferences/domain/app_preferences.dart';
@@ -19,7 +21,6 @@ import '../../preferences/presentation/preferences_controller.dart';
 import '../../transactions/domain/transaction.dart';
 import '../../transactions/presentation/transactions_providers.dart';
 import '../../dashboard/domain/financial_dashboard_summary.dart';
-import '../../dashboard/presentation/dashboard_providers.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -29,38 +30,41 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  late DateTime _month;
-
-  @override
-  void initState() {
-    super.initState();
-    final now = DateTime.now();
-    _month = DateTime(now.year, now.month);
-  }
-
-  void _changeMonth(int delta) =>
-      setState(() => _month = DateTime(_month.year, _month.month + delta));
+  BudgetPeriodView _periodView = BudgetPeriodView.current;
 
   @override
   Widget build(BuildContext context) {
-    final summary = ref.watch(dashboardSummaryProvider(_month));
+    final transactions = ref.watch(transactionsProvider);
+    final budget = ref.watch(budgetConfigProvider);
+    final range = budgetPeriodForView(
+      budget.value,
+      _periodView,
+      DateTime.now(),
+    );
+    final summary = transactions.whenData(
+      (items) => FinancialDashboardSummary.fromTransactions(
+        items,
+        month: range.start,
+        selectedPeriod: range,
+      ),
+    );
     final categories = ref.watch(categoriesProvider);
     final preferences =
         ref.watch(appPreferencesProvider).value ?? AppPreferences.defaults;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mony'),
+        title: const Text('Inicio'),
         actions: [
           PopupMenuButton<_HomeAction>(
             tooltip: 'Más opciones',
             onSelected: (action) {
               switch (action) {
                 case _HomeAction.paymentMethods:
-                  context.goNamed('paymentMethods');
+                  context.pushNamed('paymentMethods');
                   break;
                 case _HomeAction.categories:
-                  context.goNamed('categories');
+                  context.pushNamed('categories');
                   break;
                 case _HomeAction.settings:
                   context.pushNamed('settings');
@@ -93,7 +97,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
               PopupMenuItem(
                 value: _HomeAction.settings,
-                child: Text('Apariencia y preferencias'),
+                child: Text('Ajustes'),
               ),
               PopupMenuItem(
                 value: _HomeAction.exports,
@@ -124,47 +128,54 @@ class _HomePageState extends ConsumerState<HomePage> {
         ],
       ),
       body: SafeArea(
-        child: summary.when(
-          loading: () => const LoadingPlaceholder(message: 'Cargando resumen'),
-          error: (error, stack) => ErrorState(
-            message: 'No pudimos cargar el resumen financiero.',
-            retryLabel: 'Reintentar',
-            onRetry: () => ref.invalidate(transactionsProvider),
-          ),
-          data: (value) => categories.when(
-            loading: () => _DashboardContent(
-              summary: value,
-              categories: const [],
-              categoryNotice: 'Cargando categorías…',
-              currencyStyle: preferences.currencyFormatStyle,
-              onPreviousMonth: () => _changeMonth(-1),
-              onNextMonth: DateUtils.isSameMonth(_month, DateTime.now())
-                  ? null
-                  : () => _changeMonth(1),
-            ),
-            error: (error, stack) => _DashboardContent(
-              summary: value,
-              categories: const [],
-              categoryNotice:
-                  'No se pudieron cargar los nombres de categorías.',
-              onRetryCategories: () => ref.invalidate(categoriesProvider),
-              currencyStyle: preferences.currencyFormatStyle,
-              onPreviousMonth: () => _changeMonth(-1),
-              onNextMonth: DateUtils.isSameMonth(_month, DateTime.now())
-                  ? null
-                  : () => _changeMonth(1),
-            ),
-            data: (categoryItems) => _DashboardContent(
-              summary: value,
-              categories: categoryItems,
-              currencyStyle: preferences.currencyFormatStyle,
-              onPreviousMonth: () => _changeMonth(-1),
-              onNextMonth: DateUtils.isSameMonth(_month, DateTime.now())
-                  ? null
-                  : () => _changeMonth(1),
-            ),
-          ),
-        ),
+        child: budget.hasError
+            ? ErrorState(
+                message: 'No pudimos cargar la configuración del ciclo.',
+                retryLabel: 'Reintentar',
+                onRetry: () => ref.invalidate(budgetConfigProvider),
+              )
+            : summary.when(
+                loading: () =>
+                    const LoadingPlaceholder(message: 'Cargando resumen'),
+                error: (error, stack) => ErrorState(
+                  message: 'No pudimos cargar el resumen financiero.',
+                  retryLabel: 'Reintentar',
+                  onRetry: () => ref.invalidate(transactionsProvider),
+                ),
+                data: (value) => categories.when(
+                  loading: () => _DashboardContent(
+                    summary: value,
+                    categories: const [],
+                    budgetAmountInCents: budget.value?.amountInCents,
+                    categoryNotice: 'Cargando categorías…',
+                    currencyStyle: preferences.currencyFormatStyle,
+                    periodView: _periodView,
+                    onPeriodViewChanged: (view) =>
+                        setState(() => _periodView = view),
+                  ),
+                  error: (error, stack) => _DashboardContent(
+                    summary: value,
+                    categories: const [],
+                    budgetAmountInCents: budget.value?.amountInCents,
+                    categoryNotice:
+                        'No se pudieron cargar los nombres de categorías.',
+                    onRetryCategories: () => ref.invalidate(categoriesProvider),
+                    currencyStyle: preferences.currencyFormatStyle,
+                    periodView: _periodView,
+                    onPeriodViewChanged: (view) =>
+                        setState(() => _periodView = view),
+                  ),
+                  data: (categoryItems) => _DashboardContent(
+                    summary: value,
+                    categories: categoryItems,
+                    budgetAmountInCents: budget.value?.amountInCents,
+                    currencyStyle: preferences.currencyFormatStyle,
+                    periodView: _periodView,
+                    onPeriodViewChanged: (view) =>
+                        setState(() => _periodView = view),
+                  ),
+                ),
+              ),
       ),
     );
   }
@@ -174,20 +185,22 @@ class _DashboardContent extends StatelessWidget {
   const _DashboardContent({
     required this.summary,
     required this.categories,
+    this.budgetAmountInCents,
     this.categoryNotice,
     this.onRetryCategories,
     required this.currencyStyle,
-    required this.onPreviousMonth,
-    required this.onNextMonth,
+    required this.periodView,
+    required this.onPeriodViewChanged,
   });
 
   final FinancialDashboardSummary summary;
   final List<Category> categories;
+  final int? budgetAmountInCents;
   final String? categoryNotice;
   final VoidCallback? onRetryCategories;
   final CurrencyFormatStyle currencyStyle;
-  final VoidCallback onPreviousMonth;
-  final VoidCallback? onNextMonth;
+  final BudgetPeriodView periodView;
+  final ValueChanged<BudgetPeriodView> onPeriodViewChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -271,22 +284,30 @@ class _DashboardContent extends StatelessWidget {
             ),
           ] else ...[
             const SizedBox(height: MonySpace.x4),
-            _MonthSelector(
-              month: summary.month,
-              onPrevious: onPreviousMonth,
-              onNext: onNextMonth,
+            _CycleSelector(
+              selected: periodView,
+              onChanged: onPeriodViewChanged,
             ),
             const SizedBox(height: MonySpace.x2),
             BalanceCard(
-              label: 'Balance neto del mes',
+              label: 'Balance neto del ciclo',
               amount: MoneyFormatter.formatDopMinorUnits(
                 summary.balanceInCents,
                 style: currencyStyle,
               ),
-              supportingText:
-                  'Ingresos menos gastos · ${_monthName(summary.month)}',
+              supportingText: summary.period == null
+                  ? 'Ingresos menos gastos · ${_monthName(summary.month)}'
+                  : 'Ingresos menos gastos · ${MonyDateFormatter.formatDate(summary.period!.start)} – ${MonyDateFormatter.formatDate(summary.period!.endInclusive)}',
             ),
             const SizedBox(height: MonySpace.x3),
+            if (budgetAmountInCents != null && budgetAmountInCents! > 0) ...[
+              _CycleBudgetProgress(
+                spentInCents: summary.expenseInCents,
+                budgetInCents: budgetAmountInCents!,
+                currencyStyle: currencyStyle,
+              ),
+              const SizedBox(height: MonySpace.x3),
+            ],
             LayoutBuilder(
               builder: (context, constraints) {
                 final cardWidth = (constraints.maxWidth - MonySpace.x3) / 2;
@@ -555,39 +576,83 @@ String _shortMonth(DateTime date) {
   return months[date.month - 1];
 }
 
-class _MonthSelector extends StatelessWidget {
-  const _MonthSelector({
-    required this.month,
-    required this.onPrevious,
-    required this.onNext,
+class _CycleBudgetProgress extends StatelessWidget {
+  const _CycleBudgetProgress({
+    required this.spentInCents,
+    required this.budgetInCents,
+    required this.currencyStyle,
   });
-  final DateTime month;
-  final VoidCallback onPrevious;
-  final VoidCallback? onNext;
+
+  final int spentInCents;
+  final int budgetInCents;
+  final CurrencyFormatStyle currencyStyle;
 
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      IconButton(
-        tooltip: 'Mes anterior',
-        onPressed: onPrevious,
-        icon: const Icon(Icons.chevron_left),
-      ),
-      Expanded(
-        child: Text(
-          _monthName(month),
-          textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+  Widget build(BuildContext context) {
+    final remaining = budgetInCents - spentInCents;
+    final overBudget = remaining < 0;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(MonySpace.x4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Progreso del presupuesto',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                Text(
+                  MoneyFormatter.formatDopMinorUnits(
+                    spentInCents,
+                    style: currencyStyle,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: MonySpace.x2),
+            LinearProgressIndicator(
+              value: (spentInCents / budgetInCents).clamp(0.0, 1.0),
+              color: overBudget ? Theme.of(context).colorScheme.error : null,
+              minHeight: 8,
+            ),
+            const SizedBox(height: MonySpace.x2),
+            Text(
+              '${overBudget ? 'Exceso' : 'Disponible'} ${MoneyFormatter.formatDopMinorUnits(remaining.abs(), style: currencyStyle)} de ${MoneyFormatter.formatDopMinorUnits(budgetInCents, style: currencyStyle)}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: overBudget
+                    ? Theme.of(context).colorScheme.error
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
       ),
-      IconButton(
-        tooltip: 'Mes siguiente',
-        onPressed: onNext,
-        icon: const Icon(Icons.chevron_right),
+    );
+  }
+}
+
+class _CycleSelector extends StatelessWidget {
+  const _CycleSelector({required this.selected, required this.onChanged});
+
+  final BudgetPeriodView selected;
+  final ValueChanged<BudgetPeriodView> onChanged;
+
+  @override
+  Widget build(BuildContext context) => SegmentedButton<BudgetPeriodView>(
+    segments: const [
+      ButtonSegment(
+        value: BudgetPeriodView.current,
+        label: Text('Ciclo actual'),
       ),
+      ButtonSegment(value: BudgetPeriodView.next, label: Text('Próximo ciclo')),
     ],
+    selected: {selected},
+    showSelectedIcon: false,
+    onSelectionChanged: (value) => onChanged(value.first),
   );
 }
 

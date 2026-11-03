@@ -7,6 +7,7 @@ import '../../../core/money/money_formatter.dart';
 import '../../../core/theme/mony_tokens.dart';
 import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_confirm_dialog.dart';
+import '../../../core/widgets/mony_settings_action.dart';
 import '../../categories/domain/category.dart';
 import '../../categories/presentation/categories_providers.dart';
 import '../../preferences/domain/app_preferences.dart';
@@ -489,8 +490,9 @@ class _BudgetsPageState extends ConsumerState<BudgetsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Presupuestos'),
+        title: const Text('Plan de ciclo'),
         actions: [
+          const MonySettingsAction(),
           IconButton(
             tooltip: 'Historial de ciclos',
             onPressed: _openHistory,
@@ -589,7 +591,7 @@ class _BudgetsPageState extends ConsumerState<BudgetsPage> {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 112),
               children: [
                 Text(
-                  'Dale un límite claro a cada período.',
+                  'Planifica tu período y revisa cuánto has usado.',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -707,7 +709,7 @@ class _BudgetsPageState extends ConsumerState<BudgetsPage> {
                       ),
                     ),
                     TextButton.icon(
-                      onPressed: () => context.goNamed('categories'),
+                      onPressed: () => context.pushNamed('settingsCategories'),
                       icon: const Icon(Icons.tune, size: 18),
                       label: const Text('Categorías'),
                     ),

@@ -1,4 +1,5 @@
 import '../../transactions/domain/transaction.dart';
+import '../../budgets/domain/budget.dart';
 
 class FinancialDashboardSummary {
   const FinancialDashboardSummary({
@@ -9,6 +10,7 @@ class FinancialDashboardSummary {
     required this.transactionCount,
     required this.recentTransactions,
     required this.monthlyTotals,
+    this.period,
   });
 
   final DateTime month;
@@ -18,13 +20,15 @@ class FinancialDashboardSummary {
   final int transactionCount;
   final List<FinanceTransaction> recentTransactions;
   final List<DashboardMonthTotals> monthlyTotals;
+  final DateRange? period;
 
   factory FinancialDashboardSummary.fromTransactions(
     Iterable<FinanceTransaction> transactions, {
     required DateTime month,
+    DateRange? selectedPeriod,
     int recentLimit = 5,
   }) {
-    final period = DateTime(month.year, month.month);
+    final monthStart = DateTime(month.year, month.month);
     var income = 0;
     var expense = 0;
     var periodCount = 0;
@@ -37,7 +41,10 @@ class FinancialDashboardSummary {
       });
     final monthTotalsByKey = <int, List<int>>{};
     for (var index = 0; index < 6; index++) {
-      final trendMonth = DateTime(period.year, period.month - (5 - index));
+      final trendMonth = DateTime(
+        monthStart.year,
+        monthStart.month - (5 - index),
+      );
       monthTotalsByKey[_monthKey(trendMonth)] = [0, 0];
     }
     for (final transaction in sorted) {
@@ -49,10 +56,11 @@ class FinancialDashboardSummary {
           amounts[1] += transaction.amountInCents;
         }
       }
-      if (transaction.date.year != period.year ||
-          transaction.date.month != period.month) {
-        continue;
-      }
+      final inPeriod = selectedPeriod == null
+          ? transaction.date.year == monthStart.year &&
+                transaction.date.month == monthStart.month
+          : selectedPeriod.contains(transaction.date);
+      if (!inPeriod) continue;
       periodCount++;
       switch (transaction.type) {
         case TransactionType.income:
@@ -62,7 +70,7 @@ class FinancialDashboardSummary {
       }
     }
     return FinancialDashboardSummary(
-      month: period,
+      month: monthStart,
       incomeInCents: income,
       expenseInCents: expense,
       balanceInCents: income - expense,
@@ -70,7 +78,10 @@ class FinancialDashboardSummary {
       recentTransactions: List.unmodifiable(sorted.take(recentLimit)),
       monthlyTotals: List.unmodifiable(
         List.generate(6, (index) {
-          final trendMonth = DateTime(period.year, period.month - (5 - index));
+          final trendMonth = DateTime(
+            monthStart.year,
+            monthStart.month - (5 - index),
+          );
           final totals = monthTotalsByKey[_monthKey(trendMonth)]!;
           return DashboardMonthTotals(
             month: trendMonth,
@@ -79,6 +90,7 @@ class FinancialDashboardSummary {
           );
         }),
       ),
+      period: selectedPeriod,
     );
   }
 
