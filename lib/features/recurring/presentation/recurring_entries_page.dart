@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_settings_action.dart';
+import '../../../core/widgets/mony_layout.dart';
+import '../../../core/widgets/mony_states.dart';
+import '../../../core/theme/mony_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/money/money_formatter.dart';
 import '../../categories/domain/category.dart';
@@ -20,6 +23,38 @@ class RecurringEntriesPage extends ConsumerStatefulWidget {
       _RecurringEntriesPageState();
 }
 
+class _ScheduleMetric extends StatelessWidget {
+  const _ScheduleMetric({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(MonyRadius.medium),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 17, color: colors.primary),
+          const SizedBox(width: 7),
+          Text('$value $label', style: Theme.of(context).textTheme.labelLarge),
+        ],
+      ),
+    );
+  }
+}
+
 class _RecurringEntriesPageState extends ConsumerState<RecurringEntriesPage> {
   TransactionType? _type;
 
@@ -31,17 +66,30 @@ class _RecurringEntriesPageState extends ConsumerState<RecurringEntriesPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Fijos'),
-        actions: const [MonySettingsAction()],
+        actions: [
+          IconButton(
+            tooltip: 'Nueva serie',
+            onPressed: () => _edit(context, ref),
+            icon: const Icon(Icons.add),
+          ),
+          const MonySettingsAction(),
+        ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _edit(context, ref),
-        icon: const Icon(Icons.add),
-        label: const Text('Nueva serie'),
-      ),
+      floatingActionButton: entries.hasValue && entries.requireValue.isEmpty
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => _edit(context, ref),
+              icon: const Icon(Icons.add),
+              label: const Text('Nueva serie'),
+            ),
       body: entries.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) =>
-            Center(child: Text('No se pudieron cargar las series.')),
+        loading: () =>
+            const LoadingPlaceholder(message: 'Cargando movimientos fijos'),
+        error: (error, stack) => ErrorState(
+          message: 'No se pudieron cargar los movimientos fijos.',
+          retryLabel: 'Reintentar',
+          onRetry: () => ref.invalidate(recurringEntriesProvider),
+        ),
         data: (items) {
           final visible = _type == null
               ? items
@@ -52,109 +100,209 @@ class _RecurringEntriesPageState extends ConsumerState<RecurringEntriesPage> {
           final incomes = items
               .where((item) => item.type == TransactionType.income)
               .length;
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: [
-                    ChoiceChip(
-                      label: Text('Todos (${items.length})'),
-                      selected: _type == null,
-                      onSelected: (_) => setState(() => _type = null),
-                    ),
-                    ChoiceChip(
-                      label: Text('Gastos ($expenses)'),
-                      selected: _type == TransactionType.expense,
-                      onSelected: (_) =>
-                          setState(() => _type = TransactionType.expense),
-                    ),
-                    ChoiceChip(
-                      label: Text('Ingresos ($incomes)'),
-                      selected: _type == TransactionType.income,
-                      onSelected: (_) =>
-                          setState(() => _type = TransactionType.income),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: visible.isEmpty
-                    ? Center(
-                        child: Text(
-                          items.isEmpty
-                              ? 'Aún no hay movimientos fijos.'
-                              : _type == TransactionType.income
-                              ? 'No hay fijos de ingreso.'
-                              : 'No hay fijos de gasto.',
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                        itemCount: visible.length,
-                        itemBuilder: (context, index) {
-                          final item = visible[index];
-                          final category = categories
-                              .where((c) => c.id == item.categoryId)
-                              .firstOrNull;
-                          return Card(
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                child: Icon(
-                                  item.type == TransactionType.income
-                                      ? Icons.south_west
-                                      : Icons.north_east,
-                                ),
+          final activeCount = items.where((item) => item.isActive).length;
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final maxWidth = constraints.maxWidth > 820
+                  ? 820.0
+                  : constraints.maxWidth;
+              return Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: maxWidth,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+                        child: MonyCard(
+                          padding: const EdgeInsets.all(MonySpace.x4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Pagos que se repiten',
+                                style: Theme.of(context).textTheme.titleLarge,
                               ),
-                              title: Text(item.title),
-                              subtitle: Text(
-                                '${MoneyFormatter.formatDopMinorUnits(item.amountInCents)} · ${category?.name ?? 'Categoría'}\n${_frequencyLabel(item)}${item.isActive ? ' · Próximo: ${_date(item.nextDate)}' : ' · En pausa'}',
-                              ),
-                              isThreeLine: true,
-                              onTap: () => _edit(context, ref, item),
-                              trailing: PopupMenuButton<String>(
-                                onSelected: (action) async {
-                                  if (action == 'edit') {
-                                    _edit(context, ref, item);
-                                  }
-                                  if (action == 'register') {
-                                    await _registerOccurrence(
-                                      context,
-                                      ref,
-                                      item,
-                                    );
-                                  }
-                                  if (action == 'pause' || action == 'resume') {
-                                    await ref
-                                        .read(recurringRepositoryProvider)
-                                        .setActive(item.id, action == 'resume');
-                                  }
-                                },
-                                itemBuilder: (_) => [
-                                  const PopupMenuItem(
-                                    value: 'register',
-                                    child: Text('Registrar movimiento'),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'edit',
-                                    child: Text('Editar serie'),
-                                  ),
-                                  PopupMenuItem(
-                                    value: item.isActive ? 'pause' : 'resume',
-                                    child: Text(
-                                      item.isActive ? 'Pausar' : 'Reanudar',
+                              const SizedBox(height: MonySpace.x1),
+                              Text(
+                                'Ten a la vista tus ingresos fijos y los próximos cargos.',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
+                              ),
+                              const SizedBox(height: MonySpace.x3),
+                              Wrap(
+                                spacing: MonySpace.x2,
+                                runSpacing: MonySpace.x2,
+                                children: [
+                                  _ScheduleMetric(
+                                    label: 'Activas',
+                                    value: '$activeCount',
+                                    icon: Icons.autorenew,
+                                  ),
+                                  _ScheduleMetric(
+                                    label: 'Ingresos',
+                                    value: '$incomes',
+                                    icon: Icons.south_west,
+                                  ),
+                                  _ScheduleMetric(
+                                    label: 'Gastos',
+                                    value: '$expenses',
+                                    icon: Icons.north_east,
                                   ),
                                 ],
                               ),
-                            ),
-                          );
-                        },
+                            ],
+                          ),
+                        ),
                       ),
-              ),
-            ],
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: [
+                            ChoiceChip(
+                              label: Text('Todos (${items.length})'),
+                              selected: _type == null,
+                              onSelected: (_) => setState(() => _type = null),
+                            ),
+                            ChoiceChip(
+                              label: Text('Gastos ($expenses)'),
+                              selected: _type == TransactionType.expense,
+                              onSelected: (_) => setState(
+                                () => _type = TransactionType.expense,
+                              ),
+                            ),
+                            ChoiceChip(
+                              label: Text('Ingresos ($incomes)'),
+                              selected: _type == TransactionType.income,
+                              onSelected: (_) => setState(
+                                () => _type = TransactionType.income,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: visible.isEmpty
+                            ? ListView(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                ),
+                                children: [
+                                  const SizedBox(height: 20),
+                                  EmptyState(
+                                    icon: items.isEmpty
+                                        ? Icons.event_repeat_outlined
+                                        : Icons.filter_alt_off_outlined,
+                                    title: items.isEmpty
+                                        ? 'Ordena tus cargos recurrentes'
+                                        : _type == TransactionType.income
+                                        ? 'No hay ingresos fijos'
+                                        : 'No hay gastos fijos',
+                                    message: items.isEmpty
+                                        ? 'Programa servicios, suscripciones o ingresos para tener presente cuándo se repiten.'
+                                        : 'Prueba otra categoría o crea una nueva serie para este tipo.',
+                                  ),
+                                  if (items.isEmpty)
+                                    Center(
+                                      child: FilledButton.icon(
+                                        onPressed: () => _edit(context, ref),
+                                        icon: const Icon(Icons.add),
+                                        label: const Text(
+                                          'Crear primera serie',
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              )
+                            : ListView.builder(
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  8,
+                                  16,
+                                  104,
+                                ),
+                                itemCount: visible.length,
+                                itemBuilder: (context, index) {
+                                  final item = visible[index];
+                                  final category = categories
+                                      .where((c) => c.id == item.categoryId)
+                                      .firstOrNull;
+                                  return Card(
+                                    child: ListTile(
+                                      leading: CircleAvatar(
+                                        child: Icon(
+                                          item.type == TransactionType.income
+                                              ? Icons.south_west
+                                              : Icons.north_east,
+                                        ),
+                                      ),
+                                      title: Text(item.title),
+                                      subtitle: Text(
+                                        '${MoneyFormatter.formatDopMinorUnits(item.amountInCents)} · ${category?.name ?? 'Categoría'}\n${_frequencyLabel(item)}${item.isActive ? ' · Próximo: ${_date(item.nextDate)}' : ' · En pausa'}',
+                                      ),
+                                      isThreeLine: true,
+                                      onTap: () => _edit(context, ref, item),
+                                      trailing: PopupMenuButton<String>(
+                                        onSelected: (action) async {
+                                          if (action == 'edit') {
+                                            _edit(context, ref, item);
+                                          }
+                                          if (action == 'register') {
+                                            await _registerOccurrence(
+                                              context,
+                                              ref,
+                                              item,
+                                            );
+                                          }
+                                          if (action == 'pause' ||
+                                              action == 'resume') {
+                                            await ref
+                                                .read(
+                                                  recurringRepositoryProvider,
+                                                )
+                                                .setActive(
+                                                  item.id,
+                                                  action == 'resume',
+                                                );
+                                          }
+                                        },
+                                        itemBuilder: (_) => [
+                                          const PopupMenuItem(
+                                            value: 'register',
+                                            child: Text('Registrar movimiento'),
+                                          ),
+                                          const PopupMenuItem(
+                                            value: 'edit',
+                                            child: Text('Editar serie'),
+                                          ),
+                                          PopupMenuItem(
+                                            value: item.isActive
+                                                ? 'pause'
+                                                : 'resume',
+                                            child: Text(
+                                              item.isActive
+                                                  ? 'Pausar'
+                                                  : 'Reanudar',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           );
         },
       ),

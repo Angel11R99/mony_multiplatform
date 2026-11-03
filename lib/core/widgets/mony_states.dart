@@ -19,36 +19,56 @@ class EmptyState extends StatelessWidget {
   final VoidCallback? onAction;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    liveRegion: true,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: MonySpace.x6),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ExcludeSemantics(
-            child: Icon(
-              icon,
-              size: 44,
-              color: Theme.of(context).colorScheme.primary,
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Semantics(
+      liveRegion: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: MonySpace.x6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ExcludeSemantics(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer,
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                child: SizedBox(
+                  width: 72,
+                  height: 72,
+                  child: Icon(icon, size: 34, color: colors.primary),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: MonySpace.x2),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: MonySpace.x1),
-          Text(message, textAlign: TextAlign.center),
-          if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: MonySpace.x3),
-            OutlinedButton(onPressed: onAction, child: Text(actionLabel!)),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: MonySpace.x1),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: Text(
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: MonySpace.x3),
+              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
+            ],
           ],
-        ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class ErrorState extends StatelessWidget {

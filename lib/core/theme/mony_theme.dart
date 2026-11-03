@@ -49,7 +49,7 @@ abstract final class MonyTheme {
         ? FlexThemeData.light
         : FlexThemeData.dark;
 
-    return themeBuilder(
+    final baseTheme = themeBuilder(
       colorScheme: colorScheme,
       useMaterial3: true,
       extensions: [MonyFinanceColors.forBrightness(brightness)],
@@ -69,6 +69,47 @@ abstract final class MonyTheme {
         textButtonRadius: MonyRadius.medium,
         inputDecoratorRadius: MonyRadius.medium,
         inputDecoratorIsFilled: true,
+      ),
+    );
+    final text = baseTheme.textTheme;
+    return baseTheme.copyWith(
+      scaffoldBackgroundColor: colorScheme.surface,
+      textTheme: text.copyWith(
+        headlineLarge: text.headlineLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -1.1,
+          height: 1.08,
+        ),
+        headlineMedium: text.headlineMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.7,
+          height: 1.12,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+        headlineSmall: text.headlineSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.35,
+        ),
+        titleLarge: text.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+        titleMedium: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        displayLarge: text.displayLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+        displayMedium: text.displayMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+        displaySmall: text.displaySmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      ),
+      appBarTheme: baseTheme.appBarTheme.copyWith(
+        centerTitle: false,
+        titleTextStyle: baseTheme.textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

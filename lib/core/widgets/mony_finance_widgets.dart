@@ -36,7 +36,15 @@ class AmountText extends StatelessWidget {
       key: ValueKey(amount),
       maxLines: maxLines,
       overflow: TextOverflow.ellipsis,
-      style: style?.copyWith(color: color) ?? TextStyle(color: color),
+      style:
+          style?.copyWith(
+            color: color,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ) ??
+          TextStyle(
+            color: color,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
     );
     final content = animateChanges
         ? PageTransitionSwitcher(
