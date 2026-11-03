@@ -11,6 +11,7 @@ import '../../../core/theme/mony_tokens.dart';
 import '../../../core/theme/mony_finance_colors.dart';
 import '../../../core/widgets/mony_finance_widgets.dart';
 import '../../../core/widgets/mony_layout.dart';
+import '../../../core/widgets/mony_settings_action.dart';
 import '../../../core/widgets/mony_states.dart';
 import '../../budgets/domain/budget.dart';
 import '../../budgets/presentation/budgets_providers.dart';
@@ -55,77 +56,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inicio'),
-        actions: [
-          PopupMenuButton<_HomeAction>(
-            tooltip: 'Más opciones',
-            onSelected: (action) {
-              switch (action) {
-                case _HomeAction.paymentMethods:
-                  context.pushNamed('paymentMethods');
-                  break;
-                case _HomeAction.categories:
-                  context.pushNamed('categories');
-                  break;
-                case _HomeAction.settings:
-                  context.pushNamed('settings');
-                  break;
-                case _HomeAction.exports:
-                  context.pushNamed('exports');
-                  break;
-                case _HomeAction.barcode:
-                  context.pushNamed('barcodeScan');
-                  break;
-                case _HomeAction.receipt:
-                  context.pushNamed('receiptScan');
-                  break;
-                case _HomeAction.widgets:
-                  context.pushNamed('widgets');
-                  break;
-                case _HomeAction.about:
-                  context.pushNamed('about');
-                  break;
-              }
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(
-                value: _HomeAction.paymentMethods,
-                child: Text('Métodos de pago'),
-              ),
-              PopupMenuItem(
-                value: _HomeAction.categories,
-                child: Text('Administrar categorías'),
-              ),
-              PopupMenuItem(
-                value: _HomeAction.settings,
-                child: Text('Ajustes'),
-              ),
-              PopupMenuItem(
-                value: _HomeAction.exports,
-                child: Text('Exportar datos'),
-              ),
-              PopupMenuItem(
-                value: _HomeAction.barcode,
-                child: Text('Escanear producto'),
-              ),
-              PopupMenuItem(
-                value: _HomeAction.receipt,
-                child: Text('Escanear ticket'),
-              ),
-              PopupMenuItem(
-                value: _HomeAction.widgets,
-                child: Text('Widgets de Mony'),
-              ),
-              PopupMenuItem(
-                value: _HomeAction.about,
-                child: Text('Acerca de Mony'),
-              ),
-            ],
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: MonySpace.x2),
-              child: Icon(Icons.more_vert),
-            ),
-          ),
-        ],
+        actions: const [MonySettingsAction()],
       ),
       body: SafeArea(
         child: budget.hasError
@@ -707,14 +638,3 @@ class _RecentTransactionTile extends StatelessWidget {
 String _monthName(DateTime date) => MonyDateFormatter.formatMonthYear(date);
 
 String _dateLabel(DateTime date) => MonyDateFormatter.formatDate(date);
-
-enum _HomeAction {
-  paymentMethods,
-  categories,
-  settings,
-  exports,
-  barcode,
-  receipt,
-  widgets,
-  about,
-}

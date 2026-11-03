@@ -287,12 +287,12 @@ class _SavingsGoalsPageState extends ConsumerState<SavingsGoalsPage> {
       appBar: AppBar(
         title: const Text('Metas de ahorro'),
         actions: [
-          const MonySettingsAction(),
           IconButton(
             tooltip: 'Ver historial de movimientos',
             onPressed: () => context.goNamed('transactions'),
             icon: const Icon(Icons.receipt_long_outlined),
           ),
+          const MonySettingsAction(),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(

@@ -492,12 +492,12 @@ class _BudgetsPageState extends ConsumerState<BudgetsPage> {
       appBar: AppBar(
         title: const Text('Plan de ciclo'),
         actions: [
-          const MonySettingsAction(),
           IconButton(
             tooltip: 'Historial de ciclos',
             onPressed: _openHistory,
             icon: const Icon(Icons.history),
           ),
+          const MonySettingsAction(),
         ],
       ),
       floatingActionButton: configuredBudget == null

@@ -27,6 +27,11 @@ class SettingsPage extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
+            const _SectionHeading(
+              title: 'PREFERENCIAS',
+              subtitle: 'Personaliza Mony y ajusta la navegación.',
+            ),
+            const SizedBox(height: 10),
             Card(
               child: Column(
                 children: [
@@ -44,18 +49,91 @@ class SettingsPage extends StatelessWidget {
                     routeName: 'settingsNavigation',
                   ),
                   const Divider(height: 1),
+                ],
+              ),
+            ),
+            const SizedBox(height: 22),
+            const _SectionHeading(
+              title: 'GESTIÓN FINANCIERA',
+              subtitle: 'Organiza tus categorías, ciclos y presupuesto.',
+            ),
+            const SizedBox(height: 10),
+            Card(
+              child: Column(
+                children: [
                   _SettingsDestination(
-                    icon: Icons.account_balance_outlined,
-                    title: 'Finanzas',
-                    subtitle: 'Presupuesto, ciclos y alertas',
-                    routeName: 'settingsFinance',
+                    icon: Icons.payment_outlined,
+                    title: 'Métodos de pago',
+                    subtitle: 'Administra tarjetas, efectivo y cuentas',
+                    routeName: 'paymentMethods',
                   ),
                   const Divider(height: 1),
                   _SettingsDestination(
                     icon: Icons.category_outlined,
-                    title: 'Categorías',
-                    subtitle: 'Administrar categorías de gastos e ingresos',
+                    title: 'Administrar categorías',
+                    subtitle: 'Categorías de ingresos y gastos',
                     routeName: 'settingsCategories',
+                  ),
+                  const Divider(height: 1),
+                  _SettingsDestination(
+                    icon: Icons.account_balance_wallet_outlined,
+                    title: 'Presupuesto y ciclos',
+                    subtitle: 'Límites, período y alertas financieras',
+                    routeName: 'settingsFinance',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 22),
+            const _SectionHeading(
+              title: 'HERRAMIENTAS',
+              subtitle:
+                  'Accesos para registrar, consultar y respaldar tus datos.',
+            ),
+            const SizedBox(height: 10),
+            Card(
+              child: Column(
+                children: [
+                  _SettingsDestination(
+                    icon: Icons.file_upload_outlined,
+                    title: 'Exportar datos',
+                    subtitle: 'Descarga tus reportes financieros',
+                    routeName: 'exports',
+                  ),
+                  const Divider(height: 1),
+                  _SettingsDestination(
+                    icon: Icons.backup_outlined,
+                    title: 'Copia de seguridad',
+                    subtitle: 'Respalda o restaura tu información',
+                    routeName: 'backup',
+                  ),
+                  const Divider(height: 1),
+                  _SettingsDestination(
+                    icon: Icons.qr_code_scanner_outlined,
+                    title: 'Escanear producto',
+                    subtitle: 'Consulta y agrega productos a tus listas',
+                    routeName: 'barcodeScan',
+                  ),
+                  const Divider(height: 1),
+                  _SettingsDestination(
+                    icon: Icons.receipt_long_outlined,
+                    title: 'Escanear ticket',
+                    subtitle: 'Prepara movimientos desde un recibo',
+                    routeName: 'receiptScan',
+                  ),
+                  const Divider(height: 1),
+                  _SettingsDestination(
+                    icon: Icons.widgets_outlined,
+                    title: 'Widgets de Mony',
+                    subtitle: 'Consulta un resumen desde tu pantalla',
+                    routeName: 'widgets',
+                  ),
+                  const Divider(height: 1),
+                  _SettingsDestination(
+                    icon: Icons.info_outline,
+                    title: 'Acerca de Mony',
+                    subtitle: 'Información de la aplicación',
+                    routeName: 'about',
                   ),
                 ],
               ),

@@ -7,6 +7,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_confirm_dialog.dart';
+import '../../../core/widgets/mony_settings_action.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -728,27 +729,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             onPressed: _openActivityCalendar,
             icon: const Icon(Icons.calendar_month_outlined),
           ),
-          PopupMenuButton<String>(
-            tooltip: 'Más opciones',
-            onSelected: (action) {
-              switch (action) {
-                case 'exports':
-                  context.pushNamed('exports');
-                case 'backup':
-                  context.pushNamed('backup');
-                case 'settings':
-                  context.pushNamed('settings');
-              }
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'exports', child: Text('Exportar datos')),
-              PopupMenuItem(
-                value: 'backup',
-                child: Text('Respaldo y restauración'),
-              ),
-              PopupMenuItem(value: 'settings', child: Text('Ajustes')),
-            ],
-          ),
+          const MonySettingsAction(),
         ],
       ),
       floatingActionButton:
