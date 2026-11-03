@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:circle_nav_bar/circle_nav_bar.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -33,10 +34,17 @@ class MonyNavigationShell extends ConsumerWidget {
     final selectedVisibleIndex = visibleIndices.indexOf(
       navigationShell.currentIndex,
     );
+    final activeIcons = [
+      for (final index in visibleIndices) _activeIcons[index],
+    ];
+    final inactiveIcons = [
+      for (final index in visibleIndices) _inactiveIcons[index],
+    ];
     final destinations = [
       for (final index in visibleIndices) _railDestinations[index],
     ];
     final showLabels = preferences?.showNavigationLabels ?? false;
+    final compactLabels = visibleIndices.length > 5;
     final wide = MediaQuery.sizeOf(context).width >= MonyBreakpoints.expanded;
     if (wide) {
       return Scaffold(
@@ -64,41 +72,101 @@ class MonyNavigationShell extends ConsumerWidget {
       body: navigationShell,
       bottomNavigationBar: SafeArea(
         top: false,
-        child: Container(
-          height: showLabels ? 68 : 56,
-          margin: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainer,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-          ),
-          child: Row(
-            children: [
-              for (
-                var itemIndex = 0;
-                itemIndex < visibleIndices.length;
-                itemIndex++
-              )
-                Expanded(
-                  child: _NavigationItem(
-                    key: ValueKey(
-                      'main-nav-${_moduleIds[visibleIndices[itemIndex]]}',
+        child: SizedBox(
+          height: 82,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: SizedBox(
+              height: 70,
+              child: Stack(
+                children: [
+                  ExcludeSemantics(
+                    child: CircleNavBar(
+                      activeIndex: selectedVisibleIndex,
+                      onTap: (index) => _selectBranch(visibleIndices[index]),
+                      activeIcons: activeIcons,
+                      inactiveIcons: inactiveIcons,
+                      levels: showLabels
+                          ? [
+                              for (final index in visibleIndices)
+                                compactLabels
+                                    ? _compactLabels[index]
+                                    : _labels[index],
+                            ]
+                          : null,
+                      activeLevelsStyle: TextStyle(
+                        fontSize:
+                            12 * (preferences?.navigationLabelScale ?? 0.85),
+                      ),
+                      inactiveLevelsStyle: TextStyle(
+                        fontSize:
+                            12 * (preferences?.navigationLabelScale ?? 0.85),
+                      ),
+                      height: 70,
+                      circleWidth: 56,
+                      color: Theme.of(context).colorScheme.surfaceContainer,
+                      circleColor: Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer,
+                      tabDurationMillSec: MonyMotion.durationFor(
+                        context,
+                        MonyMotion.standard,
+                      ).inMilliseconds,
+                      iconDurationMillSec: MonyMotion.durationFor(
+                        context,
+                        MonyMotion.quick,
+                      ).inMilliseconds,
+                      tabCurve: MonyMotion.curveFor(
+                        context,
+                        Curves.easeOutCubic,
+                      ),
+                      iconCurve: MonyMotion.curveFor(context, Curves.easeOut),
+                      cornerRadius: const BorderRadius.vertical(
+                        top: Radius.circular(22),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                     ),
-                    label: _labels[visibleIndices[itemIndex]],
-                    compactLabel: _compactLabels[visibleIndices[itemIndex]],
-                    icon: _inactiveIcons[visibleIndices[itemIndex]],
-                    selectedIcon: _activeIcons[visibleIndices[itemIndex]],
-                    selected: itemIndex == selectedVisibleIndex,
-                    showLabel: showLabels,
-                    compact: visibleIndices.length > 5,
-                    labelScale: preferences?.navigationLabelScale ?? 0.85,
-                    onTap: () => _selectBranch(visibleIndices[itemIndex]),
                   ),
-                ),
-            ],
+                  Positioned.fill(
+                    child: Row(
+                      children: [
+                        for (
+                          var itemIndex = 0;
+                          itemIndex < visibleIndices.length;
+                          itemIndex++
+                        )
+                          Expanded(
+                            child: Semantics(
+                              key: ValueKey(
+                                'main-nav-${_moduleIds[visibleIndices[itemIndex]]}',
+                              ),
+                              label: _labels[visibleIndices[itemIndex]],
+                              button: true,
+                              selected:
+                                  navigationShell.currentIndex ==
+                                  visibleIndices[itemIndex],
+                              onTap: () =>
+                                  _selectBranch(visibleIndices[itemIndex]),
+                              child: ExcludeSemantics(
+                                child: InkWell(
+                                  onTap: () =>
+                                      _selectBranch(visibleIndices[itemIndex]),
+                                  excludeFromSemantics: true,
+                                  canRequestFocus: true,
+                                  focusColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.12),
+                                  child: const SizedBox.expand(),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -202,99 +270,4 @@ class MonyNavigationShell extends ConsumerWidget {
       label: Text('Historial'),
     ),
   ];
-}
-
-class _NavigationItem extends StatelessWidget {
-  const _NavigationItem({
-    super.key,
-    required this.label,
-    required this.compactLabel,
-    required this.icon,
-    required this.selectedIcon,
-    required this.selected,
-    required this.showLabel,
-    required this.compact,
-    required this.labelScale,
-    required this.onTap,
-  });
-
-  final String label;
-  final String compactLabel;
-  final Widget icon;
-  final Widget selectedIcon;
-  final bool selected;
-  final bool showLabel;
-  final bool compact;
-  final double labelScale;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final displayLabel = compact ? compactLabel : label;
-    return Semantics(
-      label: label,
-      button: true,
-      selected: selected,
-      onTap: onTap,
-      child: Tooltip(
-        message: label,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: ExcludeSemantics(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOutCubic,
-                  width: 34,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? colors.primaryContainer
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconTheme(
-                    data: IconThemeData(
-                      size: 21,
-                      color: selected
-                          ? colors.onPrimaryContainer
-                          : colors.onSurfaceVariant,
-                    ),
-                    child: selected ? selectedIcon : icon,
-                  ),
-                ),
-                if (showLabel) ...[
-                  const SizedBox(height: 2),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 1),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        displayLabel,
-                        maxLines: 1,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          fontSize: 11.5 * labelScale,
-                          fontWeight: selected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: selected
-                              ? colors.primary
-                              : colors.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
