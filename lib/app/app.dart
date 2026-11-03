@@ -36,7 +36,7 @@ class MonyApp extends ConsumerWidget {
             ),
             child: MaterialApp.router(
               title: config.appName,
-              debugShowCheckedModeBanner: config.showDebugBanner,
+              debugShowCheckedModeBanner: false,
               theme: MonyTheme.light(preferences),
               darkTheme: MonyTheme.dark(preferences),
               themeMode: MonyTheme.themeMode(preferences.themeMode),

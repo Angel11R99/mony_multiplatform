@@ -1,5 +1,4 @@
 import 'package:drift/native.dart';
-import 'package:circle_nav_bar/circle_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,7 +32,7 @@ void main() {
 
     await _pumpApp(tester, router, database);
     expect(find.text('Tus finanzas, en un solo lugar'), findsOneWidget);
-    expect(find.byType(CircleNavBar), findsOneWidget);
+    expect(find.byKey(const ValueKey('main-nav-home')), findsOneWidget);
     expect(find.bySemanticsLabel('Inicio'), findsNWidgets(2));
     expect(find.bySemanticsLabel('Historial'), findsOneWidget);
     expect(find.byType(MonyNavigationShell), findsOneWidget);
@@ -42,6 +41,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('main-nav-transactions')));
     await tester.pumpAndSettle();
     expect(find.text('Buscar movimientos'), findsOneWidget);
+    expect(find.text('Todavía no hay movimientos.'), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsNothing);
 
     await tester.enterText(find.byType(TextField).first, 'supermercado');
     await tester.pumpAndSettle();
@@ -81,7 +82,7 @@ void main() {
 
     await _pumpApp(tester, router, database);
     expect(find.byType(CategoriesPage), findsOneWidget);
-    expect(find.byType(CircleNavBar), findsNothing);
+    expect(find.byKey(const ValueKey('main-nav-home')), findsNothing);
   });
 
   testWidgets('uses a navigation rail on a wide viewport', (tester) async {
@@ -99,7 +100,7 @@ void main() {
 
     await _pumpApp(tester, router, database);
     expect(find.byType(NavigationRail), findsOneWidget);
-    expect(find.byType(CircleNavBar), findsNothing);
+    expect(find.byKey(const ValueKey('main-nav-home')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -117,12 +118,12 @@ void main() {
     router.push('/transactions/not-a-number');
     await tester.pumpAndSettle();
     expect(find.text('Página no encontrada'), findsOneWidget);
-    expect(find.byType(CircleNavBar), findsNothing);
+    expect(find.byKey(const ValueKey('main-nav-home')), findsNothing);
 
     router.pop();
     await tester.pumpAndSettle();
     expect(find.text('Tus finanzas, en un solo lugar'), findsOneWidget);
-    expect(find.byType(CircleNavBar), findsOneWidget);
+    expect(find.byKey(const ValueKey('main-nav-home')), findsOneWidget);
   });
 
   testWidgets('warns before discarding an edited transaction form', (
