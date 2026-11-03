@@ -157,8 +157,9 @@ class MonyEntrance extends StatelessWidget {
   Widget build(BuildContext context) {
     final duration = MonyMotion.durationFor(context, MonyMotion.emphasis);
     if (duration == Duration.zero) return child;
+    final isRouteActive = TickerMode.valuesOf(context).enabled;
     return child
-        .animate(delay: delay)
+        .animate(delay: delay, autoPlay: isRouteActive)
         .fadeIn(duration: duration, curve: Curves.easeOut)
         .slideY(
           begin: .025,

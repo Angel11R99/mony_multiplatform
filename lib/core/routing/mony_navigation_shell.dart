@@ -77,11 +77,8 @@ class MonyNavigationShell extends ConsumerWidget {
             onItemSelected: (index) => _selectBranch(visibleIndices[index]),
             items: items,
             style: NavBarStyle.synapse,
-            theme: FuturisticTheme.cyberpunk().copyWith(
-              customColors: const {'nucleusColor': Color(0xFF62E6B5)},
-              effectToggles: const {'showNodes': false},
-            ),
-            iconAnimationType: IconAnimationType.bounce,
+            theme: FuturisticTheme.cyberpunk(),
+            iconAnimationType: IconAnimationType.slide,
             showGlow: true,
           ),
         ),
