@@ -1,6 +1,7 @@
 package com.example.mony_multiplatform.widgets
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -13,6 +14,7 @@ import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
+import androidx.glance.currentState
 import androidx.glance.background
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.layout.Alignment
@@ -284,7 +286,9 @@ private fun WidgetAction(label: String, uri: String, palette: WidgetPalette, emp
     val foreground = if (emphasize) palette.surface else palette.ink
     Box(
         modifier = modifier.height(34.dp).cornerRadius(17.dp).background(background)
-            .clickable(actionStartActivity<MainActivity>(context, Uri.parse(uri))),
+            .clickable(actionStartActivity(Intent(context, MainActivity::class.java).apply {
+                data = Uri.parse(uri)
+            })),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, style = TextStyle(color = foreground, fontSize = 12.sp, fontWeight = FontWeight.Medium), maxLines = 1)
@@ -299,7 +303,7 @@ private fun WidgetAmount(label: String, value: String, color: ColorProvider, siz
 
 @Composable
 private fun WidgetLine(label: String, value: String, palette: WidgetPalette, valueColor: ColorProvider) {
-    Row(modifier = GlanceModifier.fillMaxWidth(), horizontalAlignment = Alignment.Horizontal.SpaceBetween) {
+    Row(modifier = GlanceModifier.fillMaxWidth()) {
         Text(label, style = TextStyle(color = palette.ink, fontSize = 10.sp), maxLines = 1, modifier = GlanceModifier.defaultWeight())
         Text(value, style = TextStyle(color = valueColor, fontSize = 10.sp, fontWeight = FontWeight.Medium), maxLines = 1)
     }
