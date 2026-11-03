@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../features/preferences/domain/app_preferences.dart';
 import 'mony_finance_colors.dart';
@@ -71,27 +72,35 @@ abstract final class MonyTheme {
         inputDecoratorIsFilled: true,
       ),
     );
-    final text = baseTheme.textTheme;
+    final text = GoogleFonts.plusJakartaSansTextTheme(baseTheme.textTheme);
+    final readingText = GoogleFonts.interTextTheme(text);
     return baseTheme.copyWith(
       scaffoldBackgroundColor: colorScheme.surface,
-      textTheme: text.copyWith(
-        headlineLarge: text.headlineLarge?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: -1.1,
-          height: 1.08,
-        ),
-        headlineMedium: text.headlineMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.7,
-          height: 1.12,
-          fontFeatures: const [FontFeature.tabularFigures()],
-        ),
-        headlineSmall: text.headlineSmall?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.35,
-        ),
-        titleLarge: text.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-        titleMedium: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+      textTheme: readingText.copyWith(
+        headlineLarge:
+            GoogleFonts.plusJakartaSans(textStyle: text.headlineLarge).copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: -1.1,
+              height: 1.08,
+            ),
+        headlineMedium:
+            GoogleFonts.plusJakartaSans(
+              textStyle: text.headlineMedium,
+            ).copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.7,
+              height: 1.12,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+        headlineSmall: GoogleFonts.plusJakartaSans(
+          textStyle: text.headlineSmall,
+        ).copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.35),
+        titleLarge: GoogleFonts.plusJakartaSans(
+          textStyle: text.titleLarge,
+        ).copyWith(fontWeight: FontWeight.w700),
+        titleMedium: GoogleFonts.plusJakartaSans(
+          textStyle: text.titleMedium,
+        ).copyWith(fontWeight: FontWeight.w600),
         displayLarge: text.displayLarge?.copyWith(
           fontWeight: FontWeight.w700,
           fontFeatures: const [FontFeature.tabularFigures()],
@@ -107,9 +116,53 @@ abstract final class MonyTheme {
       ),
       appBarTheme: baseTheme.appBarTheme.copyWith(
         centerTitle: false,
-        titleTextStyle: baseTheme.textTheme.titleLarge?.copyWith(
+        titleTextStyle: readingText.titleLarge?.copyWith(
           fontWeight: FontWeight.w700,
         ),
+      ),
+      inputDecorationTheme: baseTheme.inputDecorationTheme.copyWith(
+        filled: true,
+        fillColor: colorScheme.surfaceContainerLow,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: MonySpace.x4,
+          vertical: MonySpace.x3,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(MonyRadius.medium),
+          borderSide: BorderSide(color: colorScheme.outlineVariant),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(MonyRadius.medium),
+          borderSide: BorderSide(color: colorScheme.primary, width: 1.6),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(MonyRadius.medium),
+          borderSide: BorderSide(color: colorScheme.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(MonyRadius.medium),
+          borderSide: BorderSide(color: colorScheme.error, width: 1.6),
+        ),
+      ),
+      dialogTheme: baseTheme.dialogTheme.copyWith(
+        backgroundColor: colorScheme.surfaceContainerLow,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(MonyRadius.extraLarge),
+          side: BorderSide(color: colorScheme.outlineVariant),
+        ),
+      ),
+      bottomSheetTheme: baseTheme.bottomSheetTheme.copyWith(
+        backgroundColor: colorScheme.surfaceContainerLow,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(MonyRadius.extraLarge),
+          ),
+        ),
+      ),
+      textSelectionTheme: baseTheme.textSelectionTheme.copyWith(
+        selectionColor: colorScheme.primary.withValues(alpha: .28),
+        cursorColor: colorScheme.primary,
+        selectionHandleColor: colorScheme.primary,
       ),
     );
   }

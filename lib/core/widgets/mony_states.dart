@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../theme/mony_tokens.dart';
 
@@ -118,19 +120,51 @@ class LoadingPlaceholder extends StatelessWidget {
     liveRegion: true,
     label: message,
     child: ExcludeSemantics(
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(MonySpace.x6),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: MonySpace.x3),
-              Text(message),
-            ],
+      child: Skeletonizer(
+        enabled: true,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(MonySpace.x6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Card(child: SizedBox(width: 260, height: 104)),
+                const SizedBox(height: MonySpace.x3),
+                const Card(child: SizedBox(width: 260, height: 58)),
+                const SizedBox(height: MonySpace.x3),
+                Text(message),
+              ],
+            ),
           ),
         ),
       ),
     ),
   );
+}
+
+/// A restrained shared entrance for primary financial content.
+class MonyEntrance extends StatelessWidget {
+  const MonyEntrance({
+    required this.child,
+    this.delay = Duration.zero,
+    super.key,
+  });
+
+  final Widget child;
+  final Duration delay;
+
+  @override
+  Widget build(BuildContext context) {
+    final duration = MonyMotion.durationFor(context, MonyMotion.emphasis);
+    if (duration == Duration.zero) return child;
+    return child
+        .animate(delay: delay)
+        .fadeIn(duration: duration, curve: Curves.easeOut)
+        .slideY(
+          begin: .025,
+          end: 0,
+          duration: duration,
+          curve: Curves.easeOutCubic,
+        );
+  }
 }

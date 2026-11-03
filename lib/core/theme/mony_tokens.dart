@@ -36,18 +36,18 @@ abstract final class MonyBreakpoints {
 }
 
 abstract final class MonyPalette {
-  static const Color darkBackground = Color(0xFF151218);
-  static const Color darkSurface = Color(0xFF27212F);
-  static const Color darkSurfaceVariant = Color(0xFF332B3C);
-  static const Color lightBackground = Color(0xFFFAF8FC);
-  static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightSurfaceVariant = Color(0xFFF0EBF5);
-  static const Color lavender = Color(0xFFC8A8F4);
-  static const Color lavenderDark = Color(0xFF68429B);
-  static const Color income = Color(0xFF75D6AC);
-  static const Color incomeDark = Color(0xFF176B4A);
-  static const Color expense = Color(0xFFF08D9B);
-  static const Color expenseDark = Color(0xFF9E3345);
-  static const Color warning = Color(0xFFE9BB69);
-  static const Color warningDark = Color(0xFF79520B);
+  static const Color darkBackground = Color(0xFF100E14);
+  static const Color darkSurface = Color(0xFF1A1721);
+  static const Color darkSurfaceVariant = Color(0xFF24202D);
+  static const Color lightBackground = Color(0xFFF7F5FA);
+  static const Color lightSurface = Color(0xFFFFFEFF);
+  static const Color lightSurfaceVariant = Color(0xFFEDE9F2);
+  static const Color lavender = Color(0xFFB99AF4);
+  static const Color lavenderDark = Color(0xFF6D46A8);
+  static const Color income = Color(0xFF73D9B0);
+  static const Color incomeDark = Color(0xFF167553);
+  static const Color expense = Color(0xFFF28A9A);
+  static const Color expenseDark = Color(0xFFAA3E51);
+  static const Color warning = Color(0xFFEFC16D);
+  static const Color warningDark = Color(0xFF815C16);
 }

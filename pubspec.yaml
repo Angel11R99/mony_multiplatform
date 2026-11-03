@@ -69,7 +69,10 @@ dependencies:
   stream_transform: 2.1.2
   table_calendar: 3.2.1
   screenshot_shield: 0.2.0
-
+  flutter_animate: ^4.5.2
+  google_fonts: ^8.2.1
+  skeletonizer: ^3.0.0
+  phosphor_icons: ^3.0.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
