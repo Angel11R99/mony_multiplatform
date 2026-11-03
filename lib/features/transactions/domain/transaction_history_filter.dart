@@ -1,6 +1,13 @@
 import 'transaction.dart';
 
-enum TransactionSortOrder { newest, oldest, amountHighToLow, amountLowToHigh }
+enum TransactionSortOrder {
+  newest,
+  oldest,
+  amountHighToLow,
+  amountLowToHigh,
+  categoryAscending,
+  categoryDescending,
+}
 
 class TransactionHistoryFilter {
   const TransactionHistoryFilter({
@@ -106,6 +113,13 @@ class TransactionHistoryFilter {
           a.amountInCents != b.amountInCents
               ? a.amountInCents.compareTo(b.amountInCents)
               : byNewest,
+        TransactionSortOrder.categoryAscending ||
+        TransactionSortOrder.categoryDescending => _compareCategoryNames(
+          categoryNames[a.categoryId] ?? '',
+          categoryNames[b.categoryId] ?? '',
+          sortOrder == TransactionSortOrder.categoryAscending,
+          byNewest,
+        ),
       };
     });
     return result;
@@ -141,4 +155,15 @@ class TransactionHistoryFilter {
 
   static bool _sameSet(Set<int> first, Set<int> second) =>
       first.length == second.length && first.containsAll(second);
+
+  static int _compareCategoryNames(
+    String first,
+    String second,
+    bool ascending,
+    int tieBreak,
+  ) {
+    final comparison = first.toLowerCase().compareTo(second.toLowerCase());
+    if (comparison == 0) return tieBreak;
+    return ascending ? comparison : -comparison;
+  }
 }

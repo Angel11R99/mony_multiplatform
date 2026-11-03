@@ -83,6 +83,21 @@ void main() {
       [4, 3, 1, 2],
     );
   });
+
+  test('sorts alphabetically by category in both directions', () {
+    expect(
+      const TransactionHistoryFilter(
+        sortOrder: TransactionSortOrder.categoryAscending,
+      ).apply(transactions, categoryNames: categories).map((item) => item.id),
+      [3, 1, 2, 4],
+    );
+    expect(
+      const TransactionHistoryFilter(
+        sortOrder: TransactionSortOrder.categoryDescending,
+      ).apply(transactions, categoryNames: categories).map((item) => item.id),
+      [4, 2, 3, 1],
+    );
+  });
 }
 
 FinanceTransaction _transaction(

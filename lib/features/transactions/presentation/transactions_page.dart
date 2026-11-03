@@ -18,6 +18,8 @@ import '../../payment_methods/presentation/payment_methods_providers.dart';
 import '../domain/transaction.dart';
 import '../domain/transaction_history_filter.dart';
 import '../domain/transaction_repository.dart';
+import '../../budgets/domain/budget.dart';
+import '../../budgets/presentation/budgets_providers.dart';
 import 'transactions_providers.dart';
 
 class TransactionsPage extends ConsumerStatefulWidget {
@@ -42,6 +44,9 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   int? _maximumAmountInCents;
   DateTime? _startDate;
   DateTime? _endDate;
+  DateRange? _cycleRange;
+  String _cycleFilterId = 'all';
+  String _cycleFilterLabel = 'Todos los ciclos';
   TransactionSortOrder _sortOrder = TransactionSortOrder.newest;
   int _visibleCount = _pageSize;
 
@@ -74,6 +79,18 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     _visibleCount = _pageSize;
   });
 
+  DateTime? get _effectiveStartDate =>
+      _cycleRange == null ||
+          (_startDate != null && !_startDate!.isBefore(_cycleRange!.start))
+      ? _startDate
+      : _cycleRange!.start;
+
+  DateTime? get _effectiveEndDate =>
+      _cycleRange == null ||
+          (_endDate != null && !_endDate!.isAfter(_cycleRange!.endInclusive))
+      ? _endDate
+      : _cycleRange!.endInclusive;
+
   TransactionHistoryFilter get _filter => TransactionHistoryFilter(
     query: _appliedQuery,
     type: _type,
@@ -81,8 +98,8 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     paymentMethodIds: _paymentMethodIds,
     minimumAmountInCents: _minimumAmountInCents,
     maximumAmountInCents: _maximumAmountInCents,
-    startDate: _startDate,
-    endDate: _endDate,
+    startDate: _effectiveStartDate,
+    endDate: _effectiveEndDate,
     sortOrder: _sortOrder,
   );
 
@@ -92,7 +109,8 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       (_categoryIds.isNotEmpty ? 1 : 0) +
       (_paymentMethodIds.isNotEmpty ? 1 : 0) +
       (_minimumAmountInCents != null || _maximumAmountInCents != null ? 1 : 0) +
-      (_startDate != null || _endDate != null ? 1 : 0);
+      (_startDate != null || _endDate != null ? 1 : 0) +
+      (_cycleRange != null ? 1 : 0);
 
   void _clearFilters() {
     _search.clear();
@@ -108,6 +126,9 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       _maximumAmountInCents = null;
       _startDate = null;
       _endDate = null;
+      _cycleRange = null;
+      _cycleFilterId = 'all';
+      _cycleFilterLabel = 'Todos los ciclos';
       _sortOrder = TransactionSortOrder.newest;
     });
   }
@@ -135,192 +156,311 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     }
   }
 
+  Future<void> _chooseBoundaryDate({required bool start}) async {
+    final current = start ? _startDate : _endDate;
+    final other = start ? _endDate : _startDate;
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: current ?? other ?? DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
+      helpText: start ? 'Fecha desde' : 'Fecha hasta',
+    );
+    if (selected == null || !mounted) return;
+    _updateFilter(() {
+      final date = DateTime(selected.year, selected.month, selected.day);
+      if (start) {
+        _startDate = date;
+      } else {
+        _endDate = date;
+      }
+    });
+  }
+
   Future<void> _openAdvancedFilters(
     List<Category> categories,
     List<PaymentMethod> methods,
-  ) => showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    builder: (sheetContext) => FractionallySizedBox(
-      heightFactor: 0.82,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Theme.of(sheetContext).colorScheme.outlineVariant,
-                  borderRadius: BorderRadius.circular(4),
+  ) {
+    final budget = ref.read(budgetConfigProvider).value;
+    final cycles =
+        ref.read(budgetHistoryProvider).value ?? const <BudgetCycle>[];
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (sheetContext) => FractionallySizedBox(
+        heightFactor: 0.82,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Theme.of(sheetContext).colorScheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Text('Filtros', style: Theme.of(sheetContext).textTheme.titleLarge),
-            const SizedBox(height: 4),
-            Text(
-              'Ajusta categorías, pagos, fechas e importes.',
-              style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(sheetContext).colorScheme.onSurfaceVariant,
+              const SizedBox(height: 20),
+              Text(
+                'Filtros',
+                style: Theme.of(sheetContext).textTheme.titleLarge,
               ),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: ListView(
-                children: [
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: () async {
-                          final selected = await _selectIds(
-                            title: 'Categorías',
-                            values: categories
-                                .map((item) => (item.id, item.name))
-                                .toList(),
-                            selected: _categoryIds,
-                          );
-                          if (selected != null) {
-                            _updateFilter(() => _categoryIds = selected);
-                          }
-                        },
-                        icon: const Icon(Icons.category_outlined),
-                        label: Text(
-                          _categoryIds.isEmpty
-                              ? 'Categorías'
-                              : 'Categorías (${_categoryIds.length})',
-                        ),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: () async {
-                          final selected = await _selectIds(
-                            title: 'Métodos de pago',
-                            values: methods
-                                .map((item) => (item.id, item.name))
-                                .toList(),
-                            selected: _paymentMethodIds,
-                          );
-                          if (selected != null) {
-                            _updateFilter(() => _paymentMethodIds = selected);
-                          }
-                        },
-                        icon: const Icon(Icons.payments_outlined),
-                        label: Text(
-                          _paymentMethodIds.isEmpty
-                              ? 'Métodos de pago'
-                              : 'Métodos (${_paymentMethodIds.length})',
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Rango de importe',
-                    style: Theme.of(sheetContext).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _minimumAmount,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
+              const SizedBox(height: 4),
+              Text(
+                'Ajusta categorías, pagos, fechas e importes.',
+                style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(sheetContext).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: ListView(
+                  children: [
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            final selected = await _selectIds(
+                              title: 'Categorías',
+                              values: categories
+                                  .where(
+                                    (item) =>
+                                        _type == null ||
+                                        item.type.name == _type!.name,
+                                  )
+                                  .map((item) => (item.id, item.name))
+                                  .toList(),
+                              selected: _categoryIds,
+                            );
+                            if (selected != null) {
+                              _updateFilter(() => _categoryIds = selected);
+                            }
+                          },
+                          icon: const Icon(Icons.category_outlined),
+                          label: Text(
+                            _categoryIds.isEmpty
+                                ? 'Categorías'
+                                : 'Categorías (${_categoryIds.length})',
                           ),
-                          decoration: const InputDecoration(
-                            labelText: 'Mínimo RD\$',
-                            border: OutlineInputBorder(),
-                          ),
-                          onSubmitted: (_) => _applyAmountRange(),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _maximumAmount,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            final selected = await _selectIds(
+                              title: 'Métodos de pago',
+                              values: methods
+                                  .map((item) => (item.id, item.name))
+                                  .toList(),
+                              selected: _paymentMethodIds,
+                            );
+                            if (selected != null) {
+                              _updateFilter(() => _paymentMethodIds = selected);
+                            }
+                          },
+                          icon: const Icon(Icons.payments_outlined),
+                          label: Text(
+                            _paymentMethodIds.isEmpty
+                                ? 'Métodos de pago'
+                                : 'Métodos (${_paymentMethodIds.length})',
                           ),
-                          decoration: const InputDecoration(
-                            labelText: 'Máximo RD\$',
-                            border: OutlineInputBorder(),
-                          ),
-                          onSubmitted: (_) => _applyAmountRange(),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: FilledButton.tonal(
-                      onPressed: _applyAmountRange,
-                      child: const Text('Aplicar importe'),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Período',
-                    style: Theme.of(sheetContext).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final preset in _DateRangePreset.values)
-                        if (preset != _DateRangePreset.custom)
-                          ActionChip(
-                            label: Text(switch (preset) {
-                              _DateRangePreset.today => 'Hoy',
-                              _DateRangePreset.week => 'Esta semana',
-                              _DateRangePreset.month => 'Este mes',
-                              _DateRangePreset.year => 'Este año',
-                              _DateRangePreset.custom => 'Personalizado',
-                            }),
-                            onPressed: () => _applyDatePreset(preset),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Rango de importe',
+                      style: Theme.of(sheetContext).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _minimumAmount,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: 'Mínimo RD\$',
+                              border: OutlineInputBorder(),
+                            ),
+                            onSubmitted: (_) => _applyAmountRange(),
                           ),
-                      OutlinedButton.icon(
-                        onPressed: _chooseRange,
-                        icon: const Icon(Icons.date_range),
-                        label: Text(
-                          _rangeLabel == 'Todas las fechas'
-                              ? 'Personalizado'
-                              : _rangeLabel,
                         ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: _maximumAmount,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: 'Máximo RD\$',
+                              border: OutlineInputBorder(),
+                            ),
+                            onSubmitted: (_) => _applyAmountRange(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: FilledButton.tonal(
+                        onPressed: _applyAmountRange,
+                        child: const Text('Aplicar importe'),
                       ),
-                    ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Período',
+                      style: Theme.of(sheetContext).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: _cycleFilterId,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Ciclo financiero',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: [
+                        const DropdownMenuItem(
+                          value: 'all',
+                          child: Text('Todos los ciclos'),
+                        ),
+                        const DropdownMenuItem(
+                          value: 'current',
+                          child: Text('Ciclo actual'),
+                        ),
+                        const DropdownMenuItem(
+                          value: 'previous',
+                          child: Text('Ciclo anterior'),
+                        ),
+                        for (final cycle in cycles)
+                          DropdownMenuItem(
+                            value: 'history-${cycle.id}',
+                            child: Text(
+                              '${_dateLabel(cycle.startDate)} – ${_dateLabel(cycle.endDate)}',
+                            ),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          _selectCycle(value, budget, cycles);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final preset in _DateRangePreset.values)
+                          if (preset != _DateRangePreset.custom)
+                            ActionChip(
+                              label: Text(switch (preset) {
+                                _DateRangePreset.today => 'Hoy',
+                                _DateRangePreset.week => 'Esta semana',
+                                _DateRangePreset.month => 'Este mes',
+                                _DateRangePreset.year => 'Este año',
+                                _DateRangePreset.custom => 'Personalizado',
+                              }),
+                              onPressed: () => _applyDatePreset(preset),
+                            ),
+                        OutlinedButton.icon(
+                          onPressed: _chooseRange,
+                          icon: const Icon(Icons.date_range),
+                          label: Text(
+                            _rangeLabel == 'Todas las fechas'
+                                ? 'Personalizado'
+                                : _rangeLabel,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _chooseBoundaryDate(start: true),
+                            icon: const Icon(Icons.south_west),
+                            label: Text(
+                              _startDate == null
+                                  ? 'Desde'
+                                  : 'Desde ${_dateLabel(_startDate!)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _chooseBoundaryDate(start: false),
+                            icon: const Icon(Icons.north_west),
+                            label: Text(
+                              _endDate == null
+                                  ? 'Hasta'
+                                  : 'Hasta ${_dateLabel(_endDate!)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_startDate != null || _endDate != null)
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          if (_startDate != null)
+                            InputChip(
+                              label: Text('Desde ${_dateLabel(_startDate!)}'),
+                              onDeleted: () =>
+                                  _updateFilter(() => _startDate = null),
+                            ),
+                          if (_endDate != null)
+                            InputChip(
+                              label: Text('Hasta ${_dateLabel(_endDate!)}'),
+                              onDeleted: () =>
+                                  _updateFilter(() => _endDate = null),
+                            ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      _clearFilters();
+                      Navigator.pop(sheetContext);
+                    },
+                    child: const Text('Limpiar'),
+                  ),
+                  const Spacer(),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(sheetContext),
+                    child: const Text('Listo'),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                TextButton(
-                  onPressed: () {
-                    _clearFilters();
-                    Navigator.pop(sheetContext);
-                  },
-                  child: const Text('Limpiar'),
-                ),
-                const Spacer(),
-                FilledButton(
-                  onPressed: () => Navigator.pop(sheetContext),
-                  child: const Text('Listo'),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 
   Future<void> _openActivityCalendar() async {
     final initialDate = _startDate ?? DateTime.now();
@@ -349,6 +489,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     context: context,
     builder: (context) {
       final draft = {...selected};
+      var query = '';
       return StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text(title),
@@ -357,7 +498,23 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             child: ListView(
               shrinkWrap: true,
               children: [
-                for (final (id, name) in values)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  child: TextField(
+                    autofocus: false,
+                    decoration: const InputDecoration(
+                      hintText: 'Buscar opciones',
+                      prefixIcon: Icon(Icons.search),
+                      isDense: true,
+                    ),
+                    onChanged: (value) => setDialogState(() => query = value),
+                  ),
+                ),
+                for (final (id, name) in values.where(
+                  (value) => value.$2.toLowerCase().contains(
+                    query.trim().toLowerCase(),
+                  ),
+                ))
                   CheckboxListTile(
                     value: draft.contains(id),
                     title: Text(name),
@@ -438,6 +595,56 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     });
   }
 
+  void _selectCycle(
+    String selection,
+    BudgetConfig? budget,
+    List<BudgetCycle> cycles,
+  ) {
+    if (selection == 'all') {
+      _updateFilter(() {
+        _cycleFilterId = selection;
+        _cycleFilterLabel = 'Todos los ciclos';
+        _cycleRange = null;
+      });
+      return;
+    }
+    final now = DateTime.now();
+    final current = activeBudgetPeriod(budget, now);
+    DateRange? range;
+    String label;
+    if (selection == 'current') {
+      range = current;
+      label =
+          'Ciclo actual · ${_dateLabel(range.start)}–${_dateLabel(range.endInclusive)}';
+    } else if (selection == 'previous') {
+      if (cycles.isNotEmpty) {
+        final previous = cycles.first;
+        range = DateRange(
+          start: previous.startDate,
+          endInclusive: previous.endDate,
+        );
+      } else {
+        range = activeBudgetPeriod(
+          budget,
+          current.start.subtract(const Duration(days: 1)),
+        );
+      }
+      label =
+          'Ciclo anterior · ${_dateLabel(range.start)}–${_dateLabel(range.endInclusive)}';
+    } else {
+      final id = int.tryParse(selection.replaceFirst('history-', ''));
+      final cycle = cycles.where((item) => item.id == id).firstOrNull;
+      if (cycle == null) return;
+      range = DateRange(start: cycle.startDate, endInclusive: cycle.endDate);
+      label = '${_dateLabel(range.start)}–${_dateLabel(range.endInclusive)}';
+    }
+    _updateFilter(() {
+      _cycleFilterId = selection;
+      _cycleRange = range;
+      _cycleFilterLabel = label;
+    });
+  }
+
   DateTime _startOfLocaleWeek(DateTime date) {
     final sundayBasedIndex = MaterialLocalizations.of(
       context,
@@ -514,12 +721,33 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Movimientos'),
+        title: const Text('Historial'),
         actions: [
           IconButton(
             tooltip: 'Calendario de actividad',
             onPressed: _openActivityCalendar,
             icon: const Icon(Icons.calendar_month_outlined),
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'Más opciones',
+            onSelected: (action) {
+              switch (action) {
+                case 'exports':
+                  context.pushNamed('exports');
+                case 'backup':
+                  context.pushNamed('backup');
+                case 'settings':
+                  context.pushNamed('settings');
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: 'exports', child: Text('Exportar datos')),
+              PopupMenuItem(
+                value: 'backup',
+                child: Text('Respaldo y restauración'),
+              ),
+              PopupMenuItem(value: 'settings', child: Text('Ajustes')),
+            ],
           ),
         ],
       ),
@@ -653,6 +881,14 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                         value: TransactionSortOrder.amountLowToHigh,
                         child: Text('Menor importe'),
                       ),
+                      DropdownMenuItem(
+                        value: TransactionSortOrder.categoryAscending,
+                        child: Text('Categoría A–Z'),
+                      ),
+                      DropdownMenuItem(
+                        value: TransactionSortOrder.categoryDescending,
+                        child: Text('Categoría Z–A'),
+                      ),
                     ],
                     onChanged: (value) {
                       if (value != null) {
@@ -769,16 +1005,41 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                             _endDate = null;
                           }),
                         ),
+                      if (_cycleRange != null)
+                        InputChip(
+                          label: Text(_cycleFilterLabel),
+                          onDeleted: () => _selectCycle(
+                            'all',
+                            ref.read(budgetConfigProvider).value,
+                            ref.read(budgetHistoryProvider).value ?? const [],
+                          ),
+                        ),
                     ],
                   ),
                 ),
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  filtered.isEmpty
-                      ? 'Sin resultados'
-                      : '${filtered.length} ${filtered.length == 1 ? 'resultado' : 'resultados'}',
+                child: Wrap(
+                  spacing: 14,
+                  runSpacing: 4,
+                  children: [
+                    Text(
+                      '${filtered.length} ${filtered.length == 1 ? 'movimiento' : 'movimientos'}',
+                    ),
+                    Text(
+                      'Ingresos ${MoneyFormatter.formatDopMinorUnits(filtered.where((item) => item.type == TransactionType.income).fold<int>(0, (total, item) => total + item.amountInCents))}',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    Text(
+                      'Gastos ${MoneyFormatter.formatDopMinorUnits(filtered.where((item) => item.type == TransactionType.expense).fold<int>(0, (total, item) => total + item.amountInCents))}',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -852,7 +1113,9 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   }
 
   String get _rangeLabel {
-    if (_startDate == null || _endDate == null) return 'Todas las fechas';
+    if (_startDate == null && _endDate == null) return 'Todas las fechas';
+    if (_startDate == null) return 'Hasta ${_dateLabel(_endDate!)}';
+    if (_endDate == null) return 'Desde ${_dateLabel(_startDate!)}';
     return '${_dateLabel(_startDate!)} – ${_dateLabel(_endDate!)}';
   }
 }

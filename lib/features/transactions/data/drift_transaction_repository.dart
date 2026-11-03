@@ -110,6 +110,14 @@ class DriftTransactionRepository implements TransactionRepository {
         OrderingTerm.asc(transactions.amountInCents),
         ...byNewest,
       ],
+      TransactionSortOrder.categoryAscending => [
+        OrderingTerm.asc(categories.name),
+        ...byNewest,
+      ],
+      TransactionSortOrder.categoryDescending => [
+        OrderingTerm.desc(categories.name),
+        ...byNewest,
+      ],
     });
     return query.watch().map(
       (rows) => rows
