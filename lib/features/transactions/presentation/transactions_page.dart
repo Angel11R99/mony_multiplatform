@@ -751,11 +751,14 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.pushNamed('transactionNew'),
-        icon: const Icon(Icons.add),
-        label: const Text('Nuevo movimiento'),
-      ),
+      floatingActionButton:
+          (transactions.hasValue && transactions.requireValue.isNotEmpty)
+          ? FloatingActionButton.extended(
+              onPressed: () => context.pushNamed('transactionNew'),
+              icon: const Icon(Icons.add),
+              label: const Text('Nuevo movimiento'),
+            )
+          : null,
       body: transactions.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => _TransactionsError(
@@ -1496,10 +1499,19 @@ class _TransactionsEmpty extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  filtered ? Icons.search_off : Icons.receipt_long_outlined,
-                  size: 48,
-                  color: Theme.of(context).colorScheme.primary,
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    filtered ? Icons.search_off : Icons.receipt_long_outlined,
+                    size: 32,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
                 ),
                 const SizedBox(height: 14),
                 Text(

@@ -198,7 +198,7 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
                 children: [
                   Text(
                     'Entiende cómo se mueven tus finanzas',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -352,6 +352,13 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
   ) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
+      Text(
+        'Período',
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+      const SizedBox(height: 4),
       Wrap(
         spacing: 8,
         runSpacing: 6,
@@ -365,22 +372,35 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
       ),
       if (schedules.length > 1)
         Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Wrap(
-            spacing: 8,
+          padding: const EdgeInsets.only(top: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (var index = 0; index < schedules.length; index++)
-                ChoiceChip(
-                  label: Text(
-                    'Ciclo ${index + 1} · ${schedules[index].openingDay}–${schedules[index].closingDay}',
-                  ),
-                  selected: _cycleIndex == index,
-                  onSelected: (_) => setState(() {
-                    _cycleIndex = index;
-                    _historyCycleId = null;
-                    _range = StatisticsRange.currentBudget;
-                  }),
+              Text(
+                'Ciclos configurados',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
+              ),
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  for (var index = 0; index < schedules.length; index++)
+                    ChoiceChip(
+                      label: Text(
+                        'Ciclo ${index + 1} · ${schedules[index].openingDay}–${schedules[index].closingDay}',
+                      ),
+                      selected: _cycleIndex == index,
+                      onSelected: (_) => setState(() {
+                        _cycleIndex = index;
+                        _historyCycleId = null;
+                        _range = StatisticsRange.currentBudget;
+                      }),
+                    ),
+                ],
+              ),
             ],
           ),
         ),
