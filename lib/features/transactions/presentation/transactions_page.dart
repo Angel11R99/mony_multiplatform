@@ -86,6 +86,32 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     sortOrder: _sortOrder,
   );
 
+  int get _activeFilterCount =>
+      (_appliedQuery.trim().isNotEmpty ? 1 : 0) +
+      (_type != null ? 1 : 0) +
+      (_categoryIds.isNotEmpty ? 1 : 0) +
+      (_paymentMethodIds.isNotEmpty ? 1 : 0) +
+      (_minimumAmountInCents != null || _maximumAmountInCents != null ? 1 : 0) +
+      (_startDate != null || _endDate != null ? 1 : 0);
+
+  void _clearFilters() {
+    _search.clear();
+    _queryChanges.add('');
+    _minimumAmount.clear();
+    _maximumAmount.clear();
+    _appliedQuery = '';
+    _updateFilter(() {
+      _type = null;
+      _categoryIds = {};
+      _paymentMethodIds = {};
+      _minimumAmountInCents = null;
+      _maximumAmountInCents = null;
+      _startDate = null;
+      _endDate = null;
+      _sortOrder = TransactionSortOrder.newest;
+    });
+  }
+
   Future<void> _chooseRange() async {
     final range = await showDateRangePicker(
       context: context,
@@ -108,6 +134,193 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       });
     }
   }
+
+  Future<void> _openAdvancedFilters(
+    List<Category> categories,
+    List<PaymentMethod> methods,
+  ) => showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (sheetContext) => FractionallySizedBox(
+      heightFactor: 0.82,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(sheetContext).colorScheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text('Filtros', style: Theme.of(sheetContext).textTheme.titleLarge),
+            const SizedBox(height: 4),
+            Text(
+              'Ajusta categorías, pagos, fechas e importes.',
+              style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(sheetContext).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: ListView(
+                children: [
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          final selected = await _selectIds(
+                            title: 'Categorías',
+                            values: categories
+                                .map((item) => (item.id, item.name))
+                                .toList(),
+                            selected: _categoryIds,
+                          );
+                          if (selected != null) {
+                            _updateFilter(() => _categoryIds = selected);
+                          }
+                        },
+                        icon: const Icon(Icons.category_outlined),
+                        label: Text(
+                          _categoryIds.isEmpty
+                              ? 'Categorías'
+                              : 'Categorías (${_categoryIds.length})',
+                        ),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          final selected = await _selectIds(
+                            title: 'Métodos de pago',
+                            values: methods
+                                .map((item) => (item.id, item.name))
+                                .toList(),
+                            selected: _paymentMethodIds,
+                          );
+                          if (selected != null) {
+                            _updateFilter(() => _paymentMethodIds = selected);
+                          }
+                        },
+                        icon: const Icon(Icons.payments_outlined),
+                        label: Text(
+                          _paymentMethodIds.isEmpty
+                              ? 'Métodos de pago'
+                              : 'Métodos (${_paymentMethodIds.length})',
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Rango de importe',
+                    style: Theme.of(sheetContext).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _minimumAmount,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: 'Mínimo RD\$',
+                            border: OutlineInputBorder(),
+                          ),
+                          onSubmitted: (_) => _applyAmountRange(),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _maximumAmount,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: 'Máximo RD\$',
+                            border: OutlineInputBorder(),
+                          ),
+                          onSubmitted: (_) => _applyAmountRange(),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: FilledButton.tonal(
+                      onPressed: _applyAmountRange,
+                      child: const Text('Aplicar importe'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Período',
+                    style: Theme.of(sheetContext).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final preset in _DateRangePreset.values)
+                        if (preset != _DateRangePreset.custom)
+                          ActionChip(
+                            label: Text(switch (preset) {
+                              _DateRangePreset.today => 'Hoy',
+                              _DateRangePreset.week => 'Esta semana',
+                              _DateRangePreset.month => 'Este mes',
+                              _DateRangePreset.year => 'Este año',
+                              _DateRangePreset.custom => 'Personalizado',
+                            }),
+                            onPressed: () => _applyDatePreset(preset),
+                          ),
+                      OutlinedButton.icon(
+                        onPressed: _chooseRange,
+                        icon: const Icon(Icons.date_range),
+                        label: Text(
+                          _rangeLabel == 'Todas las fechas'
+                              ? 'Personalizado'
+                              : _rangeLabel,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                TextButton(
+                  onPressed: () {
+                    _clearFilters();
+                    Navigator.pop(sheetContext);
+                  },
+                  child: const Text('Limpiar'),
+                ),
+                const Spacer(),
+                FilledButton(
+                  onPressed: () => Navigator.pop(sheetContext),
+                  child: const Text('Listo'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 
   Future<void> _openActivityCalendar() async {
     final initialDate = _startDate ?? DateTime.now();
@@ -398,189 +611,104 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                   border: const OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 4,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  _TypeFilter(
+              const SizedBox(height: 12),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final compact = constraints.maxWidth < 900;
+                  final typeFilter = _TypeFilter(
                     value: _type,
                     onChanged: (value) => _updateFilter(() => _type = value),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final selected = await _selectIds(
-                        title: 'Categorías',
-                        values: categories
-                            .map((item) => (item.id, item.name))
-                            .toList(),
-                        selected: _categoryIds,
-                      );
-                      if (selected != null) {
-                        _updateFilter(() => _categoryIds = selected);
-                      }
-                    },
-                    icon: const Icon(Icons.category_outlined),
+                  );
+                  final filterButton = OutlinedButton.icon(
+                    onPressed: () => _openAdvancedFilters(categories, methods),
+                    icon: const Icon(Icons.tune),
                     label: Text(
-                      _categoryIds.isEmpty
-                          ? 'Categorías'
-                          : 'Categorías (${_categoryIds.length})',
+                      _activeFilterCount == 0
+                          ? 'Filtros'
+                          : 'Filtros ($_activeFilterCount)',
                     ),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final selected = await _selectIds(
-                        title: 'Métodos de pago',
-                        values: methods
-                            .map((item) => (item.id, item.name))
-                            .toList(),
-                        selected: _paymentMethodIds,
-                      );
-                      if (selected != null) {
-                        _updateFilter(() => _paymentMethodIds = selected);
-                      }
-                    },
-                    icon: const Icon(Icons.payments_outlined),
-                    label: Text(
-                      _paymentMethodIds.isEmpty
-                          ? 'Métodos'
-                          : 'Métodos (${_paymentMethodIds.length})',
+                  );
+                  final sorting = DropdownButtonFormField<TransactionSortOrder>(
+                    initialValue: _sortOrder,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Ordenar',
+                      isDense: true,
+                      border: OutlineInputBorder(),
                     ),
-                  ),
-                  SizedBox(
-                    width: 130,
-                    child: TextField(
-                      controller: _minimumAmount,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
+                    items: const [
+                      DropdownMenuItem(
+                        value: TransactionSortOrder.newest,
+                        child: Text('Más recientes'),
                       ),
-                      decoration: const InputDecoration(
-                        labelText: 'Mínimo RD\$',
-                        isDense: true,
-                        border: OutlineInputBorder(),
+                      DropdownMenuItem(
+                        value: TransactionSortOrder.oldest,
+                        child: Text('Más antiguos'),
                       ),
-                      onSubmitted: (_) => _applyAmountRange(),
-                    ),
-                  ),
-                  FilledButton.tonal(
-                    onPressed: _applyAmountRange,
-                    child: const Text('Aplicar importe'),
-                  ),
-                  SizedBox(
-                    width: 130,
-                    child: TextField(
-                      controller: _maximumAmount,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
+                      DropdownMenuItem(
+                        value: TransactionSortOrder.amountHighToLow,
+                        child: Text('Mayor importe'),
                       ),
-                      decoration: const InputDecoration(
-                        labelText: 'Máximo RD\$',
-                        isDense: true,
-                        border: OutlineInputBorder(),
-                      ),
-                      onSubmitted: (_) => _applyAmountRange(),
-                    ),
-                  ),
-                  PopupMenuButton<_DateRangePreset>(
-                    tooltip: 'Filtrar fechas: $_rangeLabel',
-                    onSelected: _applyDatePreset,
-                    itemBuilder: (context) => const [
-                      PopupMenuItem(
-                        value: _DateRangePreset.today,
-                        child: Text('Hoy'),
-                      ),
-                      PopupMenuItem(
-                        value: _DateRangePreset.week,
-                        child: Text('Esta semana'),
-                      ),
-                      PopupMenuItem(
-                        value: _DateRangePreset.month,
-                        child: Text('Este mes'),
-                      ),
-                      PopupMenuItem(
-                        value: _DateRangePreset.year,
-                        child: Text('Este año'),
-                      ),
-                      PopupMenuDivider(),
-                      PopupMenuItem(
-                        value: _DateRangePreset.custom,
-                        child: Text('Personalizado…'),
+                      DropdownMenuItem(
+                        value: TransactionSortOrder.amountLowToHigh,
+                        child: Text('Menor importe'),
                       ),
                     ],
-                    child: Semantics(
-                      button: true,
-                      label: 'Filtrar por fecha: $_rangeLabel',
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.date_range),
-                          const SizedBox(width: 8),
-                          Text(_rangeLabel),
-                          const Icon(Icons.arrow_drop_down),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 190,
-                    child: DropdownButtonFormField<TransactionSortOrder>(
-                      initialValue: _sortOrder,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Ordenar por',
-                        isDense: true,
-                        border: OutlineInputBorder(),
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: TransactionSortOrder.newest,
-                          child: Text('Más recientes'),
+                    onChanged: (value) {
+                      if (value != null) {
+                        _updateFilter(() => _sortOrder = value);
+                      }
+                    },
+                  );
+                  if (compact) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: typeFilter,
                         ),
-                        DropdownMenuItem(
-                          value: TransactionSortOrder.oldest,
-                          child: Text('Más antiguos'),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            filterButton,
+                            const SizedBox(width: 8),
+                            Expanded(child: sorting),
+                          ],
                         ),
-                        DropdownMenuItem(
-                          value: TransactionSortOrder.amountHighToLow,
-                          child: Text('Mayor importe'),
-                        ),
-                        DropdownMenuItem(
-                          value: TransactionSortOrder.amountLowToHigh,
-                          child: Text('Menor importe'),
-                        ),
+                        if (_filter.hasCriteria ||
+                            _search.text.isNotEmpty ||
+                            _sortOrder != TransactionSortOrder.newest)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              onPressed: _clearFilters,
+                              icon: const Icon(Icons.filter_alt_off),
+                              label: const Text('Limpiar filtros'),
+                            ),
+                          ),
                       ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          _updateFilter(() => _sortOrder = value);
-                        }
-                      },
-                    ),
-                  ),
-                  if (_filter.hasCriteria ||
-                      _search.text.isNotEmpty ||
-                      _sortOrder != TransactionSortOrder.newest)
-                    TextButton.icon(
-                      onPressed: () {
-                        _search.clear();
-                        _minimumAmount.clear();
-                        _maximumAmount.clear();
-                        _appliedQuery = '';
-                        _updateFilter(() {
-                          _type = null;
-                          _categoryIds = {};
-                          _paymentMethodIds = {};
-                          _minimumAmountInCents = null;
-                          _maximumAmountInCents = null;
-                          _startDate = null;
-                          _endDate = null;
-                          _sortOrder = TransactionSortOrder.newest;
-                        });
-                      },
-                      icon: const Icon(Icons.filter_alt_off),
-                      label: const Text('Limpiar filtros'),
-                    ),
-                ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      typeFilter,
+                      const SizedBox(width: 12),
+                      filterButton,
+                      const SizedBox(width: 12),
+                      SizedBox(width: 190, child: sorting),
+                      const Spacer(),
+                      if (_filter.hasCriteria ||
+                          _search.text.isNotEmpty ||
+                          _sortOrder != TransactionSortOrder.newest)
+                        TextButton.icon(
+                          onPressed: _clearFilters,
+                          icon: const Icon(Icons.filter_alt_off),
+                          label: const Text('Limpiar'),
+                        ),
+                    ],
+                  );
+                },
               ),
               if (_filter.hasCriteria)
                 Align(
@@ -658,7 +786,10 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         ),
         Expanded(
           child: filtered.isEmpty
-              ? _TransactionsEmpty(filtered: _filter.hasCriteria)
+              ? _TransactionsEmpty(
+                  filtered: _filter.hasCriteria,
+                  onClear: _filter.hasCriteria ? _clearFilters : null,
+                )
               : SlidableAutoCloseBehavior(
                   child: ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 104),
@@ -1087,36 +1218,61 @@ class _DateHeading extends StatelessWidget {
 }
 
 class _TransactionsEmpty extends StatelessWidget {
-  const _TransactionsEmpty({this.filtered = false});
+  const _TransactionsEmpty({this.filtered = false, this.onClear});
   final bool filtered;
+  final VoidCallback? onClear;
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            filtered ? Icons.search_off : Icons.receipt_long_outlined,
-            size: 52,
-            color: Theme.of(context).colorScheme.primary,
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) => SingleChildScrollView(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: constraints.maxHeight),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  filtered ? Icons.search_off : Icons.receipt_long_outlined,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  filtered
+                      ? 'No hay movimientos con estos filtros.'
+                      : 'Todavía no hay movimientos.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  filtered
+                      ? 'Prueba con otras palabras, fechas o categorías.'
+                      : 'Registra un ingreso o un gasto para comenzar tu historial.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (filtered && onClear != null)
+                  OutlinedButton.icon(
+                    onPressed: onClear,
+                    icon: const Icon(Icons.filter_alt_off),
+                    label: const Text('Limpiar filtros'),
+                  )
+                else if (!filtered)
+                  FilledButton.icon(
+                    onPressed: () => context.pushNamed('transactionNew'),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Nuevo movimiento'),
+                  ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            filtered
-                ? 'No hay movimientos con estos filtros.'
-                : 'Todavía no hay movimientos.',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            filtered
-                ? 'Prueba con otras palabras, fechas o categorías.'
-                : 'Registra un ingreso o un gasto para comenzar tu historial.',
-            textAlign: TextAlign.center,
-          ),
-        ],
+        ),
       ),
     ),
   );
