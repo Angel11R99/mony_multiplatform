@@ -147,17 +147,8 @@ class MonyNavigationShell extends ConsumerWidget {
                                   visibleIndices[itemIndex],
                               onTap: () =>
                                   _selectBranch(visibleIndices[itemIndex]),
-                              child: ExcludeSemantics(
-                                child: InkWell(
-                                  onTap: () =>
-                                      _selectBranch(visibleIndices[itemIndex]),
-                                  excludeFromSemantics: true,
-                                  canRequestFocus: true,
-                                  focusColor: Theme.of(
-                                    context,
-                                  ).colorScheme.primary.withValues(alpha: 0.12),
-                                  child: const SizedBox.expand(),
-                                ),
+                              child: const ExcludeSemantics(
+                                child: SizedBox.expand(),
                               ),
                             ),
                           ),
