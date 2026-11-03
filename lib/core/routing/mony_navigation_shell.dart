@@ -153,8 +153,17 @@ class MonyNavigationShell extends ConsumerWidget {
                         64.0,
                         constraints.maxWidth / visibleIndices.length + 6,
                       );
+                      final labelScale =
+                          preferences?.navigationLabelScale ?? 0.85;
+                      final scaledLabelHeight = MediaQuery.textScalerOf(
+                        context,
+                      ).scale(12 * labelScale);
+                      final barHeight = math.max(
+                        82.0,
+                        bubbleSize + scaledLabelHeight * 1.5 + 10,
+                      );
                       return SizedBox(
-                        height: 82,
+                        height: barHeight,
                         child: Row(
                           children: [
                             for (final index in visibleIndices)
@@ -174,8 +183,8 @@ class MonyNavigationShell extends ConsumerWidget {
                                   activeIcon: _activeIcons[index],
                                   inactiveIcon: _inactiveIcons[index],
                                   bubbleSize: bubbleSize,
-                                  labelScale:
-                                      preferences?.navigationLabelScale ?? 0.85,
+                                  itemHeight: barHeight,
+                                  labelScale: labelScale,
                                   accentColor: theme.colorScheme.primary,
                                   labelColor:
                                       theme.colorScheme.onSurfaceVariant,
@@ -371,6 +380,7 @@ class _GlassNavigationItem extends StatelessWidget {
     required this.activeIcon,
     required this.inactiveIcon,
     required this.bubbleSize,
+    required this.itemHeight,
     required this.labelScale,
     required this.accentColor,
     required this.labelColor,
@@ -386,6 +396,7 @@ class _GlassNavigationItem extends StatelessWidget {
   final Widget activeIcon;
   final Widget inactiveIcon;
   final double bubbleSize;
+  final double itemHeight;
   final double labelScale;
   final Color accentColor;
   final Color labelColor;
@@ -417,57 +428,74 @@ class _GlassNavigationItem extends StatelessWidget {
             return Colors.transparent;
           }),
           child: SizedBox(
-            height: 82,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            height: itemHeight,
+            child: Stack(
               children: [
-                OverflowBox(
-                  maxWidth: bubbleSize,
-                  maxHeight: bubbleSize,
-                  child: AnimatedContainer(
-                    duration: reducedMotion
-                        ? Duration.zero
-                        : const Duration(milliseconds: 180),
-                    curve: Curves.easeOutCubic,
-                    width: iconDiameter,
-                    height: iconDiameter,
-                    decoration: selected
-                        ? BoxDecoration(
-                            color: bubbleColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.72),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: bubbleSize,
+                  child: Center(
+                    child: OverflowBox(
+                      maxWidth: bubbleSize,
+                      maxHeight: bubbleSize,
+                      child: AnimatedContainer(
+                        duration: reducedMotion
+                            ? Duration.zero
+                            : const Duration(milliseconds: 180),
+                        curve: Curves.easeOutCubic,
+                        width: iconDiameter,
+                        height: iconDiameter,
+                        decoration: selected
+                            ? BoxDecoration(
+                                color: bubbleColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.72),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: accentColor.withValues(alpha: 0.22),
+                                    blurRadius: 14,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              )
+                            : null,
+                        child: Center(
+                          child: IconTheme(
+                            data: IconThemeData(
+                              color: selected ? accentColor : labelColor,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: accentColor.withValues(alpha: 0.22),
-                                blurRadius: 14,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          )
-                        : null,
-                    child: Center(
-                      child: IconTheme(
-                        data: IconThemeData(
-                          color: selected ? accentColor : labelColor,
+                            child: selected ? activeIcon : inactiveIcon,
+                          ),
                         ),
-                        child: selected ? activeIcon : inactiveIcon,
                       ),
                     ),
                   ),
                 ),
                 if (showLabel) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      fontSize: 12 * labelScale,
-                      color: selected ? accentColor : labelColor,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  Positioned(
+                    bottom: 1,
+                    left: 0,
+                    right: 0,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontSize: 12 * labelScale,
+                            color: selected ? accentColor : labelColor,
+                            fontWeight: selected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
