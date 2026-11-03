@@ -10,6 +10,13 @@ void main() {
     expect(formatted, contains('25,000.00'));
   });
 
+  test('zero amount contains only the expected printable characters', () {
+    final formatted = MoneyFormatter.formatDopMinorUnits(0);
+
+    expect(formatted, r'RD$0.00');
+    expect(formatted.runes, everyElement(inInclusiveRange(0x20, 0x7E)));
+  });
+
   test('can display the DOP ISO code instead of the symbol', () {
     final formatted = MoneyFormatter.formatDopMinorUnits(
       12345,
