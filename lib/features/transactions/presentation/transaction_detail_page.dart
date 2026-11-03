@@ -150,6 +150,7 @@ class TransactionDetailPage extends ConsumerWidget {
               icon: const Icon(Icons.edit_outlined),
               label: const Text('Editar movimiento'),
             ),
+            const SizedBox(height: 10),
             OutlinedButton.icon(
               onPressed: () async {
                 try {
@@ -184,6 +185,7 @@ class TransactionDetailPage extends ConsumerWidget {
               icon: const Icon(Icons.copy_outlined),
               label: const Text('Duplicar movimiento'),
             ),
+            const SizedBox(height: 6),
             TextButton.icon(
               onPressed: () async {
                 final confirmed = await MonyConfirmDialog.show(

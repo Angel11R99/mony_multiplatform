@@ -23,14 +23,25 @@ abstract final class MonyTheme {
     AppPreferences preferences, {
     required Brightness brightness,
   }) {
+    final brandColor = Color(preferences.primaryColorArgb);
+    final accentColor = Color(preferences.accentColorArgb);
+    final accessiblePrimary = brightness == Brightness.light
+        ? _lightSurfaceAccent(brandColor)
+        : brandColor;
+    final accessibleSecondary = brightness == Brightness.light
+        ? _lightSurfaceAccent(accentColor)
+        : accentColor;
     final seedScheme = ColorScheme.fromSeed(
-      seedColor: Color(preferences.primaryColorArgb),
-      secondary: Color(preferences.accentColorArgb),
+      seedColor: brandColor,
+      secondary: accentColor,
       brightness: brightness,
     );
     final dark = brightness == Brightness.dark;
     final colorScheme = seedScheme.copyWith(
-      primary: Color(preferences.primaryColorArgb),
+      primary: accessiblePrimary,
+      onPrimary: _contrastingForeground(accessiblePrimary),
+      secondary: accessibleSecondary,
+      onSecondary: _contrastingForeground(accessibleSecondary),
       surface: dark ? MonyPalette.darkBackground : MonyPalette.lightBackground,
       onSurface: dark ? const Color(0xFFF4EFF8) : const Color(0xFF241D2B),
       surfaceContainerLow: dark
@@ -165,5 +176,30 @@ abstract final class MonyTheme {
         selectionHandleColor: colorScheme.primary,
       ),
     );
+  }
+
+  static Color _lightSurfaceAccent(Color color) {
+    final source = HSLColor.fromColor(color);
+    for (var lightness = source.lightness; lightness >= 0; lightness -= .015) {
+      final candidate = source.withLightness(lightness).toColor();
+      if (_contrastRatio(candidate, Colors.white) >= 4.5) return candidate;
+    }
+    return MonyPalette.lavenderDark;
+  }
+
+  static Color _contrastingForeground(Color background) {
+    const light = Colors.white;
+    const dark = Color(0xFF241D2B);
+    return _contrastRatio(background, light) >= _contrastRatio(background, dark)
+        ? light
+        : dark;
+  }
+
+  static double _contrastRatio(Color foreground, Color background) {
+    final first = foreground.computeLuminance();
+    final second = background.computeLuminance();
+    final lighter = first > second ? first : second;
+    final darker = first > second ? second : first;
+    return (lighter + .05) / (darker + .05);
   }
 }
