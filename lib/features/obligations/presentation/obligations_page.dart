@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/money/money_formatter.dart';
 import '../../../core/widgets/mony_settings_action.dart';
+import '../../../core/widgets/mony_states.dart';
 import '../../../core/widgets/dialog_helpers.dart';
 import '../../categories/domain/category.dart';
 import '../../categories/presentation/categories_providers.dart';
@@ -201,14 +202,17 @@ class _ObligationsPageState extends ConsumerState<ObligationsPage> {
                                     const SizedBox(height: 10),
                                 itemBuilder: (context, index) {
                                   final obligation = filtered[index];
-                                  return _ObligationCard(
-                                    obligation: obligation,
-                                    currencyStyle: currencyStyle,
-                                    onTap: () => context.pushNamed(
-                                      'obligationDetail',
-                                      pathParameters: {
-                                        'id': '${obligation.id}',
-                                      },
+                                  return MonyEntrance(
+                                    delay: Duration(milliseconds: 30 * index),
+                                    child: _ObligationCard(
+                                      obligation: obligation,
+                                      currencyStyle: currencyStyle,
+                                      onTap: () => context.pushNamed(
+                                        'obligationDetail',
+                                        pathParameters: {
+                                          'id': '${obligation.id}',
+                                        },
+                                      ),
                                     ),
                                   );
                                 },

@@ -7,6 +7,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/money/money_formatter.dart';
 import '../../../core/widgets/mony_settings_action.dart';
+import '../../../core/widgets/mony_states.dart';
 import '../../budgets/domain/budget.dart';
 import '../../budgets/presentation/budgets_providers.dart';
 import '../../categories/domain/category.dart';
@@ -89,7 +90,7 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
           title: const Text('Estadísticas'),
           actions: const [MonySettingsAction()],
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const LoadingPlaceholder(message: 'Preparando tus estadísticas'),
       );
     }
 
@@ -266,23 +267,31 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
                     currencyStyle: preferences.currencyFormatStyle,
                   ),
                   const SizedBox(height: 12),
-                  _IncomeExpenseCard(
-                    report: current,
-                    currencyStyle: preferences.currencyFormatStyle,
+                  MonyEntrance(
+                    child: _IncomeExpenseCard(
+                      report: current,
+                      currencyStyle: preferences.currencyFormatStyle,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   if (previous != null) ...[
-                    _ComparisonCard(
-                      current: current,
-                      previous: previous,
-                      currencyStyle: preferences.currencyFormatStyle,
+                    MonyEntrance(
+                      delay: const Duration(milliseconds: 50),
+                      child: _ComparisonCard(
+                        current: current,
+                        previous: previous,
+                        currencyStyle: preferences.currencyFormatStyle,
+                      ),
                     ),
                     const SizedBox(height: 12),
                   ],
-                  _EvolutionCard(
-                    data: evolution,
-                    currencyStyle: preferences.currencyFormatStyle,
-                    periodLabel: _evolutionLabel(period, _range, cycle),
+                  MonyEntrance(
+                    delay: const Duration(milliseconds: 90),
+                    child: _EvolutionCard(
+                      data: evolution,
+                      currencyStyle: preferences.currencyFormatStyle,
+                      periodLabel: _evolutionLabel(period, _range, cycle),
+                    ),
                   ),
                   const SizedBox(height: 22),
                   _SectionTitle(

@@ -8,6 +8,7 @@ import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_confirm_dialog.dart';
 import '../../../core/widgets/mony_settings_action.dart';
+import '../../../core/widgets/mony_states.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -508,21 +509,26 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             )
           : null,
       body: transactions.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () =>
+            const LoadingPlaceholder(message: 'Cargando movimientos'),
         error: (error, stack) => _TransactionsError(
           onRetry: () => ref.invalidate(filteredTransactionsProvider(_filter)),
         ),
         data: (items) => categories.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () =>
+              const LoadingPlaceholder(message: 'Cargando categorías'),
           error: (error, stack) => _TransactionsError(
             onRetry: () => ref.invalidate(categoriesProvider),
           ),
           data: (categoryItems) => methods.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () =>
+                const LoadingPlaceholder(message: 'Cargando métodos de pago'),
             error: (error, stack) => _TransactionsError(
               onRetry: () => ref.invalidate(paymentMethodsProvider),
             ),
-            data: (methodItems) => _history(items, categoryItems, methodItems),
+            data: (methodItems) => MonyEntrance(
+              child: _history(items, categoryItems, methodItems),
+            ),
           ),
         ),
       ),

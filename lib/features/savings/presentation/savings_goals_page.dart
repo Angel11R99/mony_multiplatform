@@ -9,6 +9,7 @@ import '../../../core/theme/mony_tokens.dart';
 import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_confirm_dialog.dart';
 import '../../../core/widgets/mony_settings_action.dart';
+import '../../../core/widgets/mony_states.dart';
 import '../../preferences/domain/app_preferences.dart';
 import '../../preferences/presentation/preferences_controller.dart';
 import '../domain/savings_goal.dart';
@@ -301,7 +302,7 @@ class _SavingsGoalsPageState extends ConsumerState<SavingsGoalsPage> {
         label: const Text('Nueva meta'),
       ),
       body: goals.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const LoadingPlaceholder(message: 'Cargando tus metas'),
         error: (error, stack) => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -535,10 +536,15 @@ class _SavingsGoalCard extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 10),
-            LinearProgressIndicator(
-              value: (percent.clamp(0, 100)) / 100,
-              minHeight: 8,
-              borderRadius: BorderRadius.circular(8),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: (percent.clamp(0, 100)) / 100),
+              duration: MonyMotion.durationFor(context, MonyMotion.emphasis),
+              curve: MonyMotion.curveFor(context, Curves.easeOutCubic),
+              builder: (context, value, _) => LinearProgressIndicator(
+                value: value,
+                minHeight: 8,
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             const SizedBox(height: 6),
             Row(

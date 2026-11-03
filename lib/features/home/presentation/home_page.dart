@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/money/money_formatter.dart';
@@ -182,36 +183,90 @@ class _DashboardContent extends StatelessWidget {
             ),
           ],
           if (summary.recentTransactions.isEmpty) ...[
-            const SizedBox(height: MonySpace.x8),
-            const EmptyState(
-              icon: Icons.account_balance_wallet_outlined,
-              title: 'Empieza con tu primer movimiento',
-              message:
-                  'Registra un ingreso o un gasto para ver tu balance y la evolución de tus finanzas.',
-            ),
             const SizedBox(height: MonySpace.x4),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: MonySpace.x3,
-              runSpacing: MonySpace.x2,
-              children: [
-                FilledButton.icon(
-                  onPressed: () => context.pushNamed(
-                    'transactionNew',
-                    queryParameters: const {'type': 'income'},
-                  ),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Añadir ingreso'),
+            _CycleSelector(
+              selected: periodView,
+              onChanged: onPeriodViewChanged,
+            ),
+            const SizedBox(height: MonySpace.x3),
+            MonyEntrance(
+              child: BalanceCard(
+                label: 'Balance disponible',
+                amount: MoneyFormatter.formatDopMinorUnits(
+                  summary.balanceInCents,
+                  style: currencyStyle,
                 ),
-                OutlinedButton.icon(
-                  onPressed: () => context.pushNamed(
-                    'transactionNew',
-                    queryParameters: const {'type': 'expense'},
+                supportingText: 'Tu balance del ciclo actual',
+              ),
+            ),
+            const SizedBox(height: MonySpace.x3),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = (constraints.maxWidth - MonySpace.x3) / 2;
+                return Wrap(
+                  spacing: MonySpace.x3,
+                  children: [
+                    SizedBox(
+                      width: width,
+                      child: StatTile(
+                        title: 'Ingresos',
+                        value: MoneyFormatter.formatDopMinorUnits(
+                          summary.incomeInCents,
+                          style: currencyStyle,
+                        ),
+                        icon: Icons.south_west_rounded,
+                        emphasis: AmountEmphasis.income,
+                      ),
+                    ),
+                    SizedBox(
+                      width: width,
+                      child: StatTile(
+                        title: 'Gastos',
+                        value: MoneyFormatter.formatDopMinorUnits(
+                          summary.expenseInCents,
+                          style: currencyStyle,
+                        ),
+                        icon: Icons.north_east_rounded,
+                        emphasis: AmountEmphasis.expense,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: MonySpace.x3),
+            const _EmptyTrendCard(),
+            const SizedBox(height: MonySpace.x3),
+            MonyCard(
+              padding: const EdgeInsets.all(MonySpace.x4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Empieza con un movimiento',
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: MonySpace.x1),
+                        Text(
+                          'Registra un ingreso o un gasto para activar tu resumen.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  icon: const Icon(Icons.remove),
-                  label: const Text('Añadir gasto'),
-                ),
-              ],
+                  const SizedBox(width: MonySpace.x2),
+                  FilledButton.tonalIcon(
+                    onPressed: () => context.pushNamed('transactionNew'),
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text('Añadir'),
+                  ),
+                ],
+              ),
             ),
           ] else ...[
             const SizedBox(height: MonySpace.x4),
@@ -220,15 +275,17 @@ class _DashboardContent extends StatelessWidget {
               onChanged: onPeriodViewChanged,
             ),
             const SizedBox(height: MonySpace.x2),
-            BalanceCard(
-              label: 'Balance neto del ciclo',
-              amount: MoneyFormatter.formatDopMinorUnits(
-                summary.balanceInCents,
-                style: currencyStyle,
+            MonyEntrance(
+              child: BalanceCard(
+                label: 'Balance neto del ciclo',
+                amount: MoneyFormatter.formatDopMinorUnits(
+                  summary.balanceInCents,
+                  style: currencyStyle,
+                ),
+                supportingText: summary.period == null
+                    ? 'Ingresos menos gastos · ${_monthName(summary.month)}'
+                    : 'Ingresos menos gastos · ${MonyDateFormatter.formatDate(summary.period!.start)} – ${MonyDateFormatter.formatDate(summary.period!.endInclusive)}',
               ),
-              supportingText: summary.period == null
-                  ? 'Ingresos menos gastos · ${_monthName(summary.month)}'
-                  : 'Ingresos menos gastos · ${MonyDateFormatter.formatDate(summary.period!.start)} – ${MonyDateFormatter.formatDate(summary.period!.endInclusive)}',
             ),
             const SizedBox(height: MonySpace.x3),
             if (budgetAmountInCents != null && budgetAmountInCents! > 0) ...[
@@ -298,9 +355,12 @@ class _DashboardContent extends StatelessWidget {
               ],
             ),
             const SizedBox(height: MonySpace.x6),
-            _MonthlyTrendChart(
-              totals: summary.monthlyTotals,
-              currencyStyle: currencyStyle,
+            MonyEntrance(
+              delay: const Duration(milliseconds: 80),
+              child: _MonthlyTrendChart(
+                totals: summary.monthlyTotals,
+                currencyStyle: currencyStyle,
+              ),
             ),
             const SizedBox(height: MonySpace.x6),
             SectionHeader(
@@ -327,6 +387,108 @@ class _DashboardContent extends StatelessWidget {
       ),
     );
   }
+}
+
+class _EmptyTrendCard extends StatelessWidget {
+  const _EmptyTrendCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return MonyCard(
+      padding: const EdgeInsets.fromLTRB(
+        MonySpace.x4,
+        MonySpace.x4,
+        MonySpace.x4,
+        MonySpace.x2,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                PhosphorIconsRegular.chartLineUp,
+                size: 19,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: MonySpace.x2),
+              Text('Tu evolución', style: theme.textTheme.titleMedium),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Los datos del ciclo aparecerán aquí',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: MonySpace.x2),
+          SizedBox(
+            height: 112,
+            width: double.infinity,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                CustomPaint(
+                  painter: _TrendGridPainter(
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: .4,
+                    ),
+                  ),
+                ),
+                Center(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(MonyRadius.medium),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        'Sin movimientos todavía',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrendGridPainter extends CustomPainter {
+  const _TrendGridPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1;
+    for (var row = 1; row <= 3; row++) {
+      final y = size.height * row / 4;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+    for (var column = 1; column <= 5; column++) {
+      final x = size.width * column / 6;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _TrendGridPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 class _MonthlyTrendChart extends StatelessWidget {

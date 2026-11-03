@@ -233,65 +233,70 @@ class _RecurringEntriesPageState extends ConsumerState<RecurringEntriesPage> {
                                   final category = categories
                                       .where((c) => c.id == item.categoryId)
                                       .firstOrNull;
-                                  return Card(
-                                    child: ListTile(
-                                      leading: CircleAvatar(
-                                        child: Icon(
-                                          item.type == TransactionType.income
-                                              ? Icons.south_west
-                                              : Icons.north_east,
+                                  return MonyEntrance(
+                                    delay: Duration(milliseconds: 30 * index),
+                                    child: Card(
+                                      child: ListTile(
+                                        leading: CircleAvatar(
+                                          child: Icon(
+                                            item.type == TransactionType.income
+                                                ? Icons.south_west
+                                                : Icons.north_east,
+                                          ),
                                         ),
-                                      ),
-                                      title: Text(item.title),
-                                      subtitle: Text(
-                                        '${MoneyFormatter.formatDopMinorUnits(item.amountInCents)} · ${category?.name ?? 'Categoría'}\n${_frequencyLabel(item)}${item.isActive ? ' · Próximo: ${_date(item.nextDate)}' : ' · En pausa'}',
-                                      ),
-                                      isThreeLine: true,
-                                      onTap: () => _edit(context, ref, item),
-                                      trailing: PopupMenuButton<String>(
-                                        onSelected: (action) async {
-                                          if (action == 'edit') {
-                                            _edit(context, ref, item);
-                                          }
-                                          if (action == 'register') {
-                                            await _registerOccurrence(
-                                              context,
-                                              ref,
-                                              item,
-                                            );
-                                          }
-                                          if (action == 'pause' ||
-                                              action == 'resume') {
-                                            await ref
-                                                .read(
-                                                  recurringRepositoryProvider,
-                                                )
-                                                .setActive(
-                                                  item.id,
-                                                  action == 'resume',
-                                                );
-                                          }
-                                        },
-                                        itemBuilder: (_) => [
-                                          const PopupMenuItem(
-                                            value: 'register',
-                                            child: Text('Registrar movimiento'),
-                                          ),
-                                          const PopupMenuItem(
-                                            value: 'edit',
-                                            child: Text('Editar serie'),
-                                          ),
-                                          PopupMenuItem(
-                                            value: item.isActive
-                                                ? 'pause'
-                                                : 'resume',
-                                            child: Text(
-                                              item.isActive
-                                                  ? 'Pausar'
-                                                  : 'Reanudar',
+                                        title: Text(item.title),
+                                        subtitle: Text(
+                                          '${MoneyFormatter.formatDopMinorUnits(item.amountInCents)} · ${category?.name ?? 'Categoría'}\n${_frequencyLabel(item)}${item.isActive ? ' · Próximo: ${_date(item.nextDate)}' : ' · En pausa'}',
+                                        ),
+                                        isThreeLine: true,
+                                        onTap: () => _edit(context, ref, item),
+                                        trailing: PopupMenuButton<String>(
+                                          onSelected: (action) async {
+                                            if (action == 'edit') {
+                                              _edit(context, ref, item);
+                                            }
+                                            if (action == 'register') {
+                                              await _registerOccurrence(
+                                                context,
+                                                ref,
+                                                item,
+                                              );
+                                            }
+                                            if (action == 'pause' ||
+                                                action == 'resume') {
+                                              await ref
+                                                  .read(
+                                                    recurringRepositoryProvider,
+                                                  )
+                                                  .setActive(
+                                                    item.id,
+                                                    action == 'resume',
+                                                  );
+                                            }
+                                          },
+                                          itemBuilder: (_) => [
+                                            const PopupMenuItem(
+                                              value: 'register',
+                                              child: Text(
+                                                'Registrar movimiento',
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                            const PopupMenuItem(
+                                              value: 'edit',
+                                              child: Text('Editar serie'),
+                                            ),
+                                            PopupMenuItem(
+                                              value: item.isActive
+                                                  ? 'pause'
+                                                  : 'resume',
+                                              child: Text(
+                                                item.isActive
+                                                    ? 'Pausar'
+                                                    : 'Reanudar',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   );

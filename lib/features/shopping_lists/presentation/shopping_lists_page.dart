@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/dialog_helpers.dart';
 import '../../../core/widgets/mony_settings_action.dart';
+import '../../../core/widgets/mony_states.dart';
 import '../../../core/money/money_formatter.dart';
 import '../../preferences/domain/app_preferences.dart';
 import '../../preferences/presentation/preferences_controller.dart';
@@ -20,6 +21,31 @@ class ShoppingListsPage extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<ShoppingListsPage> createState() => _ShoppingListsPageState();
+}
+
+class _PlannerStep extends StatelessWidget {
+  const _PlannerStep({required this.number, required this.title});
+
+  final String number;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 5),
+    child: Row(
+      children: [
+        Text(
+          number,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(child: Text(title)),
+      ],
+    ),
+  );
 }
 
 enum _ShoppingListFilter { all, active, completed }
@@ -46,46 +72,98 @@ class _ShoppingListsPageState extends ConsumerState<ShoppingListsPage> {
         title: const Text('Lista'),
         actions: const [MonySettingsAction()],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _editList(context, ref, style),
-        icon: const Icon(Icons.add),
-        label: const Text('Nueva lista'),
-      ),
+      floatingActionButton: state.hasValue && state.requireValue.isEmpty
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => _editList(context, ref, style),
+              icon: const Icon(Icons.add),
+              label: const Text('Nueva lista'),
+            ),
       body: state.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const LoadingPlaceholder(message: 'Cargando tus listas'),
         error: (_, _) => _ListError(
           onRetry: () => ref.invalidate(shoppingListOverviewsProvider),
         ),
         data: (overviews) {
           if (overviews.isEmpty) {
             return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.shopping_cart_outlined,
-                      size: 54,
-                      color: Theme.of(context).colorScheme.primary,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Card.outlined(
+                    child: Padding(
+                      padding: const EdgeInsets.all(22),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: SizedBox(
+                                  width: 54,
+                                  height: 54,
+                                  child: Icon(
+                                    Icons.shopping_basket_outlined,
+                                    size: 27,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Text(
+                                  'Tu compra, mejor planificada',
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Prepara la lista antes de salir y mantén el total estimado a la vista.',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                          const SizedBox(height: 16),
+                          const _PlannerStep(
+                            number: '01',
+                            title: 'Agrega productos y cantidades',
+                          ),
+                          const _PlannerStep(
+                            number: '02',
+                            title: 'Anota precios para estimar el total',
+                          ),
+                          const _PlannerStep(
+                            number: '03',
+                            title: 'Marca cada artículo al comprarlo',
+                          ),
+                          const SizedBox(height: 14),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              onPressed: () => _editList(context, ref, style),
+                              icon: const Icon(Icons.add_rounded),
+                              label: const Text('Crear lista de compra'),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Prepara tu próxima compra',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Agrega productos, cantidades y precios para controlar el total antes de pagar.',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      onPressed: () => _editList(context, ref, style),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Crear lista'),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             );
@@ -200,29 +278,35 @@ class _ShoppingListsPageState extends ConsumerState<ShoppingListsPage> {
                                   ),
                                   const SizedBox(height: 14),
                                   for (final overview in filtered)
-                                    _ShoppingListCard(
-                                      overview: overview,
-                                      currencyStyle: style,
-                                      onOpen: () => context.pushNamed(
-                                        'shoppingListDetail',
-                                        pathParameters: {
-                                          'id': '${overview.list.id}',
-                                        },
+                                    MonyEntrance(
+                                      delay: Duration(
+                                        milliseconds:
+                                            35 * filtered.indexOf(overview),
                                       ),
-                                      onDuplicate: () => _duplicate(
-                                        context,
-                                        ref,
-                                        overview.list.id,
+                                      child: _ShoppingListCard(
+                                        overview: overview,
+                                        currencyStyle: style,
+                                        onOpen: () => context.pushNamed(
+                                          'shoppingListDetail',
+                                          pathParameters: {
+                                            'id': '${overview.list.id}',
+                                          },
+                                        ),
+                                        onDuplicate: () => _duplicate(
+                                          context,
+                                          ref,
+                                          overview.list.id,
+                                        ),
+                                        onDelete:
+                                            overview.list.status ==
+                                                ShoppingListStatus.completed
+                                            ? null
+                                            : () => _delete(
+                                                context,
+                                                ref,
+                                                overview.list.id,
+                                              ),
                                       ),
-                                      onDelete:
-                                          overview.list.status ==
-                                              ShoppingListStatus.completed
-                                          ? null
-                                          : () => _delete(
-                                              context,
-                                              ref,
-                                              overview.list.id,
-                                            ),
                                     ),
                                 ],
                               ),

@@ -8,6 +8,7 @@ import '../../../core/theme/mony_tokens.dart';
 import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_confirm_dialog.dart';
 import '../../../core/widgets/mony_settings_action.dart';
+import '../../../core/widgets/mony_states.dart';
 import '../../categories/domain/category.dart';
 import '../../categories/presentation/categories_providers.dart';
 import '../../preferences/domain/app_preferences.dart';
@@ -497,30 +498,28 @@ class _BudgetsPageState extends ConsumerState<BudgetsPage> {
             onPressed: _openHistory,
             icon: const Icon(Icons.history),
           ),
+          if (configuredBudget != null)
+            IconButton(
+              tooltip: 'Editar presupuesto',
+              onPressed: _saving ? null : () => _editBudget(configuredBudget),
+              icon: const Icon(Icons.tune_rounded),
+            ),
           const MonySettingsAction(),
         ],
       ),
-      floatingActionButton: configuredBudget == null
-          ? FloatingActionButton.extended(
-              onPressed: _saving ? null : () => _editBudget(null),
-              icon: const Icon(Icons.add),
-              label: const Text('Configurar presupuesto'),
-            )
-          : FloatingActionButton.extended(
-              onPressed: _saving ? null : () => _editBudget(configuredBudget),
-              icon: const Icon(Icons.edit_outlined),
-              label: const Text('Editar presupuesto'),
-            ),
       body: config.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () =>
+            const LoadingPlaceholder(message: 'Preparando tu presupuesto'),
         error: (error, stack) =>
             _BudgetsError(onRetry: () => ref.invalidate(budgetConfigProvider)),
         data: (budget) => categories.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () =>
+              const LoadingPlaceholder(message: 'Cargando categorías'),
           error: (error, stack) =>
               _BudgetsError(onRetry: () => ref.invalidate(categoriesProvider)),
           data: (allCategories) => transactions.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () =>
+                const LoadingPlaceholder(message: 'Cargando movimientos'),
             error: (error, stack) => _BudgetsError(
               onRetry: () => ref.invalidate(transactionsProvider),
             ),
@@ -805,11 +804,16 @@ class _BudgetSummaryCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 14),
-            LinearProgressIndicator(
-              value: (usagePercent.clamp(0, 100)) / 100,
-              minHeight: 9,
-              borderRadius: BorderRadius.circular(9),
-              color: usagePercent >= 100 ? colors.error : colors.primary,
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: (usagePercent.clamp(0, 100)) / 100),
+              duration: MonyMotion.durationFor(context, MonyMotion.emphasis),
+              curve: MonyMotion.curveFor(context, Curves.easeOutCubic),
+              builder: (context, value, _) => LinearProgressIndicator(
+                value: value,
+                minHeight: 9,
+                borderRadius: BorderRadius.circular(9),
+                color: usagePercent >= 100 ? colors.error : colors.primary,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
