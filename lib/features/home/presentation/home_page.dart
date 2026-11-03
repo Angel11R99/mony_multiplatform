@@ -59,55 +59,58 @@ class _HomePageState extends ConsumerState<HomePage> {
         title: const Text('Inicio'),
         actions: const [MonySettingsAction()],
       ),
-      body: SafeArea(
-        child: budget.hasError
-            ? ErrorState(
-                message: 'No pudimos cargar la configuración del ciclo.',
-                retryLabel: 'Reintentar',
-                onRetry: () => ref.invalidate(budgetConfigProvider),
-              )
-            : summary.when(
-                loading: () =>
-                    const LoadingPlaceholder(message: 'Cargando resumen'),
-                error: (error, stack) => ErrorState(
-                  message: 'No pudimos cargar el resumen financiero.',
+      body: SelectionContainer.disabled(
+        child: SafeArea(
+          child: budget.hasError
+              ? ErrorState(
+                  message: 'No pudimos cargar la configuración del ciclo.',
                   retryLabel: 'Reintentar',
-                  onRetry: () => ref.invalidate(transactionsProvider),
+                  onRetry: () => ref.invalidate(budgetConfigProvider),
+                )
+              : summary.when(
+                  loading: () =>
+                      const LoadingPlaceholder(message: 'Cargando resumen'),
+                  error: (error, stack) => ErrorState(
+                    message: 'No pudimos cargar el resumen financiero.',
+                    retryLabel: 'Reintentar',
+                    onRetry: () => ref.invalidate(transactionsProvider),
+                  ),
+                  data: (value) => categories.when(
+                    loading: () => _DashboardContent(
+                      summary: value,
+                      categories: const [],
+                      budgetAmountInCents: budget.value?.amountInCents,
+                      categoryNotice: 'Cargando categorías…',
+                      currencyStyle: preferences.currencyFormatStyle,
+                      periodView: _periodView,
+                      onPeriodViewChanged: (view) =>
+                          setState(() => _periodView = view),
+                    ),
+                    error: (error, stack) => _DashboardContent(
+                      summary: value,
+                      categories: const [],
+                      budgetAmountInCents: budget.value?.amountInCents,
+                      categoryNotice:
+                          'No se pudieron cargar los nombres de categorías.',
+                      onRetryCategories: () =>
+                          ref.invalidate(categoriesProvider),
+                      currencyStyle: preferences.currencyFormatStyle,
+                      periodView: _periodView,
+                      onPeriodViewChanged: (view) =>
+                          setState(() => _periodView = view),
+                    ),
+                    data: (categoryItems) => _DashboardContent(
+                      summary: value,
+                      categories: categoryItems,
+                      budgetAmountInCents: budget.value?.amountInCents,
+                      currencyStyle: preferences.currencyFormatStyle,
+                      periodView: _periodView,
+                      onPeriodViewChanged: (view) =>
+                          setState(() => _periodView = view),
+                    ),
+                  ),
                 ),
-                data: (value) => categories.when(
-                  loading: () => _DashboardContent(
-                    summary: value,
-                    categories: const [],
-                    budgetAmountInCents: budget.value?.amountInCents,
-                    categoryNotice: 'Cargando categorías…',
-                    currencyStyle: preferences.currencyFormatStyle,
-                    periodView: _periodView,
-                    onPeriodViewChanged: (view) =>
-                        setState(() => _periodView = view),
-                  ),
-                  error: (error, stack) => _DashboardContent(
-                    summary: value,
-                    categories: const [],
-                    budgetAmountInCents: budget.value?.amountInCents,
-                    categoryNotice:
-                        'No se pudieron cargar los nombres de categorías.',
-                    onRetryCategories: () => ref.invalidate(categoriesProvider),
-                    currencyStyle: preferences.currencyFormatStyle,
-                    periodView: _periodView,
-                    onPeriodViewChanged: (view) =>
-                        setState(() => _periodView = view),
-                  ),
-                  data: (categoryItems) => _DashboardContent(
-                    summary: value,
-                    categories: categoryItems,
-                    budgetAmountInCents: budget.value?.amountInCents,
-                    currencyStyle: preferences.currencyFormatStyle,
-                    periodView: _periodView,
-                    onPeriodViewChanged: (view) =>
-                        setState(() => _periodView = view),
-                  ),
-                ),
-              ),
+        ),
       ),
     );
   }

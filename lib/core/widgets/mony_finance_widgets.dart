@@ -39,12 +39,10 @@ class AmountText extends StatelessWidget {
       style:
           style?.copyWith(
             color: color,
-            backgroundColor: Colors.transparent,
             fontFeatures: const [FontFeature.tabularFigures()],
           ) ??
           TextStyle(
             color: color,
-            backgroundColor: Colors.transparent,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
     );
