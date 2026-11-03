@@ -77,7 +77,7 @@ class MonyNavigationShell extends ConsumerWidget {
             onItemSelected: (index) => _selectBranch(visibleIndices[index]),
             items: items,
             style: NavBarStyle.floating,
-            iconAnimationType: IconAnimationType.fade,
+            iconAnimationType: IconAnimationType.bounce,
             showGlow: false,
             theme: FuturisticTheme.cyberpunk().copyWith(
               effectToggles: const {'showIndicator': false},
