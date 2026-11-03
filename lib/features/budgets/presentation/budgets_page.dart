@@ -697,22 +697,38 @@ class _BudgetsPageState extends ConsumerState<BudgetsPage> {
                   ),
                 ],
                 const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Asignaciones por categoría',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                LayoutBuilder(
+                  builder: (context, headingConstraints) {
+                    final title = Text(
+                      'Asignaciones por categoría',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
-                    ),
-                    TextButton.icon(
+                    );
+                    final action = TextButton.icon(
                       onPressed: () => context.pushNamed('settingsCategories'),
                       icon: const Icon(Icons.tune, size: 18),
                       label: const Text('Categorías'),
-                    ),
-                  ],
+                    );
+                    if (headingConstraints.maxWidth < 460) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          title,
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: action,
+                          ),
+                        ],
+                      );
+                    }
+                    return Row(
+                      children: [
+                        Expanded(child: title),
+                        action,
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 8),
                 if (expenseCategories.isEmpty)

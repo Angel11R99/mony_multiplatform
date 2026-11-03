@@ -51,12 +51,19 @@ abstract final class MonyFeedback {
       context: context,
       alignment: Alignment.bottomCenter,
       type: toastType,
-      style: ToastificationStyle.flatColored,
-      title: Text(message),
+      style: ToastificationStyle.flat,
+      title: Text(
+        message,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          color: scheme.onSurface,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
       icon: Icon(icon, color: color),
       primaryColor: color,
       backgroundColor: scheme.surfaceContainerHigh,
       foregroundColor: scheme.onSurface,
+      borderSide: BorderSide(color: scheme.outlineVariant),
       borderRadius: BorderRadius.circular(MonyRadius.medium),
       padding: const EdgeInsets.symmetric(
         horizontal: MonySpace.x4,
