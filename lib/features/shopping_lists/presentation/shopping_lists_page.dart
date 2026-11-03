@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/dialog_helpers.dart';
+import '../../../core/widgets/mony_settings_action.dart';
 import '../../../core/money/money_formatter.dart';
 import '../../preferences/domain/app_preferences.dart';
 import '../../preferences/presentation/preferences_controller.dart';
@@ -14,17 +15,37 @@ import '../domain/shopping_list_repository.dart';
 import '../domain/shopping_list_validator.dart';
 import 'shopping_lists_providers.dart';
 
-class ShoppingListsPage extends ConsumerWidget {
+class ShoppingListsPage extends ConsumerStatefulWidget {
   const ShoppingListsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ShoppingListsPage> createState() => _ShoppingListsPageState();
+}
+
+enum _ShoppingListFilter { all, active, completed }
+
+class _ShoppingListsPageState extends ConsumerState<ShoppingListsPage> {
+  final _search = TextEditingController();
+  _ShoppingListFilter _filter = _ShoppingListFilter.all;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ref = this.ref;
     final state = ref.watch(shoppingListOverviewsProvider);
     final style =
         ref.watch(appPreferencesProvider).value?.currencyFormatStyle ??
         AppPreferences.defaults.currencyFormatStyle;
     return Scaffold(
-      appBar: AppBar(title: const Text('Listas de compras')),
+      appBar: AppBar(
+        title: const Text('Lista'),
+        actions: const [MonySettingsAction()],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _editList(context, ref, style),
         icon: const Icon(Icons.add),
@@ -69,6 +90,20 @@ class ShoppingListsPage extends ConsumerWidget {
               ),
             );
           }
+          final query = _search.text.trim().toLowerCase();
+          final filtered = overviews
+              .where((overview) {
+                final statusMatches = switch (_filter) {
+                  _ShoppingListFilter.all => true,
+                  _ShoppingListFilter.active =>
+                    overview.list.status != ShoppingListStatus.completed,
+                  _ShoppingListFilter.completed =>
+                    overview.list.status == ShoppingListStatus.completed,
+                };
+                return statusMatches &&
+                    overview.list.name.toLowerCase().contains(query);
+              })
+              .toList(growable: false);
           return LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth > 850
@@ -78,30 +113,120 @@ class ShoppingListsPage extends ConsumerWidget {
                 alignment: Alignment.topCenter,
                 child: SizedBox(
                   width: width,
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(18, 16, 18, 96),
+                  child: Column(
                     children: [
-                      Text(
-                        'Todo lo que necesitas, con el total bajo control.',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 14),
-                      for (final overview in overviews)
-                        _ShoppingListCard(
-                          overview: overview,
-                          currencyStyle: style,
-                          onOpen: () => context.pushNamed(
-                            'shoppingListDetail',
-                            pathParameters: {'id': '${overview.list.id}'},
-                          ),
-                          onDuplicate: () =>
-                              _duplicate(context, ref, overview.list.id),
-                          onDelete:
-                              overview.list.status ==
-                                  ShoppingListStatus.completed
-                              ? null
-                              : () => _delete(context, ref, overview.list.id),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 12, 18, 10),
+                        child: Column(
+                          children: [
+                            TextField(
+                              controller: _search,
+                              onChanged: (_) => setState(() {}),
+                              decoration: InputDecoration(
+                                hintText: 'Buscar listas por nombre',
+                                prefixIcon: const Icon(Icons.search),
+                                suffixIcon: _search.text.isEmpty
+                                    ? null
+                                    : IconButton(
+                                        tooltip: 'Limpiar búsqueda',
+                                        onPressed: () {
+                                          _search.clear();
+                                          setState(() {});
+                                        },
+                                        icon: const Icon(Icons.close),
+                                      ),
+                                border: const OutlineInputBorder(),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            SegmentedButton<_ShoppingListFilter>(
+                              segments: const [
+                                ButtonSegment(
+                                  value: _ShoppingListFilter.all,
+                                  label: Text('Todas'),
+                                ),
+                                ButtonSegment(
+                                  value: _ShoppingListFilter.active,
+                                  label: Text('En compra'),
+                                ),
+                                ButtonSegment(
+                                  value: _ShoppingListFilter.completed,
+                                  label: Text('Completadas'),
+                                ),
+                              ],
+                              selected: {_filter},
+                              showSelectedIcon: false,
+                              onSelectionChanged: (selection) =>
+                                  setState(() => _filter = selection.first),
+                            ),
+                          ],
                         ),
+                      ),
+                      Expanded(
+                        child: filtered.isEmpty
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        'No hay listas que coincidan con la búsqueda y el estado.',
+                                      ),
+                                      TextButton(
+                                        onPressed: () => setState(() {
+                                          _search.clear();
+                                          _filter = _ShoppingListFilter.all;
+                                        }),
+                                        child: const Text('Limpiar filtros'),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            : ListView(
+                                padding: const EdgeInsets.fromLTRB(
+                                  18,
+                                  8,
+                                  18,
+                                  96,
+                                ),
+                                children: [
+                                  Text(
+                                    'Todo lo que necesitas, con el total bajo control.',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                  ),
+                                  const SizedBox(height: 14),
+                                  for (final overview in filtered)
+                                    _ShoppingListCard(
+                                      overview: overview,
+                                      currencyStyle: style,
+                                      onOpen: () => context.pushNamed(
+                                        'shoppingListDetail',
+                                        pathParameters: {
+                                          'id': '${overview.list.id}',
+                                        },
+                                      ),
+                                      onDuplicate: () => _duplicate(
+                                        context,
+                                        ref,
+                                        overview.list.id,
+                                      ),
+                                      onDelete:
+                                          overview.list.status ==
+                                              ShoppingListStatus.completed
+                                          ? null
+                                          : () => _delete(
+                                              context,
+                                              ref,
+                                              overview.list.id,
+                                            ),
+                                    ),
+                                ],
+                              ),
+                      ),
                     ],
                   ),
                 ),

@@ -73,4 +73,17 @@ void main() {
     expect(item.isActive, isFalse);
     expect(item.nextDate, DateTime(2026, 5, 1));
   });
+
+  test('manually registers an occurrence once on its selected date', () async {
+    final id = await repository.create(monthly());
+    final selectedDate = DateTime(2026, 1, 31);
+
+    expect(await repository.registerOccurrence(id, selectedDate), isTrue);
+    expect(await repository.registerOccurrence(id, selectedDate), isFalse);
+    expect((await db.select(db.transactions).get()).length, 1);
+    expect(
+      (await repository.watchAll().first).single.nextDate,
+      DateTime(2026, 2, 28),
+    );
+  });
 }

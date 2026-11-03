@@ -103,6 +103,57 @@ class DriftRecurringRepository implements RecurringRepository {
   }
 
   @override
+  Future<bool> registerOccurrence(int id, DateTime date) =>
+      db.transaction(() async {
+        final row = await (db.select(
+          db.recurringEntries,
+        )..where((r) => r.id.equals(id))).getSingleOrNull();
+        if (row == null) throw StateError('La serie recurrente ya no existe.');
+        final entry = _fromRow(row);
+        final day = dateToEpochDay(date);
+        if (day < row.startDateEpochDay ||
+            (row.endDateEpochDay != null && day > row.endDateEpochDay!)) {
+          throw ArgumentError('La fecha está fuera del período de esta serie.');
+        }
+        final existing =
+            await (db.select(db.transactions)..where(
+                  (r) => r.fixedEntryId.equals(id) & r.dateEpochDay.equals(day),
+                ))
+                .getSingleOrNull();
+        if (existing != null) return false;
+        await db
+            .into(db.transactions)
+            .insert(
+              TransactionsCompanion.insert(
+                amountInCents: entry.amountInCents,
+                type: entry.type.name,
+                categoryId: entry.categoryId,
+                paymentMethodId: entry.paymentMethodId,
+                description: Value(entry.title),
+                dateEpochDay: day,
+                fixedEntryId: Value(entry.id),
+                createdAt: Value(DateTime.now()),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
+        if (day == row.nextDateEpochDay) {
+          final next = dateToEpochDay(nextOccurrence(entry, date));
+          final exhausted =
+              row.endDateEpochDay != null && next > row.endDateEpochDay!;
+          await (db.update(
+            db.recurringEntries,
+          )..where((r) => r.id.equals(id))).write(
+            RecurringEntriesCompanion(
+              nextDateEpochDay: Value(next),
+              isActive: Value(!exhausted),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
+        }
+        return true;
+      });
+
+  @override
   Future<int> processDue({DateTime? now}) => db.transaction(() async {
     final today = dateToEpochDay(now ?? DateTime.now());
     final due =

@@ -8,6 +8,7 @@ import '../../../core/money/money_formatter.dart';
 import '../../../core/theme/mony_tokens.dart';
 import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_confirm_dialog.dart';
+import '../../../core/widgets/mony_settings_action.dart';
 import '../../preferences/domain/app_preferences.dart';
 import '../../preferences/presentation/preferences_controller.dart';
 import '../domain/savings_goal.dart';
@@ -24,6 +25,13 @@ class SavingsGoalsPage extends ConsumerStatefulWidget {
 
 class _SavingsGoalsPageState extends ConsumerState<SavingsGoalsPage> {
   bool _showCompleted = false;
+  final _search = TextEditingController();
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
 
   Future<void> _editGoal({SavingsGoalProgress? goal}) async {
     var name = goal?.goal.name ?? '';
@@ -279,6 +287,7 @@ class _SavingsGoalsPageState extends ConsumerState<SavingsGoalsPage> {
       appBar: AppBar(
         title: const Text('Metas de ahorro'),
         actions: [
+          const MonySettingsAction(),
           IconButton(
             tooltip: 'Ver historial de movimientos',
             onPressed: () => context.goNamed('transactions'),
@@ -310,7 +319,13 @@ class _SavingsGoalsPageState extends ConsumerState<SavingsGoalsPage> {
         data: (items) {
           final active = items.where((item) => item.isActive).toList();
           final completed = items.where((item) => !item.isActive).toList();
-          final visible = _showCompleted ? completed : active;
+          final visible = (_showCompleted ? completed : active)
+              .where(
+                (item) => item.goal.name.toLowerCase().contains(
+                  _search.text.trim().toLowerCase(),
+                ),
+              )
+              .toList(growable: false);
           return Column(
             children: [
               Padding(
@@ -324,12 +339,33 @@ class _SavingsGoalsPageState extends ConsumerState<SavingsGoalsPage> {
                     const SizedBox(height: 12),
                     SegmentedButton<bool>(
                       segments: const [
-                        ButtonSegment(value: false, label: Text('En curso')),
+                        ButtonSegment(value: false, label: Text('Activas')),
                         ButtonSegment(value: true, label: Text('Completadas')),
                       ],
                       selected: {_showCompleted},
                       onSelectionChanged: (selection) =>
                           setState(() => _showCompleted = selection.first),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _search,
+                      onChanged: (_) => setState(() {}),
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: 'Buscar metas por nombre',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: _search.text.isEmpty
+                            ? null
+                            : IconButton(
+                                tooltip: 'Limpiar búsqueda',
+                                onPressed: () {
+                                  _search.clear();
+                                  setState(() {});
+                                },
+                                icon: const Icon(Icons.close),
+                              ),
+                        border: const OutlineInputBorder(),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Align(
@@ -344,7 +380,14 @@ class _SavingsGoalsPageState extends ConsumerState<SavingsGoalsPage> {
               ),
               Expanded(
                 child: visible.isEmpty
-                    ? _SavingsEmpty(completed: _showCompleted)
+                    ? _SavingsEmpty(
+                        completed: _showCompleted,
+                        filtered: _search.text.trim().isNotEmpty,
+                        onClear: () {
+                          _search.clear();
+                          setState(() {});
+                        },
+                      )
                     : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 104),
                         itemCount: visible.length,
@@ -644,8 +687,14 @@ class _ContributionHistorySheet extends ConsumerWidget {
 }
 
 class _SavingsEmpty extends StatelessWidget {
-  const _SavingsEmpty({required this.completed});
+  const _SavingsEmpty({
+    required this.completed,
+    this.filtered = false,
+    this.onClear,
+  });
   final bool completed;
+  final bool filtered;
+  final VoidCallback? onClear;
 
   @override
   Widget build(BuildContext context) => Center(
@@ -655,13 +704,19 @@ class _SavingsEmpty extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            completed ? Icons.emoji_events_outlined : Icons.savings_outlined,
+            filtered
+                ? Icons.search_off
+                : completed
+                ? Icons.emoji_events_outlined
+                : Icons.savings_outlined,
             size: 52,
             color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(height: 16),
           Text(
-            completed
+            filtered
+                ? 'No hay metas con ese nombre.'
+                : completed
                 ? 'No tienes metas completadas aún.'
                 : 'Todavía no tienes metas de ahorro.',
             textAlign: TextAlign.center,
@@ -669,11 +724,21 @@ class _SavingsEmpty extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            completed
+            filtered
+                ? 'Prueba con otro nombre o limpia la búsqueda.'
+                : completed
                 ? 'Cuando alcances un objetivo, complétalo para encontrarlo aquí.'
                 : 'Crea una meta y registra aportes. Cada aporte se guarda como un gasto en la categoría “Ahorro”.',
             textAlign: TextAlign.center,
           ),
+          if (filtered && onClear != null) ...[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: onClear,
+              icon: const Icon(Icons.close),
+              label: const Text('Limpiar búsqueda'),
+            ),
+          ],
         ],
       ),
     ),

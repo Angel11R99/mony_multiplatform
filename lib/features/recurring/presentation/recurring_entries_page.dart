@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/widgets/mony_feedback.dart';
+import '../../../core/widgets/mony_settings_action.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/money/money_formatter.dart';
 import '../../categories/domain/category.dart';
@@ -11,15 +12,27 @@ import '../../transactions/domain/transaction.dart';
 import '../domain/recurring_entry.dart';
 import 'recurring_providers.dart';
 
-class RecurringEntriesPage extends ConsumerWidget {
+class RecurringEntriesPage extends ConsumerStatefulWidget {
   const RecurringEntriesPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RecurringEntriesPage> createState() =>
+      _RecurringEntriesPageState();
+}
+
+class _RecurringEntriesPageState extends ConsumerState<RecurringEntriesPage> {
+  TransactionType? _type;
+
+  @override
+  Widget build(BuildContext context) {
+    final ref = this.ref;
     final entries = ref.watch(recurringEntriesProvider);
     final categories = ref.watch(categoriesProvider).value ?? const [];
     return Scaffold(
-      appBar: AppBar(title: const Text('Movimientos recurrentes')),
+      appBar: AppBar(
+        title: const Text('Fijos'),
+        actions: const [MonySettingsAction()],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _edit(context, ref),
         icon: const Icon(Icons.add),
@@ -29,55 +42,121 @@ class RecurringEntriesPage extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) =>
             Center(child: Text('No se pudieron cargar las series.')),
-        data: (items) => items.isEmpty
-            ? const Center(child: Text('Aún no hay movimientos recurrentes.'))
-            : ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  final category = categories
-                      .where((c) => c.id == item.categoryId)
-                      .firstOrNull;
-                  return Card(
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        child: Icon(
-                          item.type == TransactionType.income
-                              ? Icons.south_west
-                              : Icons.north_east,
-                        ),
-                      ),
-                      title: Text(item.title),
-                      subtitle: Text(
-                        '${MoneyFormatter.formatDopMinorUnits(item.amountInCents)} · ${category?.name ?? 'Categoría'}\n${_frequencyLabel(item)}${item.isActive ? ' · Próximo: ${_date(item.nextDate)}' : ' · En pausa'}',
-                      ),
-                      isThreeLine: true,
-                      onTap: () => _edit(context, ref, item),
-                      trailing: PopupMenuButton<String>(
-                        onSelected: (action) async {
-                          if (action == 'edit') _edit(context, ref, item);
-                          if (action == 'pause' || action == 'resume') {
-                            await ref
-                                .read(recurringRepositoryProvider)
-                                .setActive(item.id, action == 'resume');
-                          }
-                        },
-                        itemBuilder: (_) => [
-                          const PopupMenuItem(
-                            value: 'edit',
-                            child: Text('Editar serie'),
-                          ),
-                          PopupMenuItem(
-                            value: item.isActive ? 'pause' : 'resume',
-                            child: Text(item.isActive ? 'Pausar' : 'Reanudar'),
-                          ),
-                        ],
-                      ),
+        data: (items) {
+          final visible = _type == null
+              ? items
+              : items.where((item) => item.type == _type).toList();
+          final expenses = items
+              .where((item) => item.type == TransactionType.expense)
+              .length;
+          final incomes = items
+              .where((item) => item.type == TransactionType.income)
+              .length;
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    ChoiceChip(
+                      label: Text('Todos (${items.length})'),
+                      selected: _type == null,
+                      onSelected: (_) => setState(() => _type = null),
                     ),
-                  );
-                },
+                    ChoiceChip(
+                      label: Text('Gastos ($expenses)'),
+                      selected: _type == TransactionType.expense,
+                      onSelected: (_) =>
+                          setState(() => _type = TransactionType.expense),
+                    ),
+                    ChoiceChip(
+                      label: Text('Ingresos ($incomes)'),
+                      selected: _type == TransactionType.income,
+                      onSelected: (_) =>
+                          setState(() => _type = TransactionType.income),
+                    ),
+                  ],
+                ),
               ),
+              Expanded(
+                child: visible.isEmpty
+                    ? Center(
+                        child: Text(
+                          items.isEmpty
+                              ? 'Aún no hay movimientos fijos.'
+                              : _type == TransactionType.income
+                              ? 'No hay fijos de ingreso.'
+                              : 'No hay fijos de gasto.',
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                        itemCount: visible.length,
+                        itemBuilder: (context, index) {
+                          final item = visible[index];
+                          final category = categories
+                              .where((c) => c.id == item.categoryId)
+                              .firstOrNull;
+                          return Card(
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                child: Icon(
+                                  item.type == TransactionType.income
+                                      ? Icons.south_west
+                                      : Icons.north_east,
+                                ),
+                              ),
+                              title: Text(item.title),
+                              subtitle: Text(
+                                '${MoneyFormatter.formatDopMinorUnits(item.amountInCents)} · ${category?.name ?? 'Categoría'}\n${_frequencyLabel(item)}${item.isActive ? ' · Próximo: ${_date(item.nextDate)}' : ' · En pausa'}',
+                              ),
+                              isThreeLine: true,
+                              onTap: () => _edit(context, ref, item),
+                              trailing: PopupMenuButton<String>(
+                                onSelected: (action) async {
+                                  if (action == 'edit') {
+                                    _edit(context, ref, item);
+                                  }
+                                  if (action == 'register') {
+                                    await _registerOccurrence(
+                                      context,
+                                      ref,
+                                      item,
+                                    );
+                                  }
+                                  if (action == 'pause' || action == 'resume') {
+                                    await ref
+                                        .read(recurringRepositoryProvider)
+                                        .setActive(item.id, action == 'resume');
+                                  }
+                                },
+                                itemBuilder: (_) => [
+                                  const PopupMenuItem(
+                                    value: 'register',
+                                    child: Text('Registrar movimiento'),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'edit',
+                                    child: Text('Editar serie'),
+                                  ),
+                                  PopupMenuItem(
+                                    value: item.isActive ? 'pause' : 'resume',
+                                    child: Text(
+                                      item.isActive ? 'Pausar' : 'Reanudar',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -124,6 +203,47 @@ class RecurringEntriesPage extends ConsumerWidget {
               : 'No se pudo actualizar la serie.',
         );
       }
+    }
+  }
+
+  Future<void> _registerOccurrence(
+    BuildContext context,
+    WidgetRef ref,
+    RecurringEntry entry,
+  ) async {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final firstDate = DateUtils.dateOnly(entry.startDate);
+    final lastDate =
+        entry.endDate != null &&
+            entry.endDate!.isBefore(today) &&
+            !entry.endDate!.isBefore(firstDate)
+        ? DateUtils.dateOnly(entry.endDate!)
+        : (today.isBefore(firstDate) ? firstDate : today);
+    final suggestedDate = DateUtils.dateOnly(entry.nextDate);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: suggestedDate.isBefore(firstDate)
+          ? firstDate
+          : (suggestedDate.isAfter(lastDate) ? lastDate : suggestedDate),
+      firstDate: firstDate,
+      lastDate: lastDate,
+      helpText: 'Fecha del movimiento',
+    );
+    if (picked == null || !context.mounted) return;
+    try {
+      final created = await ref
+          .read(recurringRepositoryProvider)
+          .registerOccurrence(entry.id, picked);
+      if (context.mounted) {
+        MonyFeedback.info(
+          context,
+          created
+              ? 'Movimiento fijo registrado.'
+              : 'Ya existe un movimiento de esta serie para esa fecha.',
+        );
+      }
+    } catch (error) {
+      if (context.mounted) MonyFeedback.error(context, error.toString());
     }
   }
 }

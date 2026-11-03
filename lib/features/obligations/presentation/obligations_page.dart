@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/money/money_formatter.dart';
+import '../../../core/widgets/mony_settings_action.dart';
 import '../../../core/widgets/dialog_helpers.dart';
 import '../../categories/domain/category.dart';
 import '../../categories/presentation/categories_providers.dart';
@@ -25,6 +26,43 @@ class ObligationsPage extends ConsumerStatefulWidget {
 
 class _ObligationsPageState extends ConsumerState<ObligationsPage> {
   var _filter = 0;
+  _DueDateFilter _dueDateFilter = _DueDateFilter.all;
+  DateTimeRange? _customDueRange;
+
+  Future<void> _chooseDueRange() async {
+    final today = DateTime.now();
+    final range = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(today.year + 5),
+      initialDateRange: _customDueRange,
+      helpText: 'Filtrar vencimientos',
+      saveText: 'Aplicar',
+    );
+    if (range != null && mounted) {
+      setState(() {
+        _dueDateFilter = _DueDateFilter.custom;
+        _customDueRange = range;
+      });
+    }
+  }
+
+  bool _matchesDueDate(DateTime date) {
+    final today = DateTime.now();
+    final day = DateTime(date.year, date.month, date.day);
+    return switch (_dueDateFilter) {
+      _DueDateFilter.all => true,
+      _DueDateFilter.week =>
+        !day.isBefore(DateTime(today.year, today.month, today.day)) &&
+            !day.isAfter(DateTime(today.year, today.month, today.day + 6)),
+      _DueDateFilter.month =>
+        date.year == today.year && date.month == today.month,
+      _DueDateFilter.custom =>
+        _customDueRange != null &&
+            !day.isBefore(_customDueRange!.start) &&
+            !day.isAfter(_customDueRange!.end),
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +77,10 @@ class _ObligationsPageState extends ConsumerState<ObligationsPage> {
         AppPreferences.defaults.currencyFormatStyle;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Pagos y cobros pendientes')),
+      appBar: AppBar(
+        title: const Text('Recordatorios'),
+        actions: const [MonySettingsAction()],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => editObligation(context, ref, categories, methods),
         icon: const Icon(Icons.add),
@@ -55,7 +96,7 @@ class _ObligationsPageState extends ConsumerState<ObligationsPage> {
           final filtered = all
               .where((obligation) {
                 final status = obligation.statusAt(today);
-                return switch (_filter) {
+                final matchesStatus = switch (_filter) {
                   0 =>
                     status != ObligationStatus.settled &&
                         status != ObligationStatus.cancelled,
@@ -71,6 +112,11 @@ class _ObligationsPageState extends ConsumerState<ObligationsPage> {
                     status == ObligationStatus.settled ||
                         status == ObligationStatus.cancelled,
                 };
+                final dueDate = obligation.dueDate;
+                return matchesStatus &&
+                    (dueDate == null
+                        ? _dueDateFilter == _DueDateFilter.all
+                        : _matchesDueDate(dueDate));
               })
               .toList(growable: false);
           return LayoutBuilder(
@@ -93,6 +139,50 @@ class _ObligationsPageState extends ConsumerState<ObligationsPage> {
                             _filterChip('Por pagar', 1),
                             _filterChip('Por cobrar', 2),
                             _filterChip('Historial', 3),
+                            PopupMenuButton<_DueDateFilter>(
+                              tooltip: 'Filtrar por vencimiento',
+                              initialValue: _dueDateFilter,
+                              onSelected: (value) {
+                                if (value == _DueDateFilter.custom) {
+                                  _chooseDueRange();
+                                } else {
+                                  setState(() => _dueDateFilter = value);
+                                }
+                              },
+                              itemBuilder: (context) => const [
+                                PopupMenuItem(
+                                  value: _DueDateFilter.all,
+                                  child: Text('Todas las fechas'),
+                                ),
+                                PopupMenuItem(
+                                  value: _DueDateFilter.week,
+                                  child: Text('Próximos 7 días'),
+                                ),
+                                PopupMenuItem(
+                                  value: _DueDateFilter.month,
+                                  child: Text('Este mes'),
+                                ),
+                                PopupMenuItem(
+                                  value: _DueDateFilter.custom,
+                                  child: Text('Rango personalizado…'),
+                                ),
+                              ],
+                              child: Chip(
+                                avatar: const Icon(
+                                  Icons.event_outlined,
+                                  size: 18,
+                                ),
+                                label: Text(switch (_dueDateFilter) {
+                                  _DueDateFilter.all => 'Todas las fechas',
+                                  _DueDateFilter.week => 'Próximos 7 días',
+                                  _DueDateFilter.month => 'Este mes',
+                                  _DueDateFilter.custom =>
+                                    _customDueRange == null
+                                        ? 'Rango personalizado'
+                                        : '${_formatDueDate(_customDueRange!.start)} – ${_formatDueDate(_customDueRange!.end)}',
+                                }),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -144,6 +234,10 @@ class _ObligationsPageState extends ConsumerState<ObligationsPage> {
     ),
   );
 }
+
+enum _DueDateFilter { all, week, month, custom }
+
+String _formatDueDate(DateTime date) => MonyDateFormatter.formatDate(date);
 
 class _ObligationCard extends StatelessWidget {
   const _ObligationCard({
