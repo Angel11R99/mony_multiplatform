@@ -576,6 +576,79 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     });
   }
 
+  void _clearFilters() {
+    _search.clear();
+    _minimumAmount.clear();
+    _maximumAmount.clear();
+    _appliedQuery = '';
+    _updateFilter(() {
+      _type = null;
+      _categoryIds = {};
+      _paymentMethodIds = {};
+      _minimumAmountInCents = null;
+      _maximumAmountInCents = null;
+      _startDate = null;
+      _endDate = null;
+      _sortOrder = TransactionSortOrder.newest;
+    });
+  }
+
+  Future<void> _openAdvancedFilters(
+    List<Category> categories,
+    List<PaymentMethod> methods,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (sheetContext) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.72,
+        minChildSize: 0.45,
+        maxChildSize: 0.94,
+        builder: (context, scrollController) => _AdvancedTransactionFilters(
+          scrollController: scrollController,
+          categoryLabel: _categoryIds.isEmpty
+              ? 'Categorías'
+              : 'Categorías (${_categoryIds.length})',
+          methodLabel: _paymentMethodIds.isEmpty
+              ? 'Métodos de pago'
+              : 'Métodos (${_paymentMethodIds.length})',
+          dateLabel: _rangeLabel,
+          hasFilters:
+              _filter.hasCriteria || _sortOrder != TransactionSortOrder.newest,
+          minimumAmount: _minimumAmount,
+          maximumAmount: _maximumAmount,
+          sortOrder: _sortOrder,
+          onCategories: () async {
+            final selected = await _selectIds(
+              title: 'Categorías',
+              values: categories.map((item) => (item.id, item.name)).toList(),
+              selected: _categoryIds,
+            );
+            if (selected != null && mounted) {
+              _updateFilter(() => _categoryIds = selected);
+            }
+          },
+          onMethods: () async {
+            final selected = await _selectIds(
+              title: 'Métodos de pago',
+              values: methods.map((item) => (item.id, item.name)).toList(),
+              selected: _paymentMethodIds,
+            );
+            if (selected != null && mounted) {
+              _updateFilter(() => _paymentMethodIds = selected);
+            }
+          },
+          onDatePreset: _applyDatePreset,
+          onApplyAmount: _applyAmountRange,
+          onSort: (value) => _updateFilter(() => _sortOrder = value),
+          onClear: _clearFilters,
+        ),
+      ),
+    );
+  }
+
   void _applyDatePreset(_DateRangePreset preset) {
     if (preset == _DateRangePreset.custom) {
       _chooseRange();
@@ -796,6 +869,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         ),
       );
     }
+    final wide = MediaQuery.sizeOf(context).width >= 720;
     return Column(
       children: [
         Padding(
@@ -1119,6 +1193,177 @@ class _TypeFilter extends StatelessWidget {
     selected: {value},
     showSelectedIcon: false,
     onSelectionChanged: (values) => onChanged(values.first),
+  );
+}
+
+String _sortLabel(TransactionSortOrder value) => switch (value) {
+  TransactionSortOrder.newest => 'Más recientes',
+  TransactionSortOrder.oldest => 'Más antiguos',
+  TransactionSortOrder.amountHighToLow => 'Mayor importe',
+  TransactionSortOrder.amountLowToHigh => 'Menor importe',
+};
+
+class _SortDropdown extends StatelessWidget {
+  const _SortDropdown({required this.value, required this.onChanged});
+  final TransactionSortOrder value;
+  final ValueChanged<TransactionSortOrder> onChanged;
+
+  @override
+  Widget build(BuildContext context) =>
+      DropdownButtonFormField<TransactionSortOrder>(
+        initialValue: value,
+        isExpanded: true,
+        decoration: const InputDecoration(
+          labelText: 'Ordenar por',
+          isDense: true,
+        ),
+        items: TransactionSortOrder.values
+            .map(
+              (item) =>
+                  DropdownMenuItem(value: item, child: Text(_sortLabel(item))),
+            )
+            .toList(),
+        onChanged: (item) {
+          if (item != null) onChanged(item);
+        },
+      );
+}
+
+class _AdvancedTransactionFilters extends StatelessWidget {
+  const _AdvancedTransactionFilters({
+    required this.scrollController,
+    required this.categoryLabel,
+    required this.methodLabel,
+    required this.dateLabel,
+    required this.hasFilters,
+    required this.minimumAmount,
+    required this.maximumAmount,
+    required this.sortOrder,
+    required this.onCategories,
+    required this.onMethods,
+    required this.onDatePreset,
+    required this.onApplyAmount,
+    required this.onSort,
+    required this.onClear,
+  });
+  final ScrollController scrollController;
+  final String categoryLabel, methodLabel, dateLabel;
+  final bool hasFilters;
+  final TextEditingController minimumAmount, maximumAmount;
+  final TransactionSortOrder sortOrder;
+  final VoidCallback onCategories, onMethods, onApplyAmount, onClear;
+  final ValueChanged<_DateRangePreset> onDatePreset;
+  final ValueChanged<TransactionSortOrder> onSort;
+
+  @override
+  Widget build(BuildContext context) => ListView(
+    controller: scrollController,
+    padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+    children: [
+      Center(
+        child: Container(
+          width: 36,
+          height: 4,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+      ),
+      const SizedBox(height: 18),
+      Text('Filtros avanzados', style: Theme.of(context).textTheme.titleLarge),
+      const SizedBox(height: 16),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          OutlinedButton.icon(
+            onPressed: onCategories,
+            icon: const Icon(Icons.category_outlined),
+            label: Text(categoryLabel),
+          ),
+          OutlinedButton.icon(
+            onPressed: onMethods,
+            icon: const Icon(Icons.payments_outlined),
+            label: Text(methodLabel),
+          ),
+        ],
+      ),
+      const SizedBox(height: 18),
+      Text('Rango de importe', style: Theme.of(context).textTheme.titleSmall),
+      const SizedBox(height: 8),
+      Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: minimumAmount,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: const InputDecoration(
+                labelText: 'Mínimo RD\$',
+                isDense: true,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: maximumAmount,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: const InputDecoration(
+                labelText: 'Máximo RD\$',
+                isDense: true,
+              ),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      Align(
+        alignment: Alignment.centerRight,
+        child: FilledButton.tonal(
+          onPressed: onApplyAmount,
+          child: const Text('Aplicar importe'),
+        ),
+      ),
+      const SizedBox(height: 14),
+      Text('Período', style: Theme.of(context).textTheme.titleSmall),
+      Wrap(
+        spacing: 8,
+        children: [
+          for (final entry in const [
+            (_DateRangePreset.today, 'Hoy'),
+            (_DateRangePreset.week, 'Esta semana'),
+            (_DateRangePreset.month, 'Este mes'),
+            (_DateRangePreset.year, 'Este año'),
+            (_DateRangePreset.custom, 'Personalizado'),
+          ])
+            ActionChip(
+              label: Text(
+                entry.$1 == _DateRangePreset.custom ? entry.$2 : entry.$2,
+              ),
+              onPressed: () => onDatePreset(entry.$1),
+            ),
+        ],
+      ),
+      Text(dateLabel, style: Theme.of(context).textTheme.bodySmall),
+      const SizedBox(height: 14),
+      _SortDropdown(value: sortOrder, onChanged: onSort),
+      if (hasFilters) ...[
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: onClear,
+            icon: const Icon(Icons.filter_alt_off),
+            label: const Text('Limpiar filtros'),
+          ),
+        ),
+      ],
+    ],
   );
 }
 
@@ -1466,7 +1711,9 @@ class _DateHeading extends StatelessWidget {
 
 class _TransactionsEmpty extends StatelessWidget {
   const _TransactionsEmpty({this.filtered = false, this.onClear});
+  const _TransactionsEmpty({this.filtered = false, this.onClear});
   final bool filtered;
+  final VoidCallback? onClear;
   final VoidCallback? onClear;
 
   @override
