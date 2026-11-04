@@ -217,6 +217,32 @@ bool shouldAutomaticallyCloseBudgetCycle(BudgetConfig? budget, DateTime now) {
   return timeNow >= closeAt;
 }
 
+/// Returns the next time the foreground automation needs to wake.
+///
+/// Recurring entries are date-based, so the next local midnight is the normal
+/// wake point. An enabled automatic budget close may require an earlier wake.
+DateTime nextBudgetAutomationCheckAt(BudgetConfig? budget, DateTime now) {
+  final nextMidnight = DateTime(now.year, now.month, now.day + 1);
+  if (budget == null || !budget.autoCloseEnabled || budget.cycleStart == null) {
+    return nextMidnight;
+  }
+
+  final closingPeriod = budgetPeriodToClose(budget, now);
+  final endDate = closingPeriod.endInclusive;
+  final today = DateTime(now.year, now.month, now.day);
+  if (DateTime(endDate.year, endDate.month, endDate.day).isBefore(today)) {
+    return now;
+  }
+
+  final closeAt = DateTime(
+    endDate.year,
+    endDate.month,
+    endDate.day,
+  ).add(Duration(minutes: budget.autoCloseMinuteOfDay));
+  if (!closeAt.isAfter(now)) return now;
+  return closeAt.isBefore(nextMidnight) ? closeAt : nextMidnight;
+}
+
 BudgetPeriodSummary summarizeBudgetPeriod(
   DateRange period,
   Iterable<({int amountInCents, String type, DateTime date})> transactions,

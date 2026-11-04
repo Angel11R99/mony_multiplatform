@@ -17,8 +17,8 @@ import '../../categories/presentation/categories_providers.dart';
 import '../../categories/presentation/category_icons.dart';
 import '../../preferences/domain/app_preferences.dart';
 import '../../preferences/presentation/preferences_controller.dart';
-import '../../transactions/presentation/transactions_providers.dart';
 import '../domain/financial_statistics.dart';
+import 'statistics_aggregate_providers.dart';
 
 class StatisticsPage extends ConsumerStatefulWidget {
   const StatisticsPage({super.key});
@@ -60,15 +60,13 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final transactionState = ref.watch(transactionsProvider);
     final categoryState = ref.watch(categoriesProvider);
     final budgetState = ref.watch(budgetConfigProvider);
     final cycleHistoryState = ref.watch(budgetHistoryProvider);
     final preferences =
         ref.watch(appPreferencesProvider).value ?? AppPreferences.defaults;
 
-    if (transactionState.hasError ||
-        categoryState.hasError ||
+    if (categoryState.hasError ||
         budgetState.hasError ||
         cycleHistoryState.hasError) {
       return Scaffold(
@@ -78,7 +76,6 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
         ),
         body: _StatisticsError(
           onRetry: () {
-            ref.invalidate(transactionsProvider);
             ref.invalidate(categoriesProvider);
             ref.invalidate(budgetConfigProvider);
             ref.invalidate(budgetHistoryProvider);
@@ -86,7 +83,7 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
         ),
       );
     }
-    if (!transactionState.hasValue || !categoryState.hasValue) {
+    if (!categoryState.hasValue) {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Estadísticas'),
@@ -96,7 +93,6 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
       );
     }
 
-    final transactions = transactionState.requireValue;
     final categories = categoryState.requireValue;
     final budget = budgetState.value;
     final cycleHistory = cycleHistoryState.value ?? const <BudgetCycle>[];
@@ -128,54 +124,100 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
             customEnd: _customEnd,
           )
         : _periodForCycle(cycle, now);
-    final scopedTransactions = _categoryId == null
-        ? transactions
-        : transactions.where((item) => item.categoryId == _categoryId);
-    final current = calculateFinancialStatistics(
-      transactions: scopedTransactions,
-      categories: {for (final category in categories) category.id: category},
-      period: period,
-    );
     final isComparable =
         _historyCycleId == null &&
         _range != StatisticsRange.allTime &&
         _range != StatisticsRange.custom;
-    final previous = isComparable
-        ? calculateFinancialStatistics(
-            transactions: scopedTransactions,
-            categories: {
-              for (final category in categories) category.id: category,
-            },
-            period: previousStatisticsPeriod(
-              range: _cycleIndex == null
-                  ? _range
-                  : StatisticsRange.currentBudget,
-              current: period,
-              today: now,
-              budget: budget,
-            ),
+    final previousPeriod = isComparable
+        ? previousStatisticsPeriod(
+            range: _cycleIndex == null ? _range : StatisticsRange.currentBudget,
+            current: period,
+            today: now,
+            budget: budget,
           )
         : null;
+    final currentBudgetPeriod = activeBudgetPeriod(budget, now);
+    final needsAllHistory = period.start == null && period.endInclusive == null;
+    final allTimeRequest = (
+      budgetStart: currentBudgetPeriod.start,
+      budgetEnd: currentBudgetPeriod.endInclusive,
+      through: DateTime(now.year, now.month, now.day),
+      categoryId: _categoryId,
+    );
+    final periodsRequest = (
+      currentStart: period.start!,
+      currentEnd: period.endInclusive!,
+      previousStart: previousPeriod?.start,
+      previousEnd: previousPeriod?.endInclusive,
+      budgetStart: currentBudgetPeriod.start,
+      budgetEnd: currentBudgetPeriod.endInclusive,
+      through: DateTime(now.year, now.month, now.day),
+      categoryId: _categoryId,
+    );
+    final allTimeState = needsAllHistory
+        ? ref.watch(allTimeStatisticsProvider(allTimeRequest))
+        : null;
+    final periodsState = needsAllHistory
+        ? null
+        : ref.watch(statisticsPeriodsProvider(periodsRequest));
+    final hasError = needsAllHistory
+        ? allTimeState!.hasError
+        : periodsState!.hasError;
+    if (hasError) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Estadísticas'),
+          actions: const [MonySettingsAction()],
+        ),
+        body: _StatisticsError(
+          onRetry: () {
+            if (needsAllHistory) {
+              ref.invalidate(allTimeStatisticsProvider(allTimeRequest));
+            } else {
+              ref.invalidate(statisticsPeriodsProvider(periodsRequest));
+            }
+          },
+        ),
+      );
+    }
+    final hasValue = needsAllHistory
+        ? allTimeState!.hasValue
+        : periodsState!.hasValue;
+    if (!hasValue) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Estadísticas'),
+          actions: const [MonySettingsAction()],
+        ),
+        body: const LoadingPlaceholder(message: 'Preparando tus estadísticas'),
+      );
+    }
+    final FinancialStatistics current;
+    final FinancialStatistics? previous;
+    final List<BudgetLimitInsight> limitInsights;
+    final List<MonthlyStatistics> evolution;
+    if (needsAllHistory) {
+      final snapshot = allTimeState!.requireValue;
+      current = snapshot.statistics;
+      previous = snapshot.previous;
+      limitInsights = snapshot.limitInsights;
+      evolution = snapshot.evolution;
+    } else {
+      final snapshot = periodsState!.requireValue;
+      current = snapshot.statistics;
+      previous = snapshot.previous;
+      limitInsights = snapshot.limitInsights;
+      evolution = snapshot.evolution;
+    }
     final focusedCategory = categories
         .where((item) => item.id == _categoryId)
         .firstOrNull;
     final focusedStats = current.expenseByCategory
         .where((item) => item.category.id == _categoryId)
         .firstOrNull;
-    final currentBudgetPeriod = activeBudgetPeriod(budget, now);
-    final limitInsights = budgetLimitInsights(
-      transactions: scopedTransactions,
-      categories: _categoryId == null
-          ? categories
-          : categories.where((item) => item.id == _categoryId),
-      period: _periodForRange(currentBudgetPeriod),
-    );
-    final evolution = monthlyStatistics(
-      scopedTransactions,
-      through: now,
-      period: period,
-      categoryId: _categoryId,
-    );
+    final visibleCategoryStats = current.expenseByCategory
+        .where((item) => _categoryId == null || item.category.id == _categoryId)
+        .toList(growable: false);
     final expenseCategories =
         categories.where((item) => item.type == CategoryType.expense).toList()
           ..sort(
@@ -196,156 +238,172 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
             alignment: Alignment.topCenter,
             child: SizedBox(
               width: maxWidth,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-                children: [
-                  Text(
-                    'Entiende cómo se mueven tus finanzas',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _rangeSelector(schedules, now),
-                  if (cycleHistory.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<int?>(
-                      initialValue: _historyCycleId,
-                      decoration: const InputDecoration(
-                        labelText: 'Mis ciclos',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: [
-                        const DropdownMenuItem<int?>(
-                          value: null,
-                          child: Text('Sin ciclo histórico'),
+              child: CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    sliver: SliverList.list(
+                      children: [
+                        Text(
+                          'Entiende cómo se mueven tus finanzas',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
-                        for (final savedCycle in cycleHistory)
-                          DropdownMenuItem<int?>(
-                            value: savedCycle.id,
-                            child: Text(
-                              '${_dateLabel(savedCycle.startDate)} – ${_dateLabel(savedCycle.endDate)}',
+                        const SizedBox(height: 12),
+                        _rangeSelector(schedules, now),
+                        if (cycleHistory.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<int?>(
+                            initialValue: _historyCycleId,
+                            decoration: const InputDecoration(
+                              labelText: 'Mis ciclos',
+                              border: OutlineInputBorder(),
+                            ),
+                            items: [
+                              const DropdownMenuItem<int?>(
+                                value: null,
+                                child: Text('Sin ciclo histórico'),
+                              ),
+                              for (final savedCycle in cycleHistory)
+                                DropdownMenuItem<int?>(
+                                  value: savedCycle.id,
+                                  child: Text(
+                                    '${_dateLabel(savedCycle.startDate)} – ${_dateLabel(savedCycle.endDate)}',
+                                  ),
+                                ),
+                            ],
+                            onChanged: (value) => setState(() {
+                              _historyCycleId = value;
+                              _cycleIndex = null;
+                            }),
+                          ),
+                        ],
+                        if (_range == StatisticsRange.custom)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton.icon(
+                              onPressed: _chooseCustomRange,
+                              icon: const Icon(Icons.date_range_outlined),
+                              label: Text(_customRangeLabel),
                             ),
                           ),
-                      ],
-                      onChanged: (value) => setState(() {
-                        _historyCycleId = value;
-                        _cycleIndex = null;
-                      }),
-                    ),
-                  ],
-                  if (_range == StatisticsRange.custom)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton.icon(
-                        onPressed: _chooseCustomRange,
-                        icon: const Icon(Icons.date_range_outlined),
-                        label: Text(_customRangeLabel),
-                      ),
-                    ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<int?>(
-                    key: ValueKey(_categoryId),
-                    initialValue: _categoryId,
-                    decoration: const InputDecoration(
-                      labelText: 'Enfoque por categoría',
-                    ),
-                    items: [
-                      const DropdownMenuItem<int?>(
-                        value: null,
-                        child: Text('Todas las categorías'),
-                      ),
-                      for (final category in expenseCategories)
-                        DropdownMenuItem<int?>(
-                          value: category.id,
-                          child: Text(category.name),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<int?>(
+                          key: ValueKey(_categoryId),
+                          initialValue: _categoryId,
+                          decoration: const InputDecoration(
+                            labelText: 'Enfoque por categoría',
+                          ),
+                          items: [
+                            const DropdownMenuItem<int?>(
+                              value: null,
+                              child: Text('Todas las categorías'),
+                            ),
+                            for (final category in expenseCategories)
+                              DropdownMenuItem<int?>(
+                                value: category.id,
+                                child: Text(category.name),
+                              ),
+                          ],
+                          onChanged: (value) =>
+                              setState(() => _categoryId = value),
                         ),
-                    ],
-                    onChanged: (value) => setState(() => _categoryId = value),
-                  ),
-                  const SizedBox(height: 14),
-                  _SummaryCard(
-                    report: current,
-                    currencyStyle: preferences.currencyFormatStyle,
-                  ),
-                  const SizedBox(height: 12),
-                  MonyEntrance(
-                    child: _IncomeExpenseCard(
-                      report: current,
-                      currencyStyle: preferences.currencyFormatStyle,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  if (previous != null) ...[
-                    MonyEntrance(
-                      delay: const Duration(milliseconds: 50),
-                      child: _ComparisonCard(
-                        current: current,
-                        previous: previous,
-                        currencyStyle: preferences.currencyFormatStyle,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  MonyEntrance(
-                    delay: const Duration(milliseconds: 90),
-                    child: _EvolutionCard(
-                      data: evolution,
-                      currencyStyle: preferences.currencyFormatStyle,
-                      periodLabel: _evolutionLabel(period, _range, cycle),
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-                  _SectionTitle(
-                    title: focusedCategory == null
-                        ? 'Gastos por categoría'
-                        : 'Detalle de ${focusedCategory.name}',
-                    subtitle: _periodLabel(period, _range, cycle),
-                  ),
-                  const SizedBox(height: 8),
-                  if (current.expenseByCategory.isEmpty)
-                    const _EmptyPanel(
-                      message: 'No hay gastos registrados en este período.',
-                    )
-                  else
-                    ...current.expenseByCategory
-                        .where(
-                          (item) =>
-                              _categoryId == null ||
-                              item.category.id == _categoryId,
-                        )
-                        .map(
-                          (item) => _CategoryBar(
-                            statistic: item,
-                            totalExpenses: current.expenseInCents,
+                        const SizedBox(height: 14),
+                        _SummaryCard(
+                          report: current,
+                          currencyStyle: preferences.currencyFormatStyle,
+                        ),
+                        const SizedBox(height: 12),
+                        MonyEntrance(
+                          child: _IncomeExpenseCard(
+                            report: current,
                             currencyStyle: preferences.currencyFormatStyle,
                           ),
                         ),
-                  if (focusedCategory != null) ...[
-                    const SizedBox(height: 12),
-                    _CategoryFocusCard(
-                      category: focusedCategory,
-                      spent: focusedStats?.amountInCents ?? 0,
-                      currencyStyle: preferences.currencyFormatStyle,
+                        const SizedBox(height: 12),
+                        if (previous != null) ...[
+                          MonyEntrance(
+                            delay: const Duration(milliseconds: 50),
+                            child: _ComparisonCard(
+                              current: current,
+                              previous: previous,
+                              currencyStyle: preferences.currencyFormatStyle,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        MonyEntrance(
+                          delay: const Duration(milliseconds: 90),
+                          child: _EvolutionCard(
+                            data: evolution,
+                            currencyStyle: preferences.currencyFormatStyle,
+                            periodLabel: _evolutionLabel(period, _range, cycle),
+                          ),
+                        ),
+                        const SizedBox(height: 22),
+                        _SectionTitle(
+                          title: focusedCategory == null
+                              ? 'Gastos por categoría'
+                              : 'Detalle de ${focusedCategory.name}',
+                          subtitle: _periodLabel(period, _range, cycle),
+                        ),
+                        const SizedBox(height: 8),
+                        if (current.expenseByCategory.isEmpty)
+                          const _EmptyPanel(
+                            message:
+                                'No hay gastos registrados en este período.',
+                          ),
+                      ],
                     ),
-                  ],
-                  const SizedBox(height: 22),
-                  const _SectionTitle(
-                    title: 'Límites del ciclo actual',
-                    subtitle:
-                        'Alertas al acercarte o superar el límite de cada categoría.',
                   ),
-                  const SizedBox(height: 8),
-                  if (limitInsights.isEmpty)
-                    const _EmptyPanel(
-                      message:
-                          'Asigna límites a tus categorías desde Plan de ciclo para ver alertas aquí.',
-                    )
-                  else
-                    ...limitInsights.map(
-                      (insight) => _LimitInsightTile(
-                        insight: insight,
-                        currencyStyle: preferences.currencyFormatStyle,
+                  if (visibleCategoryStats.isNotEmpty)
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      sliver: SliverList.builder(
+                        itemCount: visibleCategoryStats.length,
+                        itemBuilder: (context, index) => _CategoryBar(
+                          statistic: visibleCategoryStats[index],
+                          totalExpenses: current.expenseInCents,
+                          currencyStyle: preferences.currencyFormatStyle,
+                        ),
+                      ),
+                    ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    sliver: SliverList.list(
+                      children: [
+                        if (focusedCategory != null) ...[
+                          const SizedBox(height: 12),
+                          _CategoryFocusCard(
+                            category: focusedCategory,
+                            spent: focusedStats?.amountInCents ?? 0,
+                            currencyStyle: preferences.currencyFormatStyle,
+                          ),
+                        ],
+                        const SizedBox(height: 22),
+                        const _SectionTitle(
+                          title: 'Límites del ciclo actual',
+                          subtitle:
+                              'Alertas al acercarte o superar el límite de cada categoría.',
+                        ),
+                        const SizedBox(height: 8),
+                        if (limitInsights.isEmpty)
+                          const _EmptyPanel(
+                            message:
+                                'Asigna límites a tus categorías desde Plan de ciclo para ver alertas aquí.',
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (limitInsights.isNotEmpty)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+                      sliver: SliverList.builder(
+                        itemCount: limitInsights.length,
+                        itemBuilder: (context, index) => _LimitInsightTile(
+                          insight: limitInsights[index],
+                          currencyStyle: preferences.currencyFormatStyle,
+                        ),
                       ),
                     ),
                 ],
@@ -449,9 +507,6 @@ StatisticsPeriod _periodForCycle(
   final range = cycle.toDateRange(DateTime(reference.year, reference.month));
   return StatisticsPeriod(start: range.start, endInclusive: range.endInclusive);
 }
-
-StatisticsPeriod _periodForRange(DateRange range) =>
-    StatisticsPeriod(start: range.start, endInclusive: range.endInclusive);
 
 String _periodLabel(
   StatisticsPeriod period,

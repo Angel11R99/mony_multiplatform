@@ -191,23 +191,24 @@ class DriftBudgetRepository implements BudgetRepository {
       final period = budgetPeriodToClose(config, now);
       final startEpochDay = dateToEpochDay(period.start);
       final endEpochDay = dateToEpochDay(period.endInclusive);
-      final transactions =
-          await (_database.select(_database.transactions)..where(
-                (item) =>
-                    item.dateEpochDay.isBiggerOrEqualValue(startEpochDay) &
-                    item.dateEpochDay.isSmallerOrEqualValue(endEpochDay),
-              ))
-              .get();
-      var income = 0;
-      var expenses = 0;
-      for (final transaction in transactions) {
-        if (transaction.type == 'income') {
-          income += transaction.amountInCents;
-        }
-        if (transaction.type == 'expense') {
-          expenses += transaction.amountInCents;
-        }
-      }
+      final totals = await _database
+          .customSelect(
+            '''SELECT
+                  COALESCE(SUM(CASE WHEN type = 'income' THEN amount_in_cents ELSE 0 END), 0)
+                    AS income_in_cents,
+                  COALESCE(SUM(CASE WHEN type = 'expense' THEN amount_in_cents ELSE 0 END), 0)
+                    AS expense_in_cents
+                FROM transactions
+                WHERE date_epoch_day BETWEEN ? AND ?''',
+            variables: [
+              Variable.withInt(startEpochDay),
+              Variable.withInt(endEpochDay),
+            ],
+            readsFrom: {_database.transactions},
+          )
+          .getSingle();
+      final income = totals.read<int>('income_in_cents');
+      final expenses = totals.read<int>('expense_in_cents');
       final nextStart = nextBudgetPeriod(config, period.endInclusive).start;
       final category = await _incomeCategory(null);
       if (category == null) {

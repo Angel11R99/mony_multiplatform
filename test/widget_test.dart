@@ -1,9 +1,8 @@
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:toastification/toastification.dart';
 import 'package:mony_multiplatform/app/app.dart';
-import 'package:mony_multiplatform/core/database/app_database.dart';
 import 'package:mony_multiplatform/core/database/app_database_provider.dart';
 import 'package:mony_multiplatform/features/transactions/data/drift_transaction_repository.dart';
 import 'package:mony_multiplatform/features/transactions/domain/transaction.dart';
@@ -12,6 +11,7 @@ import 'package:mony_multiplatform/features/preferences/domain/preferences_repos
 import 'package:mony_multiplatform/features/preferences/presentation/preferences_controller.dart';
 import 'package:mony_multiplatform/features/notifications/domain/reminder_plan.dart';
 import 'package:mony_multiplatform/features/notifications/presentation/notifications_providers.dart';
+import 'support/test_database.dart';
 
 void main() {
   testWidgets('requests notification permission before saving the switch', (
@@ -20,7 +20,7 @@ void main() {
     addTearDown(() async => tester.pumpWidget(const SizedBox.shrink()));
     final repository = _FakePreferencesRepository();
     final client = _FakeReminderNotificationClient();
-    final database = AppDatabase(NativeDatabase.memory());
+    final database = createTestDatabase();
     addTearDown(database.close);
     await tester.pumpWidget(
       ProviderScope(
@@ -33,9 +33,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Más opciones'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Ajustes'));
+    await tester.tap(find.byTooltip('Ajustes'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Personalización'));
     await tester.pumpAndSettle();
@@ -49,15 +47,20 @@ void main() {
 
     expect(client.permissionRequests, 1);
     expect(repository.saved.notificationsEnabled, isTrue);
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pump(const Duration(milliseconds: 250));
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets('opens appearance settings and persists selections', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(800, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     final repository = _FakePreferencesRepository();
-    final database = AppDatabase(NativeDatabase.memory());
+    final database = createTestDatabase();
     addTearDown(database.close);
     await tester.pumpWidget(
       ProviderScope(
@@ -71,9 +74,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Tus finanzas, en un solo lugar'), findsOneWidget);
-    await tester.tap(find.byTooltip('Más opciones'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Ajustes'));
+    await tester.tap(find.byTooltip('Ajustes'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Personalización'));
     await tester.pumpAndSettle();
@@ -81,22 +82,26 @@ void main() {
     expect(find.text('Haz Mony tuya'), findsOneWidget);
     await tester.tap(find.text('Oscuro'));
     await tester.pumpAndSettle();
-    final redSwatch = find.byTooltip('Rojo').first;
-    await tester.ensureVisible(redSwatch);
+    final redSwatch = find.byTooltip('Rojo').last;
+    final redSwatchList = find
+        .ancestor(of: redSwatch, matching: find.byType(Scrollable))
+        .first;
+    await tester.scrollUntilVisible(redSwatch, 200, scrollable: redSwatchList);
     await tester.tap(redSwatch);
     await tester.pumpAndSettle();
 
     expect(repository.saved.themeMode, AppThemeMode.dark);
     expect(repository.saved.primaryColorArgb, 0xFFEF4444);
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pump(const Duration(milliseconds: 250));
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets('navigation preferences hide modules and persist', (
     tester,
   ) async {
     final repository = _FakePreferencesRepository();
-    final database = AppDatabase(NativeDatabase.memory());
+    final database = createTestDatabase();
     addTearDown(database.close);
     await tester.pumpWidget(
       ProviderScope(
@@ -109,9 +114,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Más opciones'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Ajustes'));
+    await tester.tap(find.byTooltip('Ajustes'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Navegación'));
     await tester.pumpAndSettle();
@@ -123,13 +126,19 @@ void main() {
       repository.saved.visibleNavigationModules,
       isNot(contains('statistics')),
     );
-    expect(find.byTooltip('Ajustes'), findsOneWidget);
+    expect(find.text('Navegación'), findsOneWidget);
+    expect(find.text('Estadísticas'), findsOneWidget);
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pump(const Duration(milliseconds: 250));
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets('retains the home and about example navigation', (tester) async {
-    final database = AppDatabase(NativeDatabase.memory());
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final database = createTestDatabase();
     addTearDown(database.close);
     await tester.pumpWidget(
       ProviderScope(
@@ -144,21 +153,24 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Acerca de Mony'));
+    await tester.tap(find.byTooltip('Ajustes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Acerca de Mony'));
     await tester.pumpAndSettle();
     expect(find.text('Acerca de Mony'), findsOneWidget);
 
     await tester.tap(find.text('Volver al inicio'));
     await tester.pumpAndSettle();
     expect(find.text('Tus finanzas, en un solo lugar'), findsOneWidget);
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pump(const Duration(milliseconds: 250));
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets('shows reactive monthly totals and starts a new income', (
     tester,
   ) async {
-    final database = AppDatabase(NativeDatabase.memory());
+    final database = createTestDatabase();
     addTearDown(database.close);
     final repository = DriftTransactionRepository(database);
     final now = DateTime.now();
@@ -201,7 +213,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Balance del mes'), findsOneWidget);
+    expect(find.text('Balance neto del ciclo'), findsOneWidget);
     expect(find.text('RD\$98.45'), findsOneWidget);
     expect(find.text('RD\$123.45'), findsOneWidget);
     expect(find.text('RD\$25.00'), findsOneWidget);
@@ -236,8 +248,9 @@ void main() {
       find.byType(SegmentedButton<TransactionType>),
     );
     expect(typeControl.selected, {TransactionType.income});
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pump(const Duration(milliseconds: 250));
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 1));
   });
 }
 

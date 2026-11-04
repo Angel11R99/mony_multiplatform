@@ -79,82 +79,77 @@ class FinanceWidgetSnapshot {
   }) {
     final today = DateTime(now.year, now.month, now.day);
     final period = activeBudgetPeriod(budget, today);
-    final inPeriod = transactions.where((item) => period.contains(item.date));
-    final income = inPeriod
-        .where((item) => item.type == TransactionType.income)
-        .fold<int>(0, (sum, item) => sum + item.amountInCents);
-    final expenses = inPeriod
-        .where((item) => item.type == TransactionType.expense)
-        .fold<int>(0, (sum, item) => sum + item.amountInCents);
+    final priorEnd = period.start.subtract(const Duration(days: 1));
+    final priorPeriod = activeBudgetPeriod(budget, priorEnd);
+    var income = 0;
+    var expenses = 0;
+    var previousExpenses = 0;
+    var hasPreviousPeriod = false;
+    var todayExpenses = 0;
+    final categoryAmounts = <int, int>{};
+    final recent = <FinanceTransaction>[];
+    for (final item in transactions) {
+      final isExpense = item.type == TransactionType.expense;
+      final isInPeriod = period.contains(item.date);
+      if (isInPeriod) {
+        if (isExpense) {
+          expenses += item.amountInCents;
+          categoryAmounts.update(
+            item.categoryId,
+            (amount) => amount + item.amountInCents,
+            ifAbsent: () => item.amountInCents,
+          );
+        } else {
+          income += item.amountInCents;
+        }
+      }
+      if (priorPeriod.contains(item.date)) {
+        hasPreviousPeriod = true;
+        if (isExpense) previousExpenses += item.amountInCents;
+      }
+      if (isExpense && _sameDay(item.date, today)) {
+        todayExpenses += item.amountInCents;
+      }
+      _insertRecent(recent, item);
+    }
     final balance = income - expenses;
     final budgetAmount = budget?.amountInCents;
     final daysLeft = period.endInclusive.difference(today).inDays + 1;
-    final priorEnd = period.start.subtract(const Duration(days: 1));
-    final priorPeriod = activeBudgetPeriod(budget, priorEnd);
-    final previousExpenses = transactions
-        .where(
-          (item) =>
-              item.type == TransactionType.expense &&
-              priorPeriod.contains(item.date),
-        )
-        .fold<int>(0, (sum, item) => sum + item.amountInCents);
-    final hasPreviousPeriod = transactions.any(
-      (item) => priorPeriod.contains(item.date),
-    );
-    final todayExpenses = transactions
-        .where(
-          (item) =>
-              item.type == TransactionType.expense &&
-              _sameDay(item.date, today),
-        )
-        .fold<int>(0, (sum, item) => sum + item.amountInCents);
+    final limits =
+        categories
+            .where(
+              (category) =>
+                  category.isActive &&
+                  category.type == CategoryType.expense &&
+                  (category.budgetLimitInCents ?? 0) > 0,
+            )
+            .map(
+              (category) => WidgetCategoryLimit(
+                name: category.name,
+                spentInCents: categoryAmounts[category.id] ?? 0,
+                limitInCents: category.budgetLimitInCents!,
+              ),
+            )
+            .toList()
+          ..sort((a, b) {
+            final aOver = a.spentInCents > a.limitInCents;
+            final bOver = b.spentInCents > b.limitInCents;
+            if (aOver != bOver) return aOver ? -1 : 1;
+            return b.fraction.compareTo(a.fraction);
+          });
 
-    final categoryAmounts = <int, int>{};
-    for (final item in inPeriod.where(
-      (item) => item.type == TransactionType.expense,
-    )) {
-      categoryAmounts.update(
-        item.categoryId,
-        (amount) => amount + item.amountInCents,
-        ifAbsent: () => item.amountInCents,
-      );
-    }
-    final limits = categories
-        .where(
-          (category) =>
-              category.isActive &&
-              category.type == CategoryType.expense &&
-              (category.budgetLimitInCents ?? 0) > 0,
-        )
-        .map(
-          (category) => WidgetCategoryLimit(
-            name: category.name,
-            spentInCents: categoryAmounts[category.id] ?? 0,
-            limitInCents: category.budgetLimitInCents!,
-          ),
-        )
-        .toList()
-      ..sort((a, b) {
-        final aOver = a.spentInCents > a.limitInCents;
-        final bOver = b.spentInCents > b.limitInCents;
-        if (aOver != bOver) return aOver ? -1 : 1;
-        return b.fraction.compareTo(a.fraction);
-      });
-
-    final activeObligations = obligations
-        .where((item) {
+    final activeObligations =
+        obligations.where((item) {
           final status = item.statusAt(today);
           return status != ObligationStatus.settled &&
               status != ObligationStatus.cancelled;
-        })
-        .toList()
-      ..sort((a, b) {
-        final left = a.dueDate;
-        final right = b.dueDate;
-        if (left == null) return right == null ? 0 : 1;
-        if (right == null) return -1;
-        return left.compareTo(right);
-      });
+        }).toList()..sort((a, b) {
+          final left = a.dueDate;
+          final right = b.dueDate;
+          if (left == null) return right == null ? 0 : 1;
+          if (right == null) return -1;
+          return left.compareTo(right);
+        });
     final toPay = activeObligations
         .where((item) => item.direction == ObligationDirection.payable)
         .fold<int>(0, (sum, item) => sum + item.remainingAmountInCents);
@@ -164,18 +159,9 @@ class FinanceWidgetSnapshot {
 
     final goals = savingsGoals.where((item) => item.isActive).toList()
       ..sort((a, b) => b.percent.compareTo(a.percent));
-    final activeRecurring = recurringEntries
-        .where((item) => item.isActive)
-        .toList()
-      ..sort((a, b) => b.amountInCents.compareTo(a.amountInCents));
-
-    final recent = transactions.toList()
-      ..sort((a, b) {
-        final byDate = b.date.compareTo(a.date);
-        if (byDate != 0) return byDate;
-        final byCreated = b.createdAt.compareTo(a.createdAt);
-        return byCreated != 0 ? byCreated : b.id.compareTo(a.id);
-      });
+    final activeRecurring =
+        recurringEntries.where((item) => item.isActive).toList()
+          ..sort((a, b) => b.amountInCents.compareTo(a.amountInCents));
 
     return FinanceWidgetSnapshot(
       createdAt: now,
@@ -201,9 +187,12 @@ class FinanceWidgetSnapshot {
           ? null
           : (budgetAmount - expenses) ~/ daysLeft,
       previousExpenseInCents: hasPreviousPeriod ? previousExpenses : null,
-      recentMovements: recent.take(5).map(WidgetMovement.fromTransaction).toList(),
+      recentMovements: recent.map(WidgetMovement.fromTransaction).toList(),
       categoryLimits: limits.take(5).toList(),
-      pendingItems: activeObligations.take(5).map(WidgetPendingItem.fromObligation).toList(),
+      pendingItems: activeObligations
+          .take(5)
+          .map(WidgetPendingItem.fromObligation)
+          .toList(),
       pendingToPayInCents: toPay,
       pendingToCollectInCents: toCollect,
       savingsGoals: goals.take(5).map(WidgetSavingsGoal.fromProgress).toList(),
@@ -212,7 +201,10 @@ class FinanceWidgetSnapshot {
         0,
         (sum, item) => sum + item.goal.targetAmountInCents,
       ),
-      fixedEntries: activeRecurring.take(5).map(WidgetFixedEntry.fromRecurring).toList(),
+      fixedEntries: activeRecurring
+          .take(5)
+          .map(WidgetFixedEntry.fromRecurring)
+          .toList(),
       fixedIncomeInCents: activeRecurring
           .where((item) => item.type == TransactionType.income)
           .fold<int>(0, (sum, item) => sum + item.amountInCents),
@@ -220,6 +212,27 @@ class FinanceWidgetSnapshot {
           .where((item) => item.type == TransactionType.expense)
           .fold<int>(0, (sum, item) => sum + item.amountInCents),
     );
+  }
+
+  static void _insertRecent(
+    List<FinanceTransaction> recent,
+    FinanceTransaction transaction,
+  ) {
+    var index = 0;
+    while (index < recent.length &&
+        _compareRecent(recent[index], transaction) <= 0) {
+      index++;
+    }
+    if (index >= 5) return;
+    recent.insert(index, transaction);
+    if (recent.length > 5) recent.removeLast();
+  }
+
+  static int _compareRecent(FinanceTransaction a, FinanceTransaction b) {
+    final byDate = b.date.compareTo(a.date);
+    if (byDate != 0) return byDate;
+    final byCreated = b.createdAt.compareTo(a.createdAt);
+    return byCreated != 0 ? byCreated : b.id.compareTo(a.id);
   }
 
   Map<String, Object?> toJson() => {
@@ -321,13 +334,14 @@ class WidgetPendingItem {
   final bool isPayable;
   final DateTime? dueDate;
 
-  factory WidgetPendingItem.fromObligation(Obligation item) => WidgetPendingItem(
-    title: item.title,
-    counterparty: item.counterparty,
-    amountInCents: item.remainingAmountInCents,
-    isPayable: item.direction == ObligationDirection.payable,
-    dueDate: item.dueDate,
-  );
+  factory WidgetPendingItem.fromObligation(Obligation item) =>
+      WidgetPendingItem(
+        title: item.title,
+        counterparty: item.counterparty,
+        amountInCents: item.remainingAmountInCents,
+        isPayable: item.direction == ObligationDirection.payable,
+        dueDate: item.dueDate,
+      );
 
   Map<String, Object?> toJson() => {
     'title': title,

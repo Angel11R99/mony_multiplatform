@@ -8,8 +8,9 @@ import 'package:mony_multiplatform/features/preferences/domain/app_preferences.d
 import 'package:mony_multiplatform/features/preferences/domain/preferences_repository.dart';
 import 'package:mony_multiplatform/features/preferences/presentation/preferences_controller.dart';
 import 'package:mony_multiplatform/features/statistics/presentation/statistics_page.dart';
-import 'package:mony_multiplatform/features/transactions/domain/transaction.dart';
-import 'package:mony_multiplatform/features/transactions/presentation/transactions_providers.dart';
+import 'package:mony_multiplatform/features/statistics/domain/financial_statistics.dart';
+import 'package:mony_multiplatform/features/statistics/domain/statistics_aggregate_snapshot.dart';
+import 'package:mony_multiplatform/features/statistics/presentation/statistics_aggregate_providers.dart';
 
 class _MemoryPreferencesRepository implements PreferencesRepository {
   @override
@@ -43,34 +44,46 @@ void main() {
       isActive: true,
       createdAt: now,
     );
-    FinanceTransaction transaction(
-      int amount,
-      TransactionType type,
-      int category,
-    ) => FinanceTransaction(
-      amountInCents: amount,
-      type: type,
-      categoryId: category,
-      paymentMethodId: 1,
-      description: 'Movimiento de prueba',
-      date: now,
-      createdAt: now,
-      updatedAt: now,
-    );
-
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          transactionsProvider.overrideWith(
-            (ref) => Stream.value([
-              transaction(100000, TransactionType.income, salary.id),
-              transaction(8000, TransactionType.expense, food.id),
-            ]),
-          ),
           categoriesProvider.overrideWith(
             (ref) => Stream.value([food, salary]),
           ),
           budgetConfigProvider.overrideWith((ref) => Stream.value(null)),
+          budgetHistoryProvider.overrideWith((ref) => Stream.value(const [])),
+          statisticsPeriodsProvider.overrideWith((ref, _) {
+            final current = FinancialStatistics(
+              incomeInCents: 100000,
+              expenseInCents: 8000,
+              transactionCount: 2,
+              averageExpenseInCents: 8000,
+              expenseByCategory: [
+                CategoryStatistics(category: food, amountInCents: 8000),
+              ],
+            );
+            return Stream.value(
+              StatisticsAggregateSnapshot(
+                statistics: current,
+                previous: null,
+                limitInsights: [
+                  BudgetLimitInsight(
+                    category: food,
+                    limitInCents: 10000,
+                    spentInCents: 8000,
+                  ),
+                ],
+                evolution: [
+                  for (var index = 0; index < 6; index++)
+                    MonthlyStatistics(
+                      month: DateTime(now.year, now.month - 5 + index),
+                      incomeInCents: 100000,
+                      expenseInCents: 8000,
+                    ),
+                ],
+              ),
+            );
+          }),
           preferencesRepositoryProvider.overrideWithValue(
             _MemoryPreferencesRepository(),
           ),
@@ -78,8 +91,7 @@ void main() {
         child: const MaterialApp(home: StatisticsPage()),
       ),
     );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pumpAndSettle();
     expect(find.text('Estadísticas'), findsOneWidget);
     expect(find.text('BALANCE DEL PERÍODO'), findsOneWidget);
     expect(find.text('INGRESOS Y GASTOS'), findsOneWidget);
@@ -88,7 +100,7 @@ void main() {
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.textContaining('EVOLUCIÓN'), findsOneWidget);
 
     await tester.scrollUntilVisible(
@@ -96,7 +108,7 @@ void main() {
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.text('80%'), findsOneWidget);
     expect(find.text('Cerca del límite'), findsOneWidget);
   });

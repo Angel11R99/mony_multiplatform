@@ -4,13 +4,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 
+import '../../../core/database/app_database_provider.dart';
+import '../../budgets/domain/budget.dart';
 import '../../budgets/presentation/budgets_providers.dart';
 import '../../categories/presentation/categories_providers.dart';
 import '../../obligations/presentation/obligations_providers.dart';
 import '../../preferences/presentation/preferences_controller.dart';
 import '../../recurring/presentation/recurring_providers.dart';
 import '../../savings/presentation/savings_providers.dart';
-import '../../transactions/presentation/transactions_providers.dart';
+import '../../transactions/domain/transaction.dart';
+import '../data/drift_widget_transaction_repository.dart';
 import '../domain/finance_widget_snapshot.dart';
 
 const widgetAppGroupId = 'group.com.example.monyMultiplatform.widgets';
@@ -100,10 +103,53 @@ enum FinanceWidgetKind {
       'com.example.mony_multiplatform.widgets.$androidReceiver';
 }
 
+typedef _WidgetTransactionRequest = ({
+  DateTime currentStart,
+  DateTime currentEnd,
+  DateTime previousStart,
+  DateTime previousEnd,
+});
+
+final _widgetTransactionRepositoryProvider =
+    Provider<DriftWidgetTransactionRepository>(
+      (ref) => DriftWidgetTransactionRepository(ref.watch(appDatabaseProvider)),
+    );
+
+final _widgetTransactionsProvider = StreamProvider.autoDispose
+    .family<List<FinanceTransaction>, _WidgetTransactionRequest>(
+      (ref, request) => ref
+          .watch(_widgetTransactionRepositoryProvider)
+          .watchRelevant(
+            currentStart: request.currentStart,
+            currentEnd: request.currentEnd,
+            previousStart: request.previousStart,
+            previousEnd: request.previousEnd,
+          ),
+    );
+
 final financeWidgetSnapshotProvider =
     Provider<AsyncValue<FinanceWidgetSnapshot>>((ref) {
-      final transactions = ref.watch(transactionsProvider);
       final budget = ref.watch(budgetConfigProvider);
+      if (budget.hasError) {
+        final error = budget.asError!;
+        return AsyncError<FinanceWidgetSnapshot>(error.error, error.stackTrace);
+      }
+      if (!budget.hasValue) {
+        return const AsyncLoading<FinanceWidgetSnapshot>();
+      }
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final currentPeriod = activeBudgetPeriod(budget.requireValue, today);
+      final priorEnd = currentPeriod.start.subtract(const Duration(days: 1));
+      final previousPeriod = activeBudgetPeriod(budget.requireValue, priorEnd);
+      final transactions = ref.watch(
+        _widgetTransactionsProvider((
+          currentStart: currentPeriod.start,
+          currentEnd: currentPeriod.endInclusive,
+          previousStart: previousPeriod.start,
+          previousEnd: previousPeriod.endInclusive,
+        )),
+      );
       final categories = ref.watch(categoriesProvider);
       final obligations = ref.watch(obligationsProvider);
       final goals = ref.watch(savingsGoalsProvider);
@@ -112,7 +158,6 @@ final financeWidgetSnapshotProvider =
 
       final errors = [
         transactions.asError,
-        budget.asError,
         categories.asError,
         obligations.asError,
         goals.asError,
@@ -125,14 +170,13 @@ final financeWidgetSnapshotProvider =
       }
 
       final transactionItems = transactions.asData?.value;
-      final budgetConfig = budget.asData?.value;
+      final budgetConfig = budget.requireValue;
       final categoryItems = categories.asData?.value;
       final obligationItems = obligations.asData?.value;
       final goalItems = goals.asData?.value;
       final recurringItems = recurring.asData?.value;
       final preferenceItems = preferences.asData?.value;
       if (transactionItems == null ||
-          budget.asData == null ||
           categoryItems == null ||
           obligationItems == null ||
           goalItems == null ||
@@ -143,7 +187,7 @@ final financeWidgetSnapshotProvider =
 
       return AsyncData(
         FinanceWidgetSnapshot.fromData(
-          now: DateTime.now(),
+          now: now,
           transactions: transactionItems,
           budget: budgetConfig,
           categories: categoryItems,
@@ -160,9 +204,10 @@ class FinanceWidgetPublisher {
 
   Future<void> publish(FinanceWidgetSnapshot snapshot) async {
     if (kIsWeb ||
-        !const {TargetPlatform.android, TargetPlatform.iOS}.contains(
-          defaultTargetPlatform,
-        )) {
+        !const {
+          TargetPlatform.android,
+          TargetPlatform.iOS,
+        }.contains(defaultTargetPlatform)) {
       return;
     }
     await (_setup ??= _configurePlatform());
