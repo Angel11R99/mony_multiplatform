@@ -320,15 +320,13 @@ class _SavingsGoalsPageState extends ConsumerState<SavingsGoalsPage> {
           ),
         ),
         data: (items) {
-          final active = items.where((item) => item.isActive).toList();
-          final completed = items.where((item) => !item.isActive).toList();
-          final visible = (_showCompleted ? completed : active)
-              .where(
-                (item) => item.goal.name.toLowerCase().contains(
-                  _search.text.trim().toLowerCase(),
-                ),
-              )
-              .toList(growable: false);
+          final query = _search.text.trim().toLowerCase();
+          final visible = <SavingsGoalProgress>[];
+          for (final item in items) {
+            if (item.isActive != !_showCompleted) continue;
+            if (!item.goal.name.toLowerCase().contains(query)) continue;
+            visible.add(item);
+          }
           return Column(
             children: [
               Padding(

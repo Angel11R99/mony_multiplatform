@@ -138,30 +138,54 @@ class FinanceWidgetSnapshot {
             return b.fraction.compareTo(a.fraction);
           });
 
-    final activeObligations =
-        obligations.where((item) {
-          final status = item.statusAt(today);
-          return status != ObligationStatus.settled &&
-              status != ObligationStatus.cancelled;
-        }).toList()..sort((a, b) {
-          final left = a.dueDate;
-          final right = b.dueDate;
-          if (left == null) return right == null ? 0 : 1;
-          if (right == null) return -1;
-          return left.compareTo(right);
-        });
-    final toPay = activeObligations
-        .where((item) => item.direction == ObligationDirection.payable)
-        .fold<int>(0, (sum, item) => sum + item.remainingAmountInCents);
-    final toCollect = activeObligations
-        .where((item) => item.direction == ObligationDirection.receivable)
-        .fold<int>(0, (sum, item) => sum + item.remainingAmountInCents);
+    final activeObligations = <Obligation>[];
+    var toPay = 0;
+    var toCollect = 0;
+    for (final item in obligations) {
+      final status = item.statusAt(today);
+      if (status == ObligationStatus.settled ||
+          status == ObligationStatus.cancelled) {
+        continue;
+      }
+      activeObligations.add(item);
+      if (item.direction == ObligationDirection.payable) {
+        toPay += item.remainingAmountInCents;
+      } else {
+        toCollect += item.remainingAmountInCents;
+      }
+    }
+    activeObligations.sort((a, b) {
+      final left = a.dueDate;
+      final right = b.dueDate;
+      if (left == null) return right == null ? 0 : 1;
+      if (right == null) return -1;
+      return left.compareTo(right);
+    });
 
-    final goals = savingsGoals.where((item) => item.isActive).toList()
-      ..sort((a, b) => b.percent.compareTo(a.percent));
-    final activeRecurring =
-        recurringEntries.where((item) => item.isActive).toList()
-          ..sort((a, b) => b.amountInCents.compareTo(a.amountInCents));
+    final goals = <SavingsGoalProgress>[];
+    var savedInCents = 0;
+    var savingsTargetInCents = 0;
+    for (final item in savingsGoals) {
+      if (!item.isActive) continue;
+      goals.add(item);
+      savedInCents += item.savedInCents;
+      savingsTargetInCents += item.goal.targetAmountInCents;
+    }
+    goals.sort((a, b) => b.percent.compareTo(a.percent));
+
+    final activeRecurring = <RecurringEntry>[];
+    var fixedIncomeInCents = 0;
+    var fixedExpenseInCents = 0;
+    for (final item in recurringEntries) {
+      if (!item.isActive) continue;
+      activeRecurring.add(item);
+      if (item.type == TransactionType.income) {
+        fixedIncomeInCents += item.amountInCents;
+      } else {
+        fixedExpenseInCents += item.amountInCents;
+      }
+    }
+    activeRecurring.sort((a, b) => b.amountInCents.compareTo(a.amountInCents));
 
     return FinanceWidgetSnapshot(
       createdAt: now,
@@ -196,21 +220,14 @@ class FinanceWidgetSnapshot {
       pendingToPayInCents: toPay,
       pendingToCollectInCents: toCollect,
       savingsGoals: goals.take(5).map(WidgetSavingsGoal.fromProgress).toList(),
-      savedInCents: goals.fold(0, (sum, item) => sum + item.savedInCents),
-      savingsTargetInCents: goals.fold(
-        0,
-        (sum, item) => sum + item.goal.targetAmountInCents,
-      ),
+      savedInCents: savedInCents,
+      savingsTargetInCents: savingsTargetInCents,
       fixedEntries: activeRecurring
           .take(5)
           .map(WidgetFixedEntry.fromRecurring)
           .toList(),
-      fixedIncomeInCents: activeRecurring
-          .where((item) => item.type == TransactionType.income)
-          .fold<int>(0, (sum, item) => sum + item.amountInCents),
-      fixedExpenseInCents: activeRecurring
-          .where((item) => item.type == TransactionType.expense)
-          .fold<int>(0, (sum, item) => sum + item.amountInCents),
+      fixedIncomeInCents: fixedIncomeInCents,
+      fixedExpenseInCents: fixedExpenseInCents,
     );
   }
 
