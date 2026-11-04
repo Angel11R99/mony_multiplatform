@@ -148,25 +148,64 @@ class CyberSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = CyberpunkTokens.maybeOf(context) ?? CyberpunkTokens.defaults;
-    final surface = CustomPaint(
-      painter: CyberSurfacePainter(tokens: tokens, variant: variant),
-      child: Padding(padding: padding, child: child),
+    final surface = ClipPath(
+      clipper: const CyberPanelClipper(),
+      child: CustomPaint(
+        painter: CyberSurfacePainter(tokens: tokens, variant: variant),
+        child: onTap == null
+            ? Padding(padding: padding, child: child)
+            : Material(
+                type: MaterialType.transparency,
+                child: InkWell(
+                  customBorder: const HudPanelBorder(side: BorderSide.none),
+                  onTap: onTap,
+                  child: Padding(padding: padding, child: child),
+                ),
+              ),
+      ),
     );
     return Semantics(
       label: semanticLabel,
       container: semanticLabel != null,
-      child: Padding(
-        padding: margin,
-        child: onTap == null
-            ? surface
-            : InkWell(
-                customBorder: const HudPanelBorder(),
-                onTap: onTap,
-                child: surface,
-              ),
-      ),
+      child: Padding(padding: margin, child: surface),
     );
   }
+}
+
+/// The one chamfered contour shared by panel fills, clipping, borders and
+/// their integrated corner accents.
+abstract final class CyberPanelGeometry {
+  static const chamfer = 14.0;
+
+  static Path path(Rect rect, {double inset = 0}) {
+    final left = rect.left + inset;
+    final top = rect.top + inset;
+    final right = rect.right - inset;
+    final bottom = rect.bottom - inset;
+    if (right <= left || bottom <= top) return Path();
+    final bounds = Rect.fromLTRB(left, top, right, bottom);
+    final cut = math.min(chamfer, math.min(bounds.width, bounds.height) * .18);
+    return Path()
+      ..moveTo(bounds.left + cut, bounds.top)
+      ..lineTo(bounds.right - cut, bounds.top)
+      ..lineTo(bounds.right, bounds.top + cut)
+      ..lineTo(bounds.right, bounds.bottom - cut)
+      ..lineTo(bounds.right - cut, bounds.bottom)
+      ..lineTo(bounds.left + cut, bounds.bottom)
+      ..lineTo(bounds.left, bounds.bottom - cut)
+      ..lineTo(bounds.left, bounds.top + cut)
+      ..close();
+  }
+}
+
+class CyberPanelClipper extends CustomClipper<Path> {
+  const CyberPanelClipper();
+
+  @override
+  Path getClip(Size size) => CyberPanelGeometry.path(Offset.zero & size);
+
+  @override
+  bool shouldReclip(covariant CyberPanelClipper oldClipper) => false;
 }
 
 class CyberSurfacePainter extends CustomPainter {
@@ -179,7 +218,11 @@ class CyberSurfacePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.isEmpty) return;
     final rect = Offset.zero & size;
-    final path = _hudPath(rect.deflate(1));
+    final silhouette = CyberPanelGeometry.path(rect);
+    final path = CyberPanelGeometry.path(rect, inset: .6);
+    if (silhouette.computeMetrics().isEmpty) return;
+    canvas.save();
+    canvas.clipPath(silhouette);
     final base = switch (variant) {
       CyberSurfaceVariant.hud => tokens.panel,
       CyberSurfaceVariant.neonFrame => tokens.deepNight,
@@ -188,56 +231,95 @@ class CyberSurfacePainter extends CustomPainter {
       CyberSurfaceVariant.signal => tokens.panel,
       CyberSurfaceVariant.openGrid => tokens.deepNight,
     };
-    canvas.drawPath(path, Paint()..color = base);
+    canvas.drawPath(silhouette, Paint()..color = base);
 
     switch (variant) {
       case CyberSurfaceVariant.hud:
-        final glowPath = _hudPath(rect.deflate(4));
-        canvas.drawPath(
-          glowPath,
-          Paint()
-            ..color = tokens.cyan.withValues(alpha: .17)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.2
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+        _stroke(path, tokens.cyan.withValues(alpha: .78), 1, canvas);
+        _drawCornerAccents(
+          path,
+          rect.deflate(.6),
+          tokens.cyan,
+          tokens.magenta,
+          1.6,
+          canvas,
         );
-        _stroke(path, tokens.cyan.withValues(alpha: .9), 1.15, canvas);
-        _cornerBrackets(canvas, rect.deflate(5), tokens.cyan, 17, 2);
       case CyberSurfaceVariant.neonFrame:
-        _stroke(path, tokens.steel.withValues(alpha: .48), .8, canvas);
-        _cornerBrackets(canvas, rect.deflate(4), tokens.cyan, 13, 1.5);
-        _stroke(
-          _bottomSignal(rect, 0.72),
-          tokens.magenta.withValues(alpha: .85),
-          1.4,
+        _stroke(path, tokens.steel.withValues(alpha: .55), .9, canvas);
+        _drawCornerAccents(
+          path,
+          rect.deflate(.6),
+          tokens.cyan,
+          tokens.magenta,
+          1.2,
           canvas,
         );
       case CyberSurfaceVariant.glass:
-        _stroke(path, tokens.steel.withValues(alpha: .55), .8, canvas);
-        _stroke(
-          _topSignal(rect, .42),
-          tokens.cyan.withValues(alpha: .72),
-          1.1,
+        _stroke(path, tokens.steel.withValues(alpha: .58), .9, canvas);
+        _drawCornerAccents(
+          path,
+          rect.deflate(.6),
+          tokens.cyan,
+          tokens.magenta,
+          1,
           canvas,
         );
       case CyberSurfaceVariant.dataBlock:
-        _stroke(path, tokens.steel.withValues(alpha: .42), .7, canvas);
-        final leftRail = Path()
-          ..moveTo(rect.left + 5, rect.top + 12)
-          ..lineTo(rect.left + 5, rect.bottom - 12);
-        _stroke(leftRail, tokens.blue.withValues(alpha: .9), 1.7, canvas);
-        canvas.drawRect(
-          Rect.fromLTWH(rect.left + 4, rect.top + 12, 3, 3),
-          Paint()..color = tokens.cyan,
+        _stroke(path, tokens.steel.withValues(alpha: .5), .9, canvas);
+        _drawCornerAccents(
+          path,
+          rect.deflate(.6),
+          tokens.blue,
+          tokens.magenta,
+          1,
+          canvas,
         );
+        final inset = math.min(7.0, rect.width * .06);
+        final railTop = math.min(12.0, rect.height * .24);
+        final railBottom = math.max(railTop, rect.height - railTop);
+        if (railBottom - railTop > 3) {
+          final rail = Path()
+            ..moveTo(rect.left + inset, rect.top + railTop)
+            ..lineTo(rect.left + inset, rect.top + railBottom);
+          _stroke(rail, tokens.blue.withValues(alpha: .85), 1.2, canvas);
+          canvas.drawCircle(
+            Offset(rect.left + inset, rect.top + railTop),
+            1.5,
+            Paint()..color = tokens.cyan,
+          );
+        }
       case CyberSurfaceVariant.signal:
-        _stroke(path, tokens.steel.withValues(alpha: .52), .8, canvas);
-        _stroke(_bottomSignal(rect, .68), tokens.cyan, 1.6, canvas);
-        _stroke(_topSignal(rect, .26), tokens.magenta, .9, canvas);
+        _stroke(path, tokens.steel.withValues(alpha: .55), .9, canvas);
+        _drawCornerAccents(
+          path,
+          rect.deflate(.6),
+          tokens.cyan,
+          tokens.magenta,
+          1.35,
+          canvas,
+        );
+        final guideY = rect.top + rect.height * .16;
+        final guideStart = rect.left + math.min(14.0, rect.width * .12);
+        final guideEnd = rect.right - math.min(14.0, rect.width * .12);
+        if (guideEnd > guideStart) {
+          final guide = Path()
+            ..moveTo(guideStart, guideY)
+            ..lineTo(guideEnd, guideY);
+          _stroke(guide, tokens.cyan.withValues(alpha: .24), .8, canvas);
+        }
       case CyberSurfaceVariant.openGrid:
-        _drawGrid(canvas, rect);
-        _cornerBrackets(canvas, rect.deflate(2), tokens.blue, 10, 1.2);
+        _drawGrid(canvas, rect.deflate(2));
+        _stroke(path, tokens.steel.withValues(alpha: .36), .8, canvas);
+        _drawCornerAccents(
+          path,
+          rect.deflate(.6),
+          tokens.blue,
+          tokens.magenta,
+          1,
+          canvas,
+        );
     }
+    canvas.restore();
   }
 
   void _drawGrid(Canvas canvas, Rect rect) {
@@ -261,52 +343,44 @@ class CyberSurfacePainter extends CustomPainter {
     }
   }
 
-  void _cornerBrackets(
-    Canvas canvas,
-    Rect rect,
-    Color color,
-    double length,
+  void _drawCornerAccents(
+    Path contour,
+    Rect bounds,
+    Color primary,
+    Color secondary,
     double width,
+    Canvas canvas,
   ) {
-    final paths = [
-      Path()
-        ..moveTo(rect.left + length, rect.top)
-        ..lineTo(rect.left + 4, rect.top)
-        ..lineTo(rect.left, rect.top + 4)
-        ..lineTo(rect.left, rect.top + length),
-      Path()
-        ..moveTo(rect.right - length, rect.top)
-        ..lineTo(rect.right - 4, rect.top)
-        ..lineTo(rect.right, rect.top + 4)
-        ..lineTo(rect.right, rect.top + length),
-      Path()
-        ..moveTo(rect.left, rect.bottom - length)
-        ..lineTo(rect.left, rect.bottom - 4)
-        ..lineTo(rect.left + 4, rect.bottom)
-        ..lineTo(rect.left + length, rect.bottom),
-      Path()
-        ..moveTo(rect.right - length, rect.bottom)
-        ..lineTo(rect.right - 4, rect.bottom)
-        ..lineTo(rect.right, rect.bottom - 4)
-        ..lineTo(rect.right, rect.bottom - length),
+    final metrics = contour.computeMetrics().toList(growable: false);
+    if (metrics.isEmpty) return;
+    final metric = metrics.first;
+    final cut = math.min(
+      CyberPanelGeometry.chamfer,
+      math.min(bounds.width, bounds.height) * .18,
+    );
+    final bevelLength = cut * math.sqrt2;
+    final topEdge = math.max(0.0, bounds.width - cut * 2);
+    final rightEdge = math.max(0.0, bounds.height - cut * 2);
+    final cornerStarts = <double>[
+      topEdge,
+      topEdge + bevelLength + rightEdge,
+      topEdge * 2 + bevelLength * 2 + rightEdge,
+      topEdge * 2 + bevelLength * 3 + rightEdge * 2,
     ];
-    for (var index = 0; index < paths.length; index++) {
+    final accentLength = bevelLength * .72;
+    for (var index = 0; index < cornerStarts.length; index++) {
+      final center = cornerStarts[index] + bevelLength / 2;
+      final start = (center - accentLength / 2).clamp(0.0, metric.length);
+      final end = (center + accentLength / 2).clamp(0.0, metric.length);
+      if (end <= start) continue;
       _stroke(
-        paths[index],
-        index.isOdd ? tokens.magenta.withValues(alpha: .82) : color,
+        metric.extractPath(start, end),
+        index.isEven ? primary : secondary,
         width,
         canvas,
       );
     }
   }
-
-  Path _topSignal(Rect rect, double fraction) => Path()
-    ..moveTo(rect.left + 12, rect.top + 2)
-    ..lineTo(rect.left + math.max(14, rect.width * fraction), rect.top + 2);
-
-  Path _bottomSignal(Rect rect, double fraction) => Path()
-    ..moveTo(rect.left + 12, rect.bottom - 2)
-    ..lineTo(rect.left + math.max(14, rect.width * fraction), rect.bottom - 2);
 
   void _stroke(Path path, Color color, double width, Canvas canvas) {
     canvas.drawPath(
@@ -325,40 +399,28 @@ class CyberSurfacePainter extends CustomPainter {
       tokens != oldDelegate.tokens || variant != oldDelegate.variant;
 }
 
-Path _hudPath(Rect rect) {
-  final cut = math.min(14.0, math.min(rect.width, rect.height) * .18);
-  return Path()
-    ..moveTo(rect.left + cut, rect.top)
-    ..lineTo(rect.right - cut, rect.top)
-    ..lineTo(rect.right, rect.top + cut)
-    ..lineTo(rect.right, rect.bottom - cut)
-    ..lineTo(rect.right - cut, rect.bottom)
-    ..lineTo(rect.left + cut, rect.bottom)
-    ..lineTo(rect.left, rect.bottom - cut)
-    ..lineTo(rect.left, rect.top + cut)
-    ..close();
-}
-
 class HudPanelBorder extends OutlinedBorder {
   const HudPanelBorder({
     super.side = const BorderSide(color: Color(0xFF00E5FF), width: 1),
   });
 
-  Path _path(Rect rect) => _hudPath(rect.deflate(side.width / 2));
+  Path _path(Rect rect) => CyberPanelGeometry.path(rect, inset: side.width / 2);
 
   @override
   OutlinedBorder copyWith({BorderSide? side}) =>
       HudPanelBorder(side: side ?? this.side);
 
   @override
-  Path getOuterPath(Rect rect, {TextDirection? textDirection}) => _path(rect);
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) =>
+      CyberPanelGeometry.path(rect);
 
   @override
   Path getInnerPath(Rect rect, {TextDirection? textDirection}) =>
-      _hudPath(rect.deflate(side.width));
+      CyberPanelGeometry.path(rect, inset: side.width);
 
   @override
   void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
+    if (side.style == BorderStyle.none || side.width <= 0) return;
     canvas.drawPath(
       _path(rect),
       Paint()
