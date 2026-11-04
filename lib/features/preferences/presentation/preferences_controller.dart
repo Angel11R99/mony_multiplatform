@@ -26,6 +26,9 @@ class AppPreferencesController extends AsyncNotifier<AppPreferences> {
   Future<void> setThemeMode(AppThemeMode value) =>
       _update((current) => current.copyWith(themeMode: value));
 
+  Future<void> setVisualTheme(AppVisualTheme value) =>
+      _update((current) => current.copyWith(visualTheme: value));
+
   Future<void> setPrimaryColor(int argb) =>
       _update((current) => current.copyWith(primaryColorArgb: argb));
 

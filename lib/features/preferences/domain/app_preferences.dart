@@ -1,5 +1,7 @@
 enum AppThemeMode { system, light, dark }
 
+enum AppVisualTheme { mony, japaneseSumie }
+
 enum CurrencyFormatStyle { symbol, code }
 
 const defaultNavigationModuleIds = <String>[
@@ -16,6 +18,7 @@ const defaultNavigationModuleIds = <String>[
 class AppPreferences {
   const AppPreferences({
     this.themeMode = AppThemeMode.system,
+    this.visualTheme = AppVisualTheme.mony,
     this.primaryColorArgb = 0xFFC8A8F4,
     this.accentColorArgb = 0xFFB794E8,
     this.currencyCode = 'DOP',
@@ -27,6 +30,7 @@ class AppPreferences {
   static const defaults = AppPreferences();
 
   final AppThemeMode themeMode;
+  final AppVisualTheme visualTheme;
   final int primaryColorArgb;
   final int accentColorArgb;
   final String currencyCode;
@@ -36,6 +40,7 @@ class AppPreferences {
 
   AppPreferences copyWith({
     AppThemeMode? themeMode,
+    AppVisualTheme? visualTheme,
     int? primaryColorArgb,
     int? accentColorArgb,
     String? currencyCode,
@@ -44,6 +49,7 @@ class AppPreferences {
     List<String>? visibleNavigationModules,
   }) => AppPreferences(
     themeMode: themeMode ?? this.themeMode,
+    visualTheme: visualTheme ?? this.visualTheme,
     primaryColorArgb: primaryColorArgb ?? this.primaryColorArgb,
     accentColorArgb: accentColorArgb ?? this.accentColorArgb,
     currencyCode: currencyCode ?? this.currencyCode,
@@ -58,6 +64,7 @@ class AppPreferences {
       identical(this, other) ||
       other is AppPreferences &&
           themeMode == other.themeMode &&
+          visualTheme == other.visualTheme &&
           primaryColorArgb == other.primaryColorArgb &&
           accentColorArgb == other.accentColorArgb &&
           currencyCode == other.currencyCode &&
@@ -68,6 +75,7 @@ class AppPreferences {
   @override
   int get hashCode => Object.hash(
     themeMode,
+    visualTheme,
     primaryColorArgb,
     accentColorArgb,
     currencyCode,

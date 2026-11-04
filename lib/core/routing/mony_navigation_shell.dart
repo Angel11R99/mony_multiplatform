@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nav_bar/nav_bar.dart';
 
+import '../../features/preferences/domain/app_preferences.dart';
 import '../../features/preferences/presentation/preferences_controller.dart';
+import '../theme/brush_border.dart';
 import '../theme/mony_tokens.dart';
 
 class MonyNavigationShell extends ConsumerWidget {
@@ -39,6 +41,29 @@ class MonyNavigationShell extends ConsumerWidget {
     final wide = MediaQuery.sizeOf(context).width >= MonyBreakpoints.expanded;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final japanese = preferences?.visualTheme == AppVisualTheme.japaneseSumie;
+    final sumieNavTheme = FuturisticTheme(
+      name: 'Japanese Sumi-e',
+      glowGradient: LinearGradient(
+        colors: [scheme.secondary.withValues(alpha: .15), Colors.transparent],
+      ),
+      accentColor: scheme.secondary,
+      baseColor: scheme.surfaceContainerLow,
+      particleColor: scheme.outline,
+      backgroundColor: scheme.surfaceContainerLow,
+      customColors: {
+        'paperColor': scheme.surfaceContainerLow,
+        'inkColor': scheme.primary,
+        'sealColor': scheme.secondary,
+        'impactColor': scheme.secondary,
+      },
+      effectToggles: const {
+        'showPaperTexture': true,
+        'showInkSplatter': false,
+        'showSeal': true,
+        'showImpact': false,
+      },
+    );
 
     if (wide) {
       return Scaffold(
@@ -70,17 +95,44 @@ class MonyNavigationShell extends ConsumerWidget {
       body: navigationShell,
       bottomNavigationBar: SafeArea(
         top: false,
-        child: Transform.translate(
-          offset: const Offset(0, 10),
-          child: FuturisticNavBar(
-            selectedIndex: selectedVisibleIndex,
-            onItemSelected: (index) => _selectBranch(visibleIndices[index]),
-            items: items,
-            style: NavBarStyle.synapse,
-            theme: FuturisticTheme.cyberpunk(),
-            iconAnimationType: IconAnimationType.slide,
-            showGlow: true,
-          ),
+        child: Stack(
+          children: [
+            if (japanese)
+              Positioned(
+                top: 10,
+                left: 20,
+                right: 20,
+                height: 80,
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: ShapeDecoration(
+                      color: scheme.surfaceContainerLow,
+                      shape: BrushBorder(
+                        radius: MonyRadius.large,
+                        variation: .19,
+                        side: BorderSide(
+                          color: scheme.outlineVariant,
+                          width: 1.25,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            Transform.translate(
+              offset: const Offset(0, 10),
+              child: FuturisticNavBar(
+                selectedIndex: selectedVisibleIndex,
+                onItemSelected: (index) => _selectBranch(visibleIndices[index]),
+                items: items,
+                style: japanese ? NavBarStyle.sumi : NavBarStyle.synapse,
+                theme: japanese ? sumieNavTheme : FuturisticTheme.cyberpunk(),
+                iconAnimationType: IconAnimationType.slide,
+                showGlow: !japanese,
+                showLiquid: !japanese,
+              ),
+            ),
+          ],
         ),
       ),
     );

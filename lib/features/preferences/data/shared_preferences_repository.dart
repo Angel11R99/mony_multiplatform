@@ -25,6 +25,9 @@ class SharedPreferencesRepository implements PreferencesRepository {
       if (decoded is! Map<String, dynamic>) return AppPreferences.defaults;
 
       return AppPreferences(
+        visualTheme:
+            _enumValue(AppVisualTheme.values, decoded['visualTheme']) ??
+            AppPreferences.defaults.visualTheme,
         themeMode:
             _enumValue(AppThemeMode.values, decoded['themeMode']) ??
             AppPreferences.defaults.themeMode,
@@ -63,6 +66,7 @@ class SharedPreferencesRepository implements PreferencesRepository {
     final saved = await storage.setString(
       _storageKey,
       jsonEncode({
+        'visualTheme': preferences.visualTheme.name,
         'themeMode': preferences.themeMode.name,
         'primaryColorArgb': preferences.primaryColorArgb,
         'accentColorArgb': preferences.accentColorArgb,

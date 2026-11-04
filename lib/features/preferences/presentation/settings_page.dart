@@ -345,6 +345,10 @@ class _SettingsPageState extends ConsumerState<PersonalizationSettingsPage> {
           onThemeChanged: (mode) => _save(
             () => ref.read(appPreferencesProvider.notifier).setThemeMode(mode),
           ),
+          onVisualThemeChanged: (theme) => _save(
+            () =>
+                ref.read(appPreferencesProvider.notifier).setVisualTheme(theme),
+          ),
           onPrimaryColorChanged: (color) => _save(
             () => ref
                 .read(appPreferencesProvider.notifier)
@@ -372,6 +376,7 @@ class _SettingsContent extends StatelessWidget {
     required this.preferences,
     required this.colorOptions,
     required this.onThemeChanged,
+    required this.onVisualThemeChanged,
     required this.onPrimaryColorChanged,
     required this.onAccentColorChanged,
     required this.onCurrencyFormatChanged,
@@ -382,6 +387,7 @@ class _SettingsContent extends StatelessWidget {
   final AppPreferences preferences;
   final List<_ColorOption> colorOptions;
   final ValueChanged<AppThemeMode> onThemeChanged;
+  final ValueChanged<AppVisualTheme> onVisualThemeChanged;
   final ValueChanged<int> onPrimaryColorChanged;
   final ValueChanged<int> onAccentColorChanged;
   final ValueChanged<CurrencyFormatStyle> onCurrencyFormatChanged;
@@ -457,6 +463,41 @@ class _SettingsContent extends StatelessWidget {
                   selected: {preferences.themeMode},
                   onSelectionChanged: (selection) =>
                       onThemeChanged(selection.first),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Estilo visual',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final options = <Widget>[
+                  _VisualThemeChoice(
+                    theme: AppVisualTheme.mony,
+                    selected: preferences.visualTheme == AppVisualTheme.mony,
+                    onSelected: () => onVisualThemeChanged(AppVisualTheme.mony),
+                  ),
+                  _VisualThemeChoice(
+                    theme: AppVisualTheme.japaneseSumie,
+                    selected:
+                        preferences.visualTheme == AppVisualTheme.japaneseSumie,
+                    onSelected: () =>
+                        onVisualThemeChanged(AppVisualTheme.japaneseSumie),
+                  ),
+                ];
+                if (constraints.maxWidth < 380) {
+                  return Wrap(spacing: 8, runSpacing: 4, children: options);
+                }
+                return Row(
+                  children: [
+                    for (var i = 0; i < options.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 8),
+                      Expanded(child: options[i]),
+                    ],
+                  ],
                 );
               },
             ),
@@ -586,6 +627,31 @@ class _SettingsContent extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _VisualThemeChoice extends StatelessWidget {
+  const _VisualThemeChoice({
+    required this.theme,
+    required this.selected,
+    required this.onSelected,
+  });
+  final AppVisualTheme theme;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = theme == AppVisualTheme.mony ? 'Mony' : 'Japanese Sumi-e';
+    final icon = theme == AppVisualTheme.mony
+        ? Icons.auto_awesome_outlined
+        : Icons.brush_outlined;
+    return ChoiceChip(
+      avatar: Icon(icon, size: 18),
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onSelected(),
     );
   }
 }
