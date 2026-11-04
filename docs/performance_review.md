@@ -69,7 +69,7 @@ Fecha: 2026-11-04
 - Se revisaron capturas de Historial y Compras en el emulador: aparecen los filtros, el resumen vacío y la navegación en Historial, y el estado vacío de bienvenida en Compras; no hubo errores SQLite ni Flutter en logcat.
 - `flutter build windows --profile`: no disponible en este equipo porque falta habilitar Developer Mode para symlinks; Flutter Doctor también informa componentes faltantes de Desktop C++.
 - `flutter build apk --release`: Gradle llegó a la etapa de empaquetado, pero el proyecto requiere firma de release mediante `MONY_RELEASE_*` o `android/key.properties`, ausente en este entorno. El build de perfil sí compila.
-- La captura ADB del emulador tras la última instalación resultó negra, pese a que Android conserva la actividad Flutter activa y expone el árbol semántico completo. Por ello la prueba automatizada confirma la escala del 75% y la selección, pero esta captura no permite confirmar visualmente la posición del sello en ese emulador.
+- Las capturas ADB del emulador siguen saliendo negras aun cuando la actividad está en primer plano y expone el árbol semántico Flutter. Se reprodujo tanto con Impeller como con una ejecución de perfil `--no-enable-impeller` (Skia); `FLAG_SECURE` aparece desactivado. Android Computer Use tampoco expone una ventana del emulador para capturarla desde el escritorio. Por ello la prueba automatizada confirma la escala del 75% y la selección, pero no hay evidencia visual concluyente del navbar en este emulador.
 - iOS/macOS no se pudieron compilar desde el host Windows; requieren un host macOS y Xcode.
 - No hay dispositivo físico conectado; las métricas Android provienen únicamente del emulador Android disponible en este host.
 

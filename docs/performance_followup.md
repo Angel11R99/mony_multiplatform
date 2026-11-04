@@ -4,7 +4,7 @@ Este archivo conserva trabajo que requiere otra sesión o un entorno distinto. L
 
 ## Siguiente sesión
 
-- [ ] Repetir una captura visual del navbar Sumi-e en emulador/dispositivo y confirmar que el sello bermellón queda fuera del icono Historial. La captura ADB del emulador actual salió negra, aunque la actividad y el árbol semántico Flutter estaban activos.
+- [ ] Repetir una captura visual del navbar Sumi-e en otro emulador o dispositivo y confirmar que el sello bermellón queda fuera del icono Historial. En el emulador actual ADB produce una superficie negra tanto con Impeller como con Skia, aunque la actividad está en primer plano, el árbol semántico Flutter está completo y `FLAG_SECURE` está desactivado; el emulador tampoco expone una ventana al control de escritorio.
 - [x] Ejecutar `flutter test` completo después del último test de navegación y del cambio de fuentes locales. Resultado: 202 pruebas pasaron.
 - [ ] Perfilar con datos poblados en Android el historial, Presupuesto y Estadísticas; registrar latencia y cuadros en desplazamiento, no solo estado vacío.
 - [ ] Medir memoria pico y duración de exportar/restaurar una copia cifrada próxima al límite de tamaño configurado (47 MiB).
