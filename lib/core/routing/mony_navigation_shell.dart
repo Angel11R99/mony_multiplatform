@@ -88,7 +88,13 @@ class MonyNavigationShell extends ConsumerWidget {
     }
 
     final items = <NavBarItem>[
-      for (final index in visibleIndices) NavBarItem(icon: _iconData[index]),
+      for (final index in visibleIndices)
+        NavBarItem(
+          icon: _iconData[index],
+          customIcon: japanese
+              ? Icon(_iconData[index], color: scheme.onSurface)
+              : null,
+        ),
     ];
 
     return Scaffold(
@@ -110,10 +116,7 @@ class MonyNavigationShell extends ConsumerWidget {
                       shape: BrushBorder(
                         radius: MonyRadius.large,
                         variation: .19,
-                        side: BorderSide(
-                          color: scheme.outlineVariant,
-                          width: 1.25,
-                        ),
+                        side: BorderSide(color: scheme.outline, width: 1.25),
                       ),
                     ),
                   ),
