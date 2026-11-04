@@ -698,8 +698,8 @@ class _VisualThemeChoice extends StatelessWidget {
       AppVisualTheme.mony => ('Mony', Icons.auto_awesome_outlined),
       AppVisualTheme.japaneseSumie => ('Japanese Sumi-e', Icons.brush_outlined),
       AppVisualTheme.coquetteBloom => (
-        'Coquette Bloom',
-        Icons.local_florist_outlined,
+        'Coquette Atelier',
+        Icons.card_giftcard_outlined,
       ),
     };
     return ChoiceChip(

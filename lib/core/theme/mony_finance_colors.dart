@@ -29,13 +29,14 @@ class MonyFinanceColors extends ThemeExtension<MonyFinanceColors> {
     final dark = brightness == Brightness.dark;
     if (coquette) {
       const bloom = CoquetteThemeColors.defaults;
+      const atelierDark = CoquetteSurfaceTokens.dark;
       return MonyFinanceColors(
-        income: dark ? const Color(0xFF9DC6AE) : bloom.income,
-        onIncome: dark ? const Color(0xFF1B2A22) : Colors.white,
-        expense: dark ? const Color(0xFFE99AAF) : const Color(0xFF9B3E57),
-        onExpense: dark ? const Color(0xFF351B25) : Colors.white,
-        warning: dark ? const Color(0xFFE3C893) : const Color(0xFF80613C),
-        onWarning: dark ? const Color(0xFF342916) : Colors.white,
+        income: dark ? atelierDark.incomeAccent : bloom.income,
+        onIncome: dark ? atelierDark.page : Colors.white,
+        expense: dark ? atelierDark.expenseAccent : const Color(0xFF9B3E57),
+        onExpense: dark ? atelierDark.page : Colors.white,
+        warning: dark ? atelierDark.warningAccent : const Color(0xFF80613C),
+        onWarning: dark ? atelierDark.page : Colors.white,
       );
     }
     if (japanese) {

@@ -51,6 +51,7 @@ class EmptyState extends StatelessWidget {
                           colors: coquette,
                           variant: CoquetteSurfaceVariant.editorial,
                           dark: Theme.of(context).brightness == Brightness.dark,
+                          surfaceTokens: CoquetteSurfaceTokens.maybeOf(context),
                         ),
                         child: Center(
                           child: Icon(icon, size: 34, color: colors.primary),

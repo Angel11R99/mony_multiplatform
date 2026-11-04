@@ -31,11 +31,13 @@ abstract final class MonyTheme {
     final dark = brightness == Brightness.dark;
     const sumie = SumiThemeColors.defaults;
     const bloom = CoquetteThemeColors.defaults;
+    const atelierDark = CoquetteSurfaceTokens.dark;
+    final atelier = CoquetteSurfaceTokens.forBrightness(brightness);
     final brandColor =
         coquette &&
             preferences.primaryColorArgb ==
                 AppPreferences.defaults.primaryColorArgb
-        ? bloom.berry
+        ? (dark ? atelierDark.primaryAccent : bloom.berry)
         : japanese &&
               preferences.primaryColorArgb ==
                   AppPreferences.defaults.primaryColorArgb
@@ -45,7 +47,7 @@ abstract final class MonyTheme {
         coquette &&
             preferences.accentColorArgb ==
                 AppPreferences.defaults.accentColorArgb
-        ? bloom.champagne
+        ? (dark ? atelierDark.secondaryAccent : bloom.champagne)
         : japanese &&
               preferences.accentColorArgb ==
                   AppPreferences.defaults.accentColorArgb
@@ -157,6 +159,7 @@ abstract final class MonyTheme {
         ),
         if (japanese) sumie,
         if (coquette) bloom,
+        if (coquette) atelier,
       ],
       appBarStyle: FlexAppBarStyle.surface,
       appBarElevation: 0,
@@ -306,8 +309,11 @@ abstract final class MonyTheme {
       dialogTheme: baseTheme.dialogTheme.copyWith(
         backgroundColor: colorScheme.surfaceContainerLow,
         shape: coquette
-            ? CoquettePetalBorder(
-                side: BorderSide(color: colorScheme.outline, width: 1.1),
+            ? RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(
+                  color: dark ? atelier.mutedBorder : bloom.champagne,
+                ),
               )
             : japanese
             ? SumiOpenFrameBorder(
@@ -322,8 +328,8 @@ abstract final class MonyTheme {
       bottomSheetTheme: baseTheme.bottomSheetTheme.copyWith(
         backgroundColor: colorScheme.surfaceContainerLow,
         shape: coquette
-            ? CoquettePetalBorder(
-                side: BorderSide(color: colorScheme.outline, width: 1.1),
+            ? const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               )
             : japanese
             ? SumiOpenFrameBorder(
@@ -344,8 +350,11 @@ abstract final class MonyTheme {
       cardTheme: baseTheme.cardTheme.copyWith(
         color: colorScheme.surfaceContainerLow,
         shape: coquette
-            ? CoquettePetalBorder(
-                side: BorderSide(color: colorScheme.outlineVariant, width: 1),
+            ? RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(22),
+                side: BorderSide(
+                  color: dark ? atelier.mutedBorder : bloom.champagne,
+                ),
               )
             : japanese
             ? SumiOpenFrameBorder(
@@ -377,7 +386,13 @@ abstract final class MonyTheme {
                 side: WidgetStatePropertyAll(
                   BorderSide(color: colorScheme.outline, width: 1),
                 ),
-                foregroundColor: WidgetStatePropertyAll(colorScheme.primary),
+                foregroundColor: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.disabled)
+                      ? (dark
+                            ? atelier.disabledText
+                            : colorScheme.onSurfaceVariant)
+                      : colorScheme.primary,
+                ),
               ),
             )
           : baseTheme.outlinedButtonTheme,
@@ -404,11 +419,34 @@ abstract final class MonyTheme {
           : coquette
           ? FilledButtonThemeData(
               style: ButtonStyle(
-                backgroundColor: WidgetStatePropertyAll(colorScheme.primary),
-                foregroundColor: WidgetStatePropertyAll(colorScheme.onPrimary),
+                backgroundColor: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.disabled)
+                      ? (dark
+                            ? atelier.disabledSurface
+                            : colorScheme.surfaceContainer)
+                      : colorScheme.primary,
+                ),
+                foregroundColor: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.disabled)
+                      ? (dark
+                            ? atelier.disabledText
+                            : colorScheme.onSurfaceVariant)
+                      : colorScheme.onPrimary,
+                ),
+                side: WidgetStateProperty.resolveWith(
+                  (states) => BorderSide(
+                    color: states.contains(WidgetState.disabled)
+                        ? atelier.mutedBorder
+                        : (dark ? atelier.primaryAccent : bloom.champagne),
+                    width: states.contains(WidgetState.disabled) ? .9 : 1.2,
+                  ),
+                ),
                 shape: WidgetStatePropertyAll(
                   CoquettePetalBorder(
-                    side: BorderSide(color: bloom.champagne, width: 1.2),
+                    side: BorderSide(
+                      color: dark ? atelier.primaryAccent : bloom.champagne,
+                      width: 1.2,
+                    ),
                   ),
                 ),
               ),
@@ -428,14 +466,27 @@ abstract final class MonyTheme {
           : coquette
           ? ElevatedButtonThemeData(
               style: ButtonStyle(
-                backgroundColor: WidgetStatePropertyAll(
-                  colorScheme.surfaceContainer,
+                backgroundColor: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.disabled)
+                      ? (dark
+                            ? atelier.disabledSurface
+                            : colorScheme.surfaceContainer)
+                      : colorScheme.surfaceContainer,
                 ),
-                foregroundColor: WidgetStatePropertyAll(colorScheme.onSurface),
+                foregroundColor: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.disabled)
+                      ? (dark
+                            ? atelier.disabledText
+                            : colorScheme.onSurfaceVariant)
+                      : colorScheme.onSurface,
+                ),
                 elevation: const WidgetStatePropertyAll(0),
                 shape: WidgetStatePropertyAll(
                   CoquettePetalBorder(
-                    side: BorderSide(color: colorScheme.outline, width: 1),
+                    side: BorderSide(
+                      color: dark ? atelier.mutedBorder : colorScheme.outline,
+                      width: 1,
+                    ),
                   ),
                 ),
               ),
@@ -446,7 +497,10 @@ abstract final class MonyTheme {
               backgroundColor: colorScheme.primary,
               foregroundColor: colorScheme.onPrimary,
               shape: CoquettePetalBorder(
-                side: BorderSide(color: bloom.champagne, width: 1.3),
+                side: BorderSide(
+                  color: dark ? atelier.primaryAccent : bloom.champagne,
+                  width: 1.3,
+                ),
               ),
             )
           : japanese
@@ -463,23 +517,35 @@ abstract final class MonyTheme {
           ? baseTheme.chipTheme.copyWith(
               color: WidgetStateProperty.resolveWith((states) {
                 if (states.contains(WidgetState.disabled)) {
-                  return colorScheme.surfaceContainer;
+                  return dark
+                      ? atelier.disabledSurface
+                      : colorScheme.surfaceContainer;
                 }
                 if (states.contains(WidgetState.selected)) {
-                  return colorScheme.primaryContainer;
+                  return dark
+                      ? atelier.selectedSurface
+                      : colorScheme.primaryContainer;
                 }
-                return colorScheme.surfaceContainerLow;
+                return dark
+                    ? atelier.subtleSurface
+                    : colorScheme.surfaceContainerLow;
               }),
               backgroundColor: colorScheme.surfaceContainerLow,
               selectedColor: colorScheme.primaryContainer,
               showCheckmark: true,
               checkmarkColor: colorScheme.onPrimaryContainer,
-              side: BorderSide(color: colorScheme.outlineVariant, width: .9),
+              side: BorderSide(color: atelier.mutedBorder, width: .9),
               shape: CoquettePetalBorder(
                 side: BorderSide(color: colorScheme.outline, width: .9),
               ),
               labelStyle: baseTheme.textTheme.labelLarge?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+                color: dark
+                    ? atelier.secondaryText
+                    : colorScheme.onSurfaceVariant,
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: MonySpace.x3,
+                vertical: MonySpace.x1,
               ),
               secondaryLabelStyle: baseTheme.textTheme.labelLarge?.copyWith(
                 color: colorScheme.onPrimaryContainer,
@@ -520,20 +586,28 @@ abstract final class MonyTheme {
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith(
                   (states) => states.contains(WidgetState.selected)
-                      ? colorScheme.primaryContainer
-                      : Colors.transparent,
+                      ? (dark
+                            ? atelier.selectedSurface
+                            : colorScheme.primaryContainer)
+                      : (dark ? atelier.subtleSurface : Colors.transparent),
                 ),
                 foregroundColor: WidgetStateProperty.resolveWith(
                   (states) => states.contains(WidgetState.selected)
-                      ? colorScheme.onPrimaryContainer
-                      : colorScheme.onSurfaceVariant,
+                      ? (dark
+                            ? atelier.primaryText
+                            : colorScheme.onPrimaryContainer)
+                      : (dark
+                            ? atelier.secondaryText
+                            : colorScheme.onSurfaceVariant),
                 ),
                 shape: WidgetStateProperty.resolveWith(
                   (states) => CoquettePetalBorder(
                     side: BorderSide(
                       color: states.contains(WidgetState.selected)
                           ? colorScheme.primary
-                          : colorScheme.outlineVariant,
+                          : (dark
+                                ? atelier.mutedBorder
+                                : colorScheme.outlineVariant),
                       width: states.contains(WidgetState.selected) ? 1.4 : .8,
                     ),
                   ),
@@ -645,42 +719,46 @@ abstract final class MonyTheme {
     required bool dark,
   }) {
     const bloom = CoquetteThemeColors.defaults;
-    final surface = dark ? const Color(0xFF211B22) : bloom.ivory;
-    final onSurface = dark ? bloom.cream : bloom.cocoa;
-    final lowSurface = dark ? const Color(0xFF302631) : bloom.cream;
+    const darkTokens = CoquetteSurfaceTokens.dark;
+    final surfaceTokens = CoquetteSurfaceTokens.forBrightness(
+      dark ? Brightness.dark : Brightness.light,
+    );
+    final surface = surfaceTokens.page;
+    final onSurface = surfaceTokens.primaryText;
+    final lowSurface = dark ? darkTokens.primarySurface : bloom.cream;
     final mediumSurface = dark
-        ? const Color(0xFF3B303D)
+        ? darkTokens.elevatedSurface
         : const Color(0xFFF9EAF0);
     final highSurface = dark
-        ? const Color(0xFF493A4A)
+        ? darkTokens.selectedSurface
         : const Color(0xFFF5DCE4);
     return seed.copyWith(
       primary: brandColor,
       onPrimary: _contrastingForeground(brandColor),
       secondary: accentColor,
       onSecondary: _contrastingForeground(accentColor),
-      tertiary: dark ? bloom.lavender : bloom.mauve,
-      onTertiary: dark ? bloom.cocoa : Colors.white,
-      error: dark ? const Color(0xFFF0A0B0) : const Color(0xFF9B3E57),
-      onError: dark ? const Color(0xFF351B25) : Colors.white,
-      primaryContainer: dark ? const Color(0xFF633B53) : bloom.blush,
-      onPrimaryContainer: dark ? bloom.cream : bloom.berry,
+      tertiary: dark ? darkTokens.secondaryAccent : bloom.mauve,
+      onTertiary: dark ? darkTokens.page : Colors.white,
+      error: dark ? darkTokens.expenseAccent : const Color(0xFF9B3E57),
+      onError: dark ? darkTokens.page : Colors.white,
+      primaryContainer: dark ? darkTokens.selectedSurface : bloom.blush,
+      onPrimaryContainer: dark ? darkTokens.primaryText : bloom.berry,
       secondaryContainer: dark
-          ? const Color(0xFF473A50)
+          ? darkTokens.elevatedSurface
           : const Color(0xFFEAE2F5),
-      onSecondaryContainer: dark ? bloom.cream : bloom.cocoa,
+      onSecondaryContainer: dark ? darkTokens.primaryText : bloom.cocoa,
       surface: surface,
       onSurface: onSurface,
-      surfaceContainerLowest: dark ? const Color(0xFF19141B) : Colors.white,
+      surfaceContainerLowest: dark ? darkTokens.subtleSurface : Colors.white,
       surfaceContainerLow: lowSurface,
       surfaceContainer: mediumSurface,
       surfaceContainerHigh: highSurface,
-      surfaceContainerHighest: dark ? const Color(0xFF59475A) : bloom.blush,
-      surfaceDim: dark ? const Color(0xFF19141B) : const Color(0xFFF3E8E6),
-      surfaceBright: dark ? const Color(0xFF493A4A) : Colors.white,
-      onSurfaceVariant: dark ? const Color(0xFFE2CEDB) : bloom.mauve,
-      outline: dark ? const Color(0xFFB99AAA) : bloom.dustyRose,
-      outlineVariant: dark ? const Color(0xFF5A4859) : const Color(0xFFE8D4DB),
+      surfaceContainerHighest: dark ? darkTokens.selectedSurface : bloom.blush,
+      surfaceDim: dark ? darkTokens.page : const Color(0xFFF3E8E6),
+      surfaceBright: dark ? darkTokens.elevatedSurface : Colors.white,
+      onSurfaceVariant: dark ? darkTokens.secondaryText : bloom.mauve,
+      outline: dark ? darkTokens.primaryAccent : bloom.dustyRose,
+      outlineVariant: dark ? darkTokens.mutedBorder : const Color(0xFFE8D4DB),
       shadow: dark ? Colors.black : bloom.cocoa.withValues(alpha: .12),
       scrim: Colors.black.withValues(alpha: .54),
     );

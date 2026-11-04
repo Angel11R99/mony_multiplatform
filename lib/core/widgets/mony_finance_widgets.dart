@@ -94,6 +94,7 @@ class BalanceCard extends StatelessWidget {
       semanticLabel: '$label. $amount. $supportingText',
       padding: EdgeInsets.zero,
       sumiVariant: SumiSurfaceVariant.inkBlock,
+      coquetteVariant: CoquetteSurfaceVariant.petal,
       child: japanese || coquette
           ? content
           : DecoratedBox(
@@ -140,6 +141,11 @@ class StatTile extends StatelessWidget {
         AmountEmphasis.neutral => SumiSurfaceVariant.openFrame,
         AmountEmphasis.income => SumiSurfaceVariant.minimalJade,
         AmountEmphasis.expense => SumiSurfaceVariant.minimalVermilion,
+      },
+      coquetteVariant: switch (emphasis) {
+        AmountEmphasis.neutral => CoquetteSurfaceVariant.scalloped,
+        AmountEmphasis.income => CoquetteSurfaceVariant.incomePearl,
+        AmountEmphasis.expense => CoquetteSurfaceVariant.expensePearl,
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

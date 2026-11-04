@@ -25,21 +25,9 @@ class MonyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (CoquetteThemeColors.maybeOf(context) != null) {
-      final variant =
-          coquetteVariant ??
-          switch (sumiVariant) {
-            SumiSurfaceVariant.inkBlock => CoquetteSurfaceVariant.petal,
-            SumiSurfaceVariant.inkWash => CoquetteSurfaceVariant.ribbon,
-            SumiSurfaceVariant.openFrame => CoquetteSurfaceVariant.pearl,
-            SumiSurfaceVariant.minimalJade =>
-              CoquetteSurfaceVariant.incomePearl,
-            SumiSurfaceVariant.minimalVermilion =>
-              CoquetteSurfaceVariant.expensePearl,
-            SumiSurfaceVariant.minimalInk => CoquetteSurfaceVariant.scalloped,
-          };
       return CoquetteSurface(
         semanticLabel: semanticLabel,
-        variant: variant,
+        variant: coquetteVariant ?? CoquetteSurfaceVariant.pearl,
         padding: padding,
         onTap: onTap,
         child: child,

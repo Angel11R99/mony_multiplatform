@@ -414,6 +414,7 @@ class _ObligationsEmpty extends StatelessWidget {
                 colors: bloom,
                 variant: CoquetteSurfaceVariant.editorial,
                 dark: Theme.of(context).brightness == Brightness.dark,
+                surfaceTokens: CoquetteSurfaceTokens.maybeOf(context),
               ),
               child: Center(
                 child: Icon(

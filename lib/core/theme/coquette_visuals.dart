@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'mony_tokens.dart';
 
-/// Semantic colors and details reserved for the Coquette Bloom identity.
+/// Semantic colors reserved for the Coquette Atelier identity.
 @immutable
 class CoquetteThemeColors extends ThemeExtension<CoquetteThemeColors> {
   const CoquetteThemeColors({
@@ -105,6 +105,146 @@ class CoquetteThemeColors extends ThemeExtension<CoquetteThemeColors> {
   }
 }
 
+/// Semantic surface and contrast tokens for the Coquette Atelier variants.
+@immutable
+class CoquetteSurfaceTokens extends ThemeExtension<CoquetteSurfaceTokens> {
+  const CoquetteSurfaceTokens({
+    required this.page,
+    required this.primarySurface,
+    required this.elevatedSurface,
+    required this.subtleSurface,
+    required this.selectedSurface,
+    required this.primaryAccent,
+    required this.secondaryAccent,
+    required this.primaryText,
+    required this.secondaryText,
+    required this.mutedBorder,
+    required this.disabledSurface,
+    required this.disabledText,
+    required this.incomeAccent,
+    required this.expenseAccent,
+    required this.warningAccent,
+  });
+
+  final Color page;
+  final Color primarySurface;
+  final Color elevatedSurface;
+  final Color subtleSurface;
+  final Color selectedSurface;
+  final Color primaryAccent;
+  final Color secondaryAccent;
+  final Color primaryText;
+  final Color secondaryText;
+  final Color mutedBorder;
+  final Color disabledSurface;
+  final Color disabledText;
+  final Color incomeAccent;
+  final Color expenseAccent;
+  final Color warningAccent;
+
+  static const light = CoquetteSurfaceTokens(
+    page: Color(0xFFFFF9F5),
+    primarySurface: Color(0xFFFFF3ED),
+    elevatedSurface: Color(0xFFFFFCFA),
+    subtleSurface: Color(0xFFF9EEF2),
+    selectedSurface: Color(0xFFF2B8C6),
+    primaryAccent: Color(0xFFA74770),
+    secondaryAccent: Color(0xFF8F7188),
+    primaryText: Color(0xFF493542),
+    secondaryText: Color(0xFF765E72),
+    mutedBorder: Color(0xFFE8D4DB),
+    disabledSurface: Color(0xFFEBE3E5),
+    disabledText: Color(0xFF847A80),
+    incomeAccent: Color(0xFF557A68),
+    expenseAccent: Color(0xFFA74770),
+    warningAccent: Color(0xFF80613C),
+  );
+
+  static const dark = CoquetteSurfaceTokens(
+    page: Color(0xFF1C1720),
+    primarySurface: Color(0xFF302531),
+    elevatedSurface: Color(0xFF3B2D3C),
+    subtleSurface: Color(0xFF28212D),
+    selectedSurface: Color(0xFF57374C),
+    primaryAccent: Color(0xFFD987AA),
+    secondaryAccent: Color(0xFFBCA4D1),
+    primaryText: Color(0xFFF9EDF3),
+    secondaryText: Color(0xFFCEBBCB),
+    mutedBorder: Color(0xFF806C83),
+    disabledSurface: Color(0xFF302A35),
+    disabledText: Color(0xFFA899A9),
+    incomeAccent: Color(0xFF8FC7A4),
+    expenseAccent: Color(0xFFD987AA),
+    warningAccent: Color(0xFFE4C78F),
+  );
+
+  static CoquetteSurfaceTokens forBrightness(Brightness brightness) =>
+      brightness == Brightness.dark ? dark : light;
+
+  static CoquetteSurfaceTokens? maybeOf(BuildContext context) =>
+      Theme.of(context).extension<CoquetteSurfaceTokens>();
+
+  @override
+  CoquetteSurfaceTokens copyWith({
+    Color? page,
+    Color? primarySurface,
+    Color? elevatedSurface,
+    Color? subtleSurface,
+    Color? selectedSurface,
+    Color? primaryAccent,
+    Color? secondaryAccent,
+    Color? primaryText,
+    Color? secondaryText,
+    Color? mutedBorder,
+    Color? disabledSurface,
+    Color? disabledText,
+    Color? incomeAccent,
+    Color? expenseAccent,
+    Color? warningAccent,
+  }) => CoquetteSurfaceTokens(
+    page: page ?? this.page,
+    primarySurface: primarySurface ?? this.primarySurface,
+    elevatedSurface: elevatedSurface ?? this.elevatedSurface,
+    subtleSurface: subtleSurface ?? this.subtleSurface,
+    selectedSurface: selectedSurface ?? this.selectedSurface,
+    primaryAccent: primaryAccent ?? this.primaryAccent,
+    secondaryAccent: secondaryAccent ?? this.secondaryAccent,
+    primaryText: primaryText ?? this.primaryText,
+    secondaryText: secondaryText ?? this.secondaryText,
+    mutedBorder: mutedBorder ?? this.mutedBorder,
+    disabledSurface: disabledSurface ?? this.disabledSurface,
+    disabledText: disabledText ?? this.disabledText,
+    incomeAccent: incomeAccent ?? this.incomeAccent,
+    expenseAccent: expenseAccent ?? this.expenseAccent,
+    warningAccent: warningAccent ?? this.warningAccent,
+  );
+
+  @override
+  CoquetteSurfaceTokens lerp(
+    ThemeExtension<CoquetteSurfaceTokens>? other,
+    double t,
+  ) {
+    if (other is! CoquetteSurfaceTokens) return this;
+    return CoquetteSurfaceTokens(
+      page: Color.lerp(page, other.page, t)!,
+      primarySurface: Color.lerp(primarySurface, other.primarySurface, t)!,
+      elevatedSurface: Color.lerp(elevatedSurface, other.elevatedSurface, t)!,
+      subtleSurface: Color.lerp(subtleSurface, other.subtleSurface, t)!,
+      selectedSurface: Color.lerp(selectedSurface, other.selectedSurface, t)!,
+      primaryAccent: Color.lerp(primaryAccent, other.primaryAccent, t)!,
+      secondaryAccent: Color.lerp(secondaryAccent, other.secondaryAccent, t)!,
+      primaryText: Color.lerp(primaryText, other.primaryText, t)!,
+      secondaryText: Color.lerp(secondaryText, other.secondaryText, t)!,
+      mutedBorder: Color.lerp(mutedBorder, other.mutedBorder, t)!,
+      disabledSurface: Color.lerp(disabledSurface, other.disabledSurface, t)!,
+      disabledText: Color.lerp(disabledText, other.disabledText, t)!,
+      incomeAccent: Color.lerp(incomeAccent, other.incomeAccent, t)!,
+      expenseAccent: Color.lerp(expenseAccent, other.expenseAccent, t)!,
+      warningAccent: Color.lerp(warningAccent, other.warningAccent, t)!,
+    );
+  }
+}
+
 enum CoquetteSurfaceVariant {
   petal,
   scalloped,
@@ -116,7 +256,7 @@ enum CoquetteSurfaceVariant {
   editorial,
 }
 
-/// Purposeful surface vocabulary used by Coquette Bloom screens.
+/// Purposeful surface vocabulary used by Coquette Atelier screens.
 class CoquetteSurface extends StatelessWidget {
   const CoquetteSurface({
     required this.child,
@@ -149,6 +289,7 @@ class CoquetteSurface extends StatelessWidget {
         colors: colors,
         variant: variant,
         dark: Theme.of(context).brightness == Brightness.dark,
+        surfaceTokens: CoquetteSurfaceTokens.maybeOf(context),
       ),
       child: Padding(padding: padding, child: child),
     );
@@ -174,215 +315,144 @@ class CoquetteSurfacePainter extends CustomPainter {
     required this.colors,
     required this.variant,
     required this.dark,
+    this.surfaceTokens,
   });
 
   final CoquetteThemeColors colors;
   final CoquetteSurfaceVariant variant;
   final bool dark;
+  final CoquetteSurfaceTokens? surfaceTokens;
 
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    final base = dark ? const Color(0xFF302631) : colors.ivory;
-    final path = _petalPath(rect);
+    final tokens =
+        surfaceTokens ??
+        CoquetteSurfaceTokens.forBrightness(
+          dark ? Brightness.dark : Brightness.light,
+        );
+    final path = _coquettePetalPath(rect);
     switch (variant) {
       case CoquetteSurfaceVariant.petal:
         canvas.drawPath(
           path,
-          Paint()..color = dark ? const Color(0xFF493542) : colors.cream,
+          Paint()
+            ..shader = LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: dark
+                  ? [
+                      tokens.primarySurface,
+                      tokens.primarySurface,
+                      tokens.primarySurface,
+                    ]
+                  : [colors.blush, colors.cream, colors.ivory],
+              stops: const [0, .58, 1],
+            ).createShader(rect),
         );
-        _stroke(path, colors.dustyRose.withValues(alpha: .64), 1.15, canvas);
-        _flowerCorner(
+        _stroke(
+          path,
+          dark ? tokens.primaryAccent : colors.dustyRose,
+          1.25,
           canvas,
-          Offset(rect.right - 23, rect.top + 22),
-          colors.rose,
         );
       case CoquetteSurfaceVariant.scalloped:
+        final scallopedPath = _coquetteScallopPath(rect);
         canvas.drawPath(
-          path,
-          Paint()..color = dark ? const Color(0xFF302631) : colors.ivory,
+          scallopedPath,
+          Paint()..color = dark ? tokens.elevatedSurface : colors.ivory,
         );
-        _scallopedFrame(canvas, rect, colors.dustyRose.withValues(alpha: .76));
-        _pearl(
+        _stroke(
+          scallopedPath,
+          dark ? tokens.mutedBorder : colors.dustyRose,
+          1.05,
           canvas,
-          Offset(rect.right - 14, rect.top + 14),
-          colors.champagne,
         );
       case CoquetteSurfaceVariant.ribbon:
         canvas.drawPath(
           path,
-          Paint()..color = dark ? const Color(0xFF342B36) : colors.cream,
+          Paint()..color = dark ? tokens.primarySurface : colors.cream,
         );
-        _ribbon(canvas, rect);
-        _stroke(
-          Path()
-            ..moveTo(rect.left + 18, rect.top + 1)
-            ..lineTo(rect.right - 23, rect.top + 1),
-          colors.champagne.withValues(alpha: .8),
-          .8,
-          canvas,
-        );
+        _ribbon(canvas, rect, tokens);
       case CoquetteSurfaceVariant.pearl:
       case CoquetteSurfaceVariant.incomePearl:
       case CoquetteSurfaceVariant.expensePearl:
-        final fill = dark ? base : colors.ivory;
+        final fill = switch (variant) {
+          CoquetteSurfaceVariant.incomePearl ||
+          CoquetteSurfaceVariant.expensePearl =>
+            dark ? tokens.elevatedSurface : colors.ivory,
+          _ => dark ? tokens.subtleSurface : colors.ivory,
+        };
         canvas.drawPath(path, Paint()..color = fill);
         final outline = variant == CoquetteSurfaceVariant.incomePearl
-            ? colors.income
+            ? (dark ? tokens.incomeAccent : colors.income)
             : variant == CoquetteSurfaceVariant.expensePearl
-            ? colors.expense
-            : colors.mauve.withValues(alpha: .65);
-        _stroke(path, outline.withValues(alpha: .62), 1.0, canvas);
-        _pearl(canvas, Offset(rect.left + 15, rect.top + 13), colors.champagne);
-        _pearl(canvas, Offset(rect.right - 15, rect.bottom - 13), colors.blush);
-        if (variant != CoquetteSurfaceVariant.pearl) {
-          final accent = Path()
-            ..moveTo(rect.left + 2, rect.top + 18)
-            ..cubicTo(
-              rect.left - 1,
-              rect.center.dy,
-              rect.left + 3,
-              rect.bottom - 18,
-              rect.left + 1,
-              rect.bottom - 7,
-            );
-          _stroke(accent, outline, 2.4, canvas);
-        }
+            ? (dark ? tokens.expenseAccent : colors.expense)
+            : (dark ? tokens.mutedBorder : colors.mauve);
+        _stroke(path, outline, 1.0, canvas);
       case CoquetteSurfaceVariant.floating:
         canvas.drawPath(
           path,
-          Paint()
-            ..color = dark ? const Color(0xFF392F3B) : colors.cream
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+          Paint()..color = dark ? tokens.elevatedSurface : colors.cream,
         );
-        canvas.drawPath(
-          path,
-          Paint()
-            ..color = dark ? const Color(0xFF463849) : const Color(0xFFFDF5FA),
-        );
-        _pearl(canvas, Offset(rect.right - 18, rect.top + 16), colors.ivory);
+        _stroke(path, dark ? tokens.mutedBorder : colors.rose, .9, canvas);
       case CoquetteSurfaceVariant.editorial:
-        _ribbon(canvas, rect, subtle: true);
-        final flourish = Path()
-          ..moveTo(rect.left + 8, rect.bottom - 3)
-          ..cubicTo(
-            rect.left + rect.width * .28,
-            rect.bottom - 1,
-            rect.left + rect.width * .48,
-            rect.bottom - 5,
-            rect.left + rect.width * .68,
-            rect.bottom - 2,
-          );
-        _stroke(flourish, colors.dustyRose.withValues(alpha: .65), 1.5, canvas);
-        _flowerCorner(
-          canvas,
-          Offset(rect.right - 17, rect.top + 17),
-          colors.lavender,
-        );
+        if (dark) {
+          canvas.drawPath(path, Paint()..color = tokens.subtleSurface);
+          _stroke(path, tokens.mutedBorder, .9, canvas);
+        }
+        _ribbon(canvas, rect, tokens, subtle: true);
     }
   }
 
-  Path _petalPath(Rect r) => Path()
-    ..moveTo(r.left + 15, r.top + 1)
-    ..cubicTo(r.left + 5, r.top - 1, r.left, r.top + 8, r.left + 1, r.top + 20)
-    ..lineTo(r.left + 1, r.bottom - 18)
-    ..cubicTo(
-      r.left - 1,
-      r.bottom - 5,
-      r.left + 9,
-      r.bottom + 1,
-      r.left + 22,
-      r.bottom - 1,
-    )
-    ..lineTo(r.right - 23, r.bottom - 1)
-    ..cubicTo(
-      r.right - 7,
-      r.bottom + 1,
-      r.right + 1,
-      r.bottom - 8,
-      r.right - 1,
-      r.bottom - 22,
-    )
-    ..lineTo(r.right - 1, r.top + 20)
-    ..cubicTo(
-      r.right + 1,
-      r.top + 6,
-      r.right - 9,
-      r.top - 1,
-      r.right - 23,
-      r.top + 1,
-    )
-    ..close();
-
-  void _scallopedFrame(Canvas canvas, Rect r, Color color) {
-    final path = Path()..moveTo(r.left + 8, r.top + 2);
-    const scallops = 18;
-    final span = (r.width - 16) / scallops;
-    for (var i = 0; i < scallops; i++) {
-      final x = r.left + 8 + span * i;
-      path.quadraticBezierTo(x + span / 2, r.top - 1.4, x + span, r.top + 2);
-    }
-    path
-      ..lineTo(r.right - 2, r.bottom - 15)
-      ..quadraticBezierTo(r.right - 2, r.bottom - 2, r.right - 15, r.bottom - 2)
-      ..lineTo(r.left + 16, r.bottom - 2)
-      ..quadraticBezierTo(r.left + 2, r.bottom - 2, r.left + 2, r.bottom - 16)
-      ..lineTo(r.left + 2, r.top + 14)
-      ..quadraticBezierTo(r.left + 2, r.top + 2, r.left + 8, r.top + 2);
-    _stroke(path, color, 1.05, canvas);
-  }
-
-  void _ribbon(Canvas canvas, Rect rect, {bool subtle = false}) {
-    final width = subtle ? 2.0 : 8.0;
+  void _ribbon(
+    Canvas canvas,
+    Rect rect,
+    CoquetteSurfaceTokens tokens, {
+    bool subtle = false,
+  }) {
+    final width = subtle ? 1.4 : 2.4;
+    final inset = width / 2 + 1;
+    final cap = math.min(14.0, rect.height * .22);
     final ribbon = Path()
-      ..moveTo(rect.left + 1, rect.top + 13)
+      ..moveTo(rect.left + inset, rect.top + cap)
       ..cubicTo(
-        rect.left + width,
-        rect.top + 22,
-        rect.left,
+        rect.left + inset + 1.2,
+        rect.top + cap + 7,
+        rect.left + inset - .2,
+        rect.center.dy - 5,
+        rect.left + inset + .8,
         rect.center.dy,
-        rect.left + width,
-        rect.bottom - 13,
+      )
+      ..cubicTo(
+        rect.left + inset - .2,
+        rect.center.dy + 5,
+        rect.left + inset + 1.2,
+        rect.bottom - cap - 7,
+        rect.left + inset,
+        rect.bottom - cap,
       );
     _stroke(
       ribbon,
-      colors.rose.withValues(alpha: subtle ? .62 : .95),
+      subtle
+          ? tokens.primaryAccent.withValues(alpha: .72)
+          : tokens.primaryAccent,
       width,
       canvas,
     );
     if (!subtle) {
-      final thread = Path()
-        ..moveTo(rect.left + width + 3, rect.top + 15)
-        ..lineTo(rect.left + width + 3, rect.bottom - 15);
-      _stroke(thread, colors.champagne.withValues(alpha: .68), .7, canvas);
+      final stitch = Path()
+        ..moveTo(rect.left + inset + 4, rect.top + cap + 2)
+        ..lineTo(rect.left + inset + 4, rect.bottom - cap - 2);
+      _stroke(
+        stitch,
+        (dark ? tokens.secondaryAccent : colors.champagne).withValues(
+          alpha: .78,
+        ),
+        .8,
+        canvas,
+      );
     }
-  }
-
-  void _flowerCorner(Canvas canvas, Offset center, Color color) {
-    final paint = Paint()..color = color.withValues(alpha: .62);
-    for (var petal = 0; petal < 4; petal++) {
-      canvas.save();
-      canvas.translate(center.dx, center.dy);
-      canvas.rotate(petal * math.pi / 2);
-      canvas.drawOval(const Rect.fromLTWH(-2.5, -8, 5, 8), paint);
-      canvas.restore();
-    }
-    canvas.drawCircle(center, 1.8, Paint()..color = colors.champagne);
-  }
-
-  void _pearl(Canvas canvas, Offset center, Color color) {
-    canvas.drawCircle(
-      center,
-      3,
-      Paint()
-        ..color = color
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.4),
-    );
-    canvas.drawCircle(
-      center.translate(-.8, -.8),
-      1.1,
-      Paint()..color = colors.ivory,
-    );
   }
 
   void _stroke(Path path, Color color, double width, Canvas canvas) {
@@ -401,7 +471,93 @@ class CoquetteSurfacePainter extends CustomPainter {
   bool shouldRepaint(covariant CoquetteSurfacePainter oldDelegate) =>
       colors != oldDelegate.colors ||
       variant != oldDelegate.variant ||
-      dark != oldDelegate.dark;
+      dark != oldDelegate.dark ||
+      surfaceTokens != oldDelegate.surfaceTokens;
+}
+
+Path _coquettePetalPath(Rect rect) {
+  final bounds = rect.deflate(1.2);
+  final corner = math.min(
+    12.0,
+    math.min(bounds.height * .24, bounds.width * .2),
+  );
+  final waist = math.min(4.5, math.min(bounds.height * .1, bounds.width * .07));
+  final middle = bounds.center.dy;
+  return Path()
+    ..moveTo(bounds.left + corner, bounds.top)
+    ..quadraticBezierTo(
+      bounds.left,
+      bounds.top,
+      bounds.left,
+      bounds.top + corner,
+    )
+    ..lineTo(bounds.left, middle - waist * 2)
+    ..quadraticBezierTo(
+      bounds.left + waist,
+      middle,
+      bounds.left,
+      middle + waist * 2,
+    )
+    ..lineTo(bounds.left, bounds.bottom - corner)
+    ..quadraticBezierTo(
+      bounds.left,
+      bounds.bottom,
+      bounds.left + corner,
+      bounds.bottom,
+    )
+    ..lineTo(bounds.right - corner, bounds.bottom)
+    ..quadraticBezierTo(
+      bounds.right,
+      bounds.bottom,
+      bounds.right,
+      bounds.bottom - corner,
+    )
+    ..lineTo(bounds.right, middle + waist * 2)
+    ..quadraticBezierTo(
+      bounds.right - waist,
+      middle,
+      bounds.right,
+      middle - waist * 2,
+    )
+    ..lineTo(bounds.right, bounds.top + corner)
+    ..quadraticBezierTo(
+      bounds.right,
+      bounds.top,
+      bounds.right - corner,
+      bounds.top,
+    )
+    ..lineTo(bounds.left + corner, bounds.top)
+    ..close();
+}
+
+Path _coquetteScallopPath(Rect rect) {
+  final bounds = rect.deflate(1.4);
+  final scallopCount = (bounds.width / 22).floor().clamp(5, 24);
+  final span = (bounds.width - 20) / scallopCount;
+  final top = bounds.top + 3;
+  final path = Path()..moveTo(bounds.left + 10, top);
+  for (var index = 0; index < scallopCount; index++) {
+    final x = bounds.left + 10 + span * index;
+    path.quadraticBezierTo(x + span / 2, bounds.top + .5, x + span, top);
+  }
+  return path
+    ..lineTo(bounds.right - 2, bounds.bottom - 13)
+    ..quadraticBezierTo(
+      bounds.right - 2,
+      bounds.bottom - 2,
+      bounds.right - 13,
+      bounds.bottom - 2,
+    )
+    ..lineTo(bounds.left + 13, bounds.bottom - 2)
+    ..quadraticBezierTo(
+      bounds.left + 2,
+      bounds.bottom - 2,
+      bounds.left + 2,
+      bounds.bottom - 13,
+    )
+    ..lineTo(bounds.left + 2, top + 11)
+    ..quadraticBezierTo(bounds.left + 2, top, bounds.left + 10, top)
+    ..close();
 }
 
 /// Soft asymmetric card silhouette for Material components.
@@ -410,44 +566,15 @@ class CoquettePetalBorder extends OutlinedBorder {
     super.side = const BorderSide(color: Color(0xFFC87996), width: 1),
   });
 
-  Path _path(Rect r) => Path()
-    ..moveTo(r.left + 18, r.top + 1)
-    ..cubicTo(r.left + 6, r.top - 1, r.left, r.top + 8, r.left + 1, r.top + 21)
-    ..lineTo(r.left + 1, r.bottom - 19)
-    ..cubicTo(
-      r.left - 1,
-      r.bottom - 6,
-      r.left + 9,
-      r.bottom + 1,
-      r.left + 22,
-      r.bottom - 1,
-    )
-    ..lineTo(r.right - 21, r.bottom - 1)
-    ..cubicTo(
-      r.right - 7,
-      r.bottom + 1,
-      r.right + 1,
-      r.bottom - 9,
-      r.right - 1,
-      r.bottom - 22,
-    )
-    ..lineTo(r.right - 1, r.top + 20)
-    ..cubicTo(
-      r.right + 1,
-      r.top + 6,
-      r.right - 9,
-      r.top - 1,
-      r.right - 22,
-      r.top + 1,
-    )
-    ..close();
+  Path _path(Rect rect) => _coquettePetalPath(rect);
 
   @override
   OutlinedBorder copyWith({BorderSide? side}) =>
       CoquettePetalBorder(side: side ?? this.side);
 
   @override
-  Path getOuterPath(Rect rect, {TextDirection? textDirection}) => _path(rect);
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) =>
+      _path(rect.deflate(side.width / 2));
 
   @override
   Path getInnerPath(Rect rect, {TextDirection? textDirection}) =>
@@ -456,7 +583,7 @@ class CoquettePetalBorder extends OutlinedBorder {
   @override
   void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
     canvas.drawPath(
-      _path(rect.deflate(side.width / 2)),
+      getOuterPath(rect),
       Paint()
         ..color = side.color
         ..style = PaintingStyle.stroke
@@ -508,10 +635,15 @@ class CoquettePearlInputBorder extends OutlineInputBorder {
     );
     if (borderSide.style == BorderStyle.none) return;
     final pearlPaint = Paint()..color = borderSide.color.withValues(alpha: .72);
-    canvas.drawCircle(Offset(rect.right - 13, rect.top + 1), 1.6, pearlPaint);
+    final edgeInset = borderSide.width / 2;
     canvas.drawCircle(
-      Offset(rect.left + 13, rect.bottom - 1),
-      1.35,
+      Offset(rect.right - 20, rect.top + edgeInset),
+      1.25,
+      pearlPaint,
+    );
+    canvas.drawCircle(
+      Offset(rect.left + 20, rect.bottom - edgeInset),
+      1.25,
       pearlPaint,
     );
   }
@@ -526,49 +658,53 @@ class CoquetteRibbonDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors =
         CoquetteThemeColors.maybeOf(context) ?? CoquetteThemeColors.defaults;
+    final tokens =
+        CoquetteSurfaceTokens.maybeOf(context) ??
+        CoquetteSurfaceTokens.forBrightness(Theme.of(context).brightness);
     return SizedBox(
       height: height,
       width: double.infinity,
-      child: CustomPaint(painter: _CoquetteDividerPainter(colors)),
+      child: CustomPaint(painter: _CoquetteDividerPainter(colors, tokens)),
     );
   }
 }
 
 class _CoquetteDividerPainter extends CustomPainter {
-  const _CoquetteDividerPainter(this.colors);
+  const _CoquetteDividerPainter(this.colors, this.tokens);
   final CoquetteThemeColors colors;
+  final CoquetteSurfaceTokens tokens;
 
   @override
   void paint(Canvas canvas, Size size) {
     final y = size.height / 2;
     final ribbon = Path()
-      ..moveTo(0, y)
+      ..moveTo(.8, y)
       ..cubicTo(
         size.width * .28,
-        y - 1.2,
+        y - math.min(1.2, size.height * .12),
         size.width * .66,
-        y + .9,
-        size.width,
-        y - .1,
+        y + math.min(.9, size.height * .1),
+        size.width - .8,
+        y,
       );
     canvas.drawPath(
       ribbon,
       Paint()
-        ..color = colors.dustyRose.withValues(alpha: .58)
+        ..color = (tokens.primaryAccent).withValues(alpha: .58)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.1
         ..strokeCap = StrokeCap.round,
     );
     canvas.drawCircle(
-      Offset(size.width * .82, y - .1),
-      2,
-      Paint()..color = colors.champagne,
+      Offset(size.width * .82, y),
+      1.6,
+      Paint()..color = tokens.secondaryAccent,
     );
   }
 
   @override
   bool shouldRepaint(covariant _CoquetteDividerPainter oldDelegate) =>
-      colors != oldDelegate.colors;
+      colors != oldDelegate.colors || tokens != oldDelegate.tokens;
 }
 
 class CoquetteNavigationItem {
@@ -577,7 +713,7 @@ class CoquetteNavigationItem {
   final String label;
 }
 
-/// Cream navigation with a delicate petal marker, distinct from Sumi-e.
+/// Boutique tray navigation with a label-tab selection state.
 class CoquetteBottomNavigationBar extends StatelessWidget {
   const CoquetteBottomNavigationBar({
     required this.items,
@@ -594,21 +730,27 @@ class CoquetteBottomNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors =
         CoquetteThemeColors.maybeOf(context) ?? CoquetteThemeColors.defaults;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final tokens =
+        CoquetteSurfaceTokens.maybeOf(context) ??
+        CoquetteSurfaceTokens.forBrightness(
+          dark ? Brightness.dark : Brightness.light,
+        );
     return Container(
-      height: 70,
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      height: 74,
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
       decoration: BoxDecoration(
-        color: colors.cream,
+        color: dark ? tokens.primarySurface : colors.ivory,
         borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(22),
-          bottom: Radius.circular(14),
+          top: Radius.circular(28),
+          bottom: Radius.circular(20),
         ),
-        border: Border.all(color: colors.dustyRose.withValues(alpha: .46)),
+        border: Border.all(color: tokens.mutedBorder),
         boxShadow: [
           BoxShadow(
-            color: colors.cocoa.withValues(alpha: .10),
-            blurRadius: 16,
-            offset: const Offset(0, -3),
+            color: Colors.black.withValues(alpha: dark ? .24 : .08),
+            blurRadius: 18,
+            offset: const Offset(0, -4),
           ),
         ],
       ),
@@ -633,19 +775,24 @@ class CoquetteBottomNavigationBar extends StatelessWidget {
                             items[index].icon,
                             size: 23,
                             color: selectedIndex == index
-                                ? colors.berry
-                                : colors.mauve,
+                                ? tokens.primaryAccent
+                                : tokens.secondaryText,
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
                           AnimatedContainer(
                             duration: const Duration(milliseconds: 180),
-                            width: selectedIndex == index ? 15 : 4,
-                            height: 4,
+                            width: selectedIndex == index ? 30 : 18,
+                            height: selectedIndex == index ? 19 : 2,
                             decoration: BoxDecoration(
                               color: selectedIndex == index
-                                  ? colors.rose
-                                  : colors.champagne.withValues(alpha: .55),
-                              borderRadius: BorderRadius.circular(4),
+                                  ? (dark
+                                        ? tokens.selectedSurface
+                                        : colors.blush.withValues(alpha: .72))
+                                  : tokens.mutedBorder.withValues(alpha: .58),
+                              borderRadius: BorderRadius.circular(12),
+                              border: selectedIndex == index
+                                  ? Border.all(color: tokens.primaryAccent)
+                                  : null,
                             ),
                           ),
                         ],

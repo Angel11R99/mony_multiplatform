@@ -246,6 +246,7 @@ class _DashboardContent extends StatelessWidget {
             MonyCard(
               padding: const EdgeInsets.all(MonySpace.x4),
               sumiVariant: SumiSurfaceVariant.inkWash,
+              coquetteVariant: CoquetteSurfaceVariant.ribbon,
               child: Row(
                 children: [
                   Expanded(
@@ -497,13 +498,14 @@ class _TrendGridPainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..strokeWidth = 1;
+    const inset = .5;
     for (var row = 1; row <= 3; row++) {
       final y = size.height * row / 4;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+      canvas.drawLine(Offset(inset, y), Offset(size.width - inset, y), paint);
     }
     for (var column = 1; column <= 5; column++) {
       final x = size.width * column / 6;
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+      canvas.drawLine(Offset(x, inset), Offset(x, size.height - inset), paint);
     }
   }
 

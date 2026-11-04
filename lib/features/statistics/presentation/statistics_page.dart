@@ -7,6 +7,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/money/money_formatter.dart';
 import '../../../core/theme/sumi_visuals.dart';
+import '../../../core/theme/coquette_visuals.dart';
 import '../../../core/widgets/mony_settings_action.dart';
 import '../../../core/widgets/mony_states.dart';
 import '../../budgets/domain/budget.dart';
@@ -558,6 +559,14 @@ class _SummaryCard extends StatelessWidget {
         child: content,
       );
     }
+    final coquette = CoquetteThemeColors.maybeOf(context);
+    if (coquette != null) {
+      return CoquetteSurface(
+        variant: CoquetteSurfaceVariant.scalloped,
+        padding: const EdgeInsets.all(18),
+        child: content,
+      );
+    }
     return Card(
       color: colors.primaryContainer,
       child: Padding(padding: const EdgeInsets.all(18), child: content),
@@ -703,7 +712,12 @@ class _ComparisonCard extends StatelessWidget {
             style: currencyStyle,
             upIsGood: false,
           ),
-          const SumiBrushDivider(height: 18),
+          if (SumiThemeColors.maybeOf(context) != null)
+            const SumiBrushDivider(height: 18)
+          else if (CoquetteThemeColors.maybeOf(context) != null)
+            const CoquetteRibbonDivider(height: 18)
+          else
+            const Divider(height: 18),
           _TrendRow(
             label: 'Ingresos',
             current: current.incomeInCents,
