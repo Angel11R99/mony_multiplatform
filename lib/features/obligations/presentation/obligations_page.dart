@@ -214,7 +214,10 @@ class _ObligationsPageState extends ConsumerState<ObligationsPage> {
                                 itemBuilder: (context, index) {
                                   final obligation = filtered[index];
                                   return MonyEntrance(
-                                    delay: Duration(milliseconds: 30 * index),
+                                    delay: Duration(
+                                      milliseconds:
+                                          30 * (index < 8 ? index : 8),
+                                    ),
                                     child: _ObligationCard(
                                       obligation: obligation,
                                       currencyStyle: currencyStyle,

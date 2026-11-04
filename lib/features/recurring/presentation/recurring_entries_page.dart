@@ -107,6 +107,9 @@ class _RecurringEntriesPageState extends ConsumerState<RecurringEntriesPage> {
     final ref = this.ref;
     final entries = ref.watch(recurringEntriesProvider);
     final categories = ref.watch(categoriesProvider).value ?? const [];
+    final categoryNames = {
+      for (final category in categories) category.id: category.name,
+    };
     return Scaffold(
       appBar: AppBar(
         title: const Text('Fijos'),
@@ -135,16 +138,16 @@ class _RecurringEntriesPageState extends ConsumerState<RecurringEntriesPage> {
           onRetry: () => ref.invalidate(recurringEntriesProvider),
         ),
         data: (items) {
-          final visible = _type == null
-              ? items
-              : items.where((item) => item.type == _type).toList();
-          final expenses = items
-              .where((item) => item.type == TransactionType.expense)
-              .length;
-          final incomes = items
-              .where((item) => item.type == TransactionType.income)
-              .length;
-          final activeCount = items.where((item) => item.isActive).length;
+          final visible = <RecurringEntry>[];
+          var expenses = 0;
+          var incomes = 0;
+          var activeCount = 0;
+          for (final item in items) {
+            if (_type == null || item.type == _type) visible.add(item);
+            if (item.type == TransactionType.expense) expenses++;
+            if (item.type == TransactionType.income) incomes++;
+            if (item.isActive) activeCount++;
+          }
           return LayoutBuilder(
             builder: (context, constraints) {
               final maxWidth = constraints.maxWidth > 820
@@ -274,11 +277,13 @@ class _RecurringEntriesPageState extends ConsumerState<RecurringEntriesPage> {
                                 itemCount: visible.length,
                                 itemBuilder: (context, index) {
                                   final item = visible[index];
-                                  final category = categories
-                                      .where((c) => c.id == item.categoryId)
-                                      .firstOrNull;
+                                  final categoryName =
+                                      categoryNames[item.categoryId];
                                   return MonyEntrance(
-                                    delay: Duration(milliseconds: 30 * index),
+                                    delay: Duration(
+                                      milliseconds:
+                                          30 * (index < 8 ? index : 8),
+                                    ),
                                     child: Card(
                                       child: ListTile(
                                         leading: CircleAvatar(
@@ -290,7 +295,7 @@ class _RecurringEntriesPageState extends ConsumerState<RecurringEntriesPage> {
                                         ),
                                         title: Text(item.title),
                                         subtitle: Text(
-                                          '${MoneyFormatter.formatDopMinorUnits(item.amountInCents)} · ${category?.name ?? 'Categoría'}\n${_frequencyLabel(item)}${item.isActive ? ' · Próximo: ${_date(item.nextDate)}' : ' · En pausa'}',
+                                          '${MoneyFormatter.formatDopMinorUnits(item.amountInCents)} · ${categoryName ?? 'Categoría'}\n${_frequencyLabel(item)}${item.isActive ? ' · Próximo: ${_date(item.nextDate)}' : ' · En pausa'}',
                                         ),
                                         isThreeLine: true,
                                         onTap: () => _edit(context, ref, item),

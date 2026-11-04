@@ -1,17 +1,18 @@
 import 'dart:async';
 
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mony_multiplatform/core/database/app_database.dart';
+import 'package:toastification/toastification.dart';
 import 'package:mony_multiplatform/core/database/app_database_provider.dart';
 import 'package:mony_multiplatform/core/routing/app_router.dart';
+import 'package:mony_multiplatform/core/theme/mony_finance_colors.dart';
 import 'package:mony_multiplatform/features/payment_methods/domain/payment_method.dart';
 import 'package:mony_multiplatform/features/payment_methods/domain/payment_methods_repository.dart';
 import 'package:mony_multiplatform/features/payment_methods/presentation/payment_method_picker.dart';
 import 'package:mony_multiplatform/features/payment_methods/presentation/payment_methods_page.dart';
 import 'package:mony_multiplatform/features/payment_methods/presentation/payment_methods_providers.dart';
+import '../../support/test_database.dart';
 
 void main() {
   late _FakePaymentMethodsRepository repository;
@@ -25,13 +26,16 @@ void main() {
         overrides: [
           paymentMethodsRepositoryProvider.overrideWithValue(repository),
         ],
-        child: const MaterialApp(home: PaymentMethodsPage()),
+        child: ToastificationWrapper(
+          child: const MaterialApp(home: PaymentMethodsPage()),
+        ),
       ),
     );
     await tester.pumpAndSettle();
     addTearDown(() async {
-      await tester.pumpWidget(const SizedBox.shrink());
+      toastification.dismissAll(delayForAnimation: false);
       await tester.pump();
+      await tester.pumpWidget(const SizedBox.shrink());
     });
   }
 
@@ -55,6 +59,7 @@ void main() {
       find.text('Débito ahora es el método predeterminado.'),
       findsOneWidget,
     );
+    await _dismissToasts(tester);
   });
 
   testWidgets('creates a custom method and trims its name', (tester) async {
@@ -73,28 +78,40 @@ void main() {
       isTrue,
     );
     expect(find.text('Método de pago creado.'), findsOneWidget);
+    await _dismissToasts(tester);
   });
 
   testWidgets('opens payment methods from the home route', (tester) async {
-    final database = AppDatabase(NativeDatabase.memory());
+    final database = createTestDatabase();
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(database),
           paymentMethodsRepositoryProvider.overrideWithValue(repository),
         ],
-        child: MaterialApp.router(routerConfig: createAppRouter()),
+        child: ToastificationWrapper(
+          child: MaterialApp.router(
+            routerConfig: createAppRouter(),
+            theme: ThemeData(
+              extensions: [MonyFinanceColors.forBrightness(Brightness.light)],
+            ),
+          ),
+        ),
       ),
     );
     await tester.pumpAndSettle();
     addTearDown(database.close);
 
-    await tester.tap(find.byIcon(Icons.payment_outlined));
+    await tester.tap(find.byTooltip('Ajustes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Métodos de pago'));
     await tester.pumpAndSettle();
     expect(find.byType(PaymentMethodsPage), findsOneWidget);
     expect(find.text('Efectivo'), findsOneWidget);
+    await _dismissToasts(tester);
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pump();
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets(
@@ -132,6 +149,11 @@ void main() {
       expect(selected?.id, 2);
     },
   );
+}
+
+Future<void> _dismissToasts(WidgetTester tester) async {
+  toastification.dismissAll(delayForAnimation: false);
+  await tester.pump(const Duration(milliseconds: 250));
 }
 
 class _FakePaymentMethodsRepository implements PaymentMethodsRepository {

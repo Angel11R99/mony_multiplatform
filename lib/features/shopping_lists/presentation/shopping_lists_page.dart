@@ -262,53 +262,64 @@ class _ShoppingListsPageState extends ConsumerState<ShoppingListsPage> {
                                   ),
                                 ),
                               )
-                            : ListView(
+                            : ListView.builder(
                                 padding: const EdgeInsets.fromLTRB(
                                   18,
                                   8,
                                   18,
                                   96,
                                 ),
-                                children: [
-                                  Text(
-                                    'Todo lo que necesitas, con el total bajo control.',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleMedium,
-                                  ),
-                                  const SizedBox(height: 14),
-                                  for (final overview in filtered)
-                                    MonyEntrance(
-                                      delay: Duration(
-                                        milliseconds:
-                                            35 * filtered.indexOf(overview),
+                                itemCount: filtered.length + 2,
+                                itemBuilder: (context, index) {
+                                  if (index == 0) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 14,
                                       ),
-                                      child: _ShoppingListCard(
-                                        overview: overview,
-                                        currencyStyle: style,
-                                        onOpen: () => context.pushNamed(
-                                          'shoppingListDetail',
-                                          pathParameters: {
-                                            'id': '${overview.list.id}',
-                                          },
-                                        ),
-                                        onDuplicate: () => _duplicate(
+                                      child: Text(
+                                        'Todo lo que necesitas, con el total bajo control.',
+                                        style: Theme.of(
                                           context,
-                                          ref,
-                                          overview.list.id,
-                                        ),
-                                        onDelete:
-                                            overview.list.status ==
-                                                ShoppingListStatus.completed
-                                            ? null
-                                            : () => _delete(
-                                                context,
-                                                ref,
-                                                overview.list.id,
-                                              ),
+                                        ).textTheme.titleMedium,
                                       ),
+                                    );
+                                  }
+                                  if (index == 1) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  final listIndex = index - 2;
+                                  final overview = filtered[listIndex];
+                                  return MonyEntrance(
+                                    delay: Duration(
+                                      milliseconds:
+                                          35 * (listIndex > 8 ? 8 : listIndex),
                                     ),
-                                ],
+                                    child: _ShoppingListCard(
+                                      overview: overview,
+                                      currencyStyle: style,
+                                      onOpen: () => context.pushNamed(
+                                        'shoppingListDetail',
+                                        pathParameters: {
+                                          'id': '${overview.list.id}',
+                                        },
+                                      ),
+                                      onDuplicate: () => _duplicate(
+                                        context,
+                                        ref,
+                                        overview.list.id,
+                                      ),
+                                      onDelete:
+                                          overview.list.status ==
+                                              ShoppingListStatus.completed
+                                          ? null
+                                          : () => _delete(
+                                              context,
+                                              ref,
+                                              overview.list.id,
+                                            ),
+                                    ),
+                                  );
+                                },
                               ),
                       ),
                     ],
