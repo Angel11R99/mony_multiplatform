@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../theme/mony_tokens.dart';
+import '../theme/sumi_visuals.dart';
+import '../theme/coquette_visuals.dart';
+import '../theme/cyberpunk_visuals.dart';
 
 class MonyCard extends StatelessWidget {
   const MonyCard({
@@ -8,6 +11,9 @@ class MonyCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(MonySpace.x4),
     this.onTap,
     this.semanticLabel,
+    this.sumiVariant = SumiSurfaceVariant.openFrame,
+    this.coquetteVariant,
+    this.cyberVariant,
     super.key,
   });
 
@@ -15,17 +21,36 @@ class MonyCard extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final VoidCallback? onTap;
   final String? semanticLabel;
+  final SumiSurfaceVariant sumiVariant;
+  final CoquetteSurfaceVariant? coquetteVariant;
+  final CyberSurfaceVariant? cyberVariant;
 
   @override
   Widget build(BuildContext context) {
-    final content = Padding(padding: padding, child: child);
-    return Semantics(
-      label: semanticLabel,
-      container: semanticLabel != null,
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        child: onTap == null ? content : InkWell(onTap: onTap, child: content),
-      ),
+    if (CyberpunkTokens.maybeOf(context) != null) {
+      return CyberSurface(
+        semanticLabel: semanticLabel,
+        variant: cyberVariant ?? CyberSurfaceVariant.neonFrame,
+        padding: padding,
+        onTap: onTap,
+        child: child,
+      );
+    }
+    if (CoquetteThemeColors.maybeOf(context) != null) {
+      return CoquetteSurface(
+        semanticLabel: semanticLabel,
+        variant: coquetteVariant ?? CoquetteSurfaceVariant.pearl,
+        padding: padding,
+        onTap: onTap,
+        child: child,
+      );
+    }
+    return SumiSurface(
+      semanticLabel: semanticLabel,
+      variant: sumiVariant,
+      padding: padding,
+      onTap: onTap,
+      child: child,
     );
   }
 }

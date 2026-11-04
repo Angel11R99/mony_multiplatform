@@ -7,6 +7,7 @@ import 'package:toastification/toastification.dart';
 import '../core/config/app_config.dart';
 import '../core/routing/app_router.dart';
 import '../core/theme/mony_theme.dart';
+import '../core/theme/cyberpunk_visuals.dart';
 import '../features/budgets/presentation/budget_cycle_automation.dart';
 import '../features/notifications/presentation/reminder_automation.dart';
 import '../features/preferences/domain/app_preferences.dart';
@@ -40,6 +41,10 @@ class MonyApp extends ConsumerWidget {
               theme: MonyTheme.light(preferences),
               darkTheme: MonyTheme.dark(preferences),
               themeMode: MonyTheme.themeMode(preferences.themeMode),
+              builder: (context, child) =>
+                  preferences.visualTheme == AppVisualTheme.cyberpunk
+                  ? CyberBackdrop(child: child ?? const SizedBox.shrink())
+                  : child ?? const SizedBox.shrink(),
               localizationsDelegates: const [
                 GlobalMaterialLocalizations.delegate,
                 GlobalWidgetsLocalizations.delegate,

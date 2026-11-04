@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nav_bar/nav_bar.dart';
 
+import '../../features/preferences/domain/app_preferences.dart';
 import '../../features/preferences/presentation/preferences_controller.dart';
 import '../theme/mony_tokens.dart';
+import '../theme/sumi_visuals.dart';
+import '../theme/coquette_visuals.dart';
+import '../theme/cyberpunk_visuals.dart';
 
 class MonyNavigationShell extends ConsumerWidget {
   const MonyNavigationShell({required this.navigationShell, super.key});
@@ -33,12 +37,39 @@ class MonyNavigationShell extends ConsumerWidget {
     final selectedVisibleIndex = visibleIndices.indexOf(
       navigationShell.currentIndex,
     );
-    final destinations = [
-      for (final index in visibleIndices) _railDestinations[index],
-    ];
     final wide = MediaQuery.sizeOf(context).width >= MonyBreakpoints.expanded;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final japanese = preferences?.visualTheme == AppVisualTheme.japaneseSumie;
+    final coquette = preferences?.visualTheme == AppVisualTheme.coquetteBloom;
+    final cyberpunk = preferences?.visualTheme == AppVisualTheme.cyberpunk;
+    final sumi = SumiThemeColors.maybeOf(context);
+    final destinations = [
+      for (final index in visibleIndices)
+        _railDestination(index, japanese: japanese, accent: scheme.primary),
+    ];
+    final sumieNavTheme = FuturisticTheme(
+      name: 'Japanese Sumi-e',
+      glowGradient: LinearGradient(
+        colors: [scheme.secondary.withValues(alpha: .15), Colors.transparent],
+      ),
+      accentColor: scheme.secondary,
+      baseColor: scheme.surfaceContainerLow,
+      particleColor: scheme.outline,
+      backgroundColor: scheme.surfaceContainerLow,
+      customColors: {
+        'paperColor': sumi?.deepInk ?? scheme.surfaceContainerLow,
+        'inkColor': scheme.primary,
+        'sealColor': scheme.secondary,
+        'impactColor': scheme.secondary,
+      },
+      effectToggles: const {
+        'showPaperTexture': false,
+        'showInkSplatter': false,
+        'showSeal': false,
+        'showImpact': false,
+      },
+    );
 
     if (wide) {
       return Scaffold(
@@ -48,6 +79,11 @@ class MonyNavigationShell extends ConsumerWidget {
               selectedIndex: selectedVisibleIndex,
               onDestinationSelected: (index) =>
                   _selectBranch(visibleIndices[index]),
+              useIndicator: japanese ? false : true,
+              indicatorColor: japanese ? Colors.transparent : null,
+              indicatorShape: japanese
+                  ? const RoundedRectangleBorder(side: BorderSide.none)
+                  : null,
               labelType: NavigationRailLabelType.all,
               destinations: destinations,
             ),
@@ -62,25 +98,99 @@ class MonyNavigationShell extends ConsumerWidget {
       );
     }
 
+    if (coquette) {
+      return Scaffold(
+        body: navigationShell,
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: CoquetteBottomNavigationBar(
+            items: [
+              for (final index in visibleIndices)
+                CoquetteNavigationItem(
+                  icon: _iconData[index],
+                  label: _moduleLabels[index],
+                ),
+            ],
+            selectedIndex: selectedVisibleIndex,
+            onSelected: (index) => _selectBranch(visibleIndices[index]),
+          ),
+        ),
+      );
+    }
+
+    if (cyberpunk) {
+      return Scaffold(
+        body: navigationShell,
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: CyberBottomNavigationBar(
+            items: [
+              for (final index in visibleIndices)
+                CyberNavigationItem(
+                  icon: _iconData[index],
+                  label: _moduleLabels[index],
+                ),
+            ],
+            selectedIndex: selectedVisibleIndex,
+            onSelected: (index) => _selectBranch(visibleIndices[index]),
+          ),
+        ),
+      );
+    }
+
     final items = <NavBarItem>[
-      for (final index in visibleIndices) NavBarItem(icon: _iconData[index]),
+      for (final index in visibleIndices)
+        NavBarItem(
+          icon: _iconData[index],
+          customIcon: japanese
+              ? Transform.translate(
+                  offset: Offset(
+                    0,
+                    index == navigationShell.currentIndex ? 5 : 0,
+                  ),
+                  child: Icon(_iconData[index], color: scheme.onSurface),
+                )
+              : null,
+        ),
     ];
 
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: SafeArea(
         top: false,
-        child: Transform.translate(
-          offset: const Offset(0, 10),
-          child: FuturisticNavBar(
-            selectedIndex: selectedVisibleIndex,
-            onItemSelected: (index) => _selectBranch(visibleIndices[index]),
-            items: items,
-            style: NavBarStyle.synapse,
-            theme: FuturisticTheme.cyberpunk(),
-            iconAnimationType: IconAnimationType.slide,
-            showGlow: true,
-          ),
+        child: Stack(
+          children: [
+            if (japanese)
+              Positioned(
+                top: 10,
+                left: 20,
+                right: 20,
+                height: 80,
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: SumiNavigationPainter(
+                      colors: sumi ?? SumiThemeColors.defaults,
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ),
+            Transform.translate(
+              offset: const Offset(0, 10),
+              child: FuturisticNavBar(
+                selectedIndex: selectedVisibleIndex,
+                onItemSelected: (index) => _selectBranch(visibleIndices[index]),
+                items: items,
+                style: japanese ? NavBarStyle.sumi : NavBarStyle.synapse,
+                theme: japanese ? sumieNavTheme : FuturisticTheme.cyberpunk(),
+                iconAnimationType: japanese
+                    ? IconAnimationType.fade
+                    : IconAnimationType.slide,
+                showGlow: !japanese,
+                showLiquid: !japanese,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -95,6 +205,17 @@ class MonyNavigationShell extends ConsumerWidget {
     'statistics',
     'cyclePlan',
     'transactions',
+  ];
+
+  static const _moduleLabels = [
+    'Inicio',
+    'Fijos',
+    'Recordatorios',
+    'Ahorros',
+    'Lista',
+    'Estadísticas',
+    'Plan de ciclo',
+    'Historial',
   ];
 
   static const _iconData = <IconData>[
@@ -150,4 +271,55 @@ class MonyNavigationShell extends ConsumerWidget {
       label: Text('Historial'),
     ),
   ];
+
+  static NavigationRailDestination _railDestination(
+    int index, {
+    required bool japanese,
+    required Color accent,
+  }) {
+    final destination = _railDestinations[index];
+    if (!japanese) return destination;
+    return NavigationRailDestination(
+      icon: destination.icon,
+      selectedIcon: CustomPaint(
+        painter: _NavigationSelectionBrush(accent),
+        child: destination.selectedIcon,
+      ),
+      label: destination.label,
+      padding: destination.padding,
+      indicatorColor: Colors.transparent,
+    );
+  }
+}
+
+class _NavigationSelectionBrush extends CustomPainter {
+  const _NavigationSelectionBrush(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final line = Path()
+      ..moveTo(2, size.height - 1.5)
+      ..cubicTo(
+        size.width * .35,
+        size.height - 2.5,
+        size.width * .68,
+        size.height,
+        size.width - 2,
+        size.height - 1,
+      );
+    canvas.drawPath(
+      line,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.2
+        ..strokeCap = StrokeCap.square,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _NavigationSelectionBrush oldDelegate) =>
+      color != oldDelegate.color;
 }

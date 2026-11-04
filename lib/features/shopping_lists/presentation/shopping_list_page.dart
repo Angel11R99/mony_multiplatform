@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/dialog_helpers.dart';
 import '../../../core/money/money_formatter.dart';
+import '../../../core/theme/sumi_visuals.dart';
+import '../../../core/theme/coquette_visuals.dart';
 import '../../categories/domain/category.dart';
 import '../../categories/presentation/categories_providers.dart';
 import '../../payment_methods/domain/payment_method.dart';
@@ -554,54 +556,72 @@ class _TotalsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final adjustments = details.adjustmentTotalInCents;
-    return Card(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _TotalRow(
-              label: 'Subtotal estimado',
-              value: details.estimatedSubtotalInCents,
-              style: currencyStyle,
-            ),
-            const SizedBox(height: 7),
-            _TotalRow(
-              label: 'Subtotal comprado',
-              value: details.purchasedSubtotalInCents,
-              style: currencyStyle,
-            ),
-            if (adjustments != 0) ...[
-              const Divider(height: 19),
-              _TotalRow(
-                label: adjustments > 0 ? 'Recargos e impuestos' : 'Descuentos',
-                value: adjustments,
-                style: currencyStyle,
-              ),
-            ],
-            const Divider(height: 22),
-            _TotalRow(
-              label: 'Total actual',
-              value: details.actualTotalInCents,
-              style: currencyStyle,
-              emphasized: true,
-            ),
-            if (details.missingActualPriceItems.isNotEmpty)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    'Faltan precios reales en ${details.missingActualPriceItems.length} producto(s) para finalizar.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
+    final colors = Theme.of(context).colorScheme;
+    final sumi = SumiThemeColors.maybeOf(context);
+    final bloom = CoquetteThemeColors.maybeOf(context);
+    Widget separator(double height) => bloom == null
+        ? SumiBrushDivider(height: height)
+        : CoquetteRibbonDivider(height: height);
+    final content = Column(
+      children: [
+        _TotalRow(
+          label: 'Subtotal estimado',
+          value: details.estimatedSubtotalInCents,
+          style: currencyStyle,
+        ),
+        const SizedBox(height: 7),
+        _TotalRow(
+          label: 'Subtotal comprado',
+          value: details.purchasedSubtotalInCents,
+          style: currencyStyle,
+        ),
+        if (adjustments != 0) ...[
+          separator(19),
+          _TotalRow(
+            label: adjustments > 0 ? 'Recargos e impuestos' : 'Descuentos',
+            value: adjustments,
+            style: currencyStyle,
+          ),
+        ],
+        separator(22),
+        _TotalRow(
+          label: 'Total actual',
+          value: details.actualTotalInCents,
+          style: currencyStyle,
+          emphasized: true,
+        ),
+        if (details.missingActualPriceItems.isNotEmpty)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Faltan precios reales en ${details.missingActualPriceItems.length} producto(s) para finalizar.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.error,
                 ),
               ),
-          ],
-        ),
-      ),
+            ),
+          ),
+      ],
+    );
+    if (sumi != null) {
+      return SumiSurface(
+        variant: SumiSurfaceVariant.inkWash,
+        padding: const EdgeInsets.all(16),
+        child: content,
+      );
+    }
+    if (bloom != null) {
+      return CoquetteSurface(
+        variant: CoquetteSurfaceVariant.ribbon,
+        padding: const EdgeInsets.all(16),
+        child: content,
+      );
+    }
+    return Card(
+      color: colors.surfaceContainerHighest,
+      child: Padding(padding: const EdgeInsets.all(16), child: content),
     );
   }
 }

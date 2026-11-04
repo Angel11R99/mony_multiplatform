@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_confirm_dialog.dart';
+import '../../../core/theme/coquette_visuals.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -339,29 +340,68 @@ class _SettingsPageState extends ConsumerState<PersonalizationSettingsPage> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) =>
             _LoadError(onRetry: () => ref.invalidate(appPreferencesProvider)),
-        data: (value) => _SettingsContent(
-          preferences: value,
-          colorOptions: _colorOptions,
-          onThemeChanged: (mode) => _save(
-            () => ref.read(appPreferencesProvider.notifier).setThemeMode(mode),
-          ),
-          onPrimaryColorChanged: (color) => _save(
-            () => ref
-                .read(appPreferencesProvider.notifier)
-                .setPrimaryColor(color),
-          ),
-          onAccentColorChanged: (color) => _save(
-            () =>
-                ref.read(appPreferencesProvider.notifier).setAccentColor(color),
-          ),
-          onCurrencyFormatChanged: (style) => _save(
-            () => ref
-                .read(appPreferencesProvider.notifier)
-                .setCurrencyFormatStyle(style),
-          ),
-          onNotificationsChanged: _setNotificationsEnabled,
-          onReset: _resetPreferences,
-        ),
+        data: (value) {
+          final colorOptions = value.visualTheme == AppVisualTheme.cyberpunk
+              ? <_ColorOption>[
+                  const _ColorOption('Neón cian', 0xFF00E5FF),
+                  const _ColorOption('Magenta', 0xFFFF2DA6),
+                  const _ColorOption('Azul eléctrico', 0xFF3A86FF),
+                  const _ColorOption('Púrpura', 0xFF9D4EDD),
+                  const _ColorOption('Lima señal', 0xFFB8FF3D),
+                  const _ColorOption('Ámbar', 0xFFFFC857),
+                ]
+              : value.visualTheme == AppVisualTheme.coquetteBloom
+              ? <_ColorOption>[
+                  _ColorOption(
+                    'Berry Rose',
+                    CoquetteThemeColors.defaults.berry.toARGB32(),
+                  ),
+                  _ColorOption(
+                    'Blush Pink',
+                    CoquetteThemeColors.defaults.blush.toARGB32(),
+                  ),
+                  _ColorOption(
+                    'Soft Lavender',
+                    CoquetteThemeColors.defaults.lavender.toARGB32(),
+                  ),
+                  _ColorOption(
+                    'Champagne',
+                    CoquetteThemeColors.defaults.champagne.toARGB32(),
+                  ),
+                  ..._colorOptions,
+                ]
+              : _colorOptions;
+          return _SettingsContent(
+            preferences: value,
+            colorOptions: colorOptions,
+            onThemeChanged: (mode) => _save(
+              () =>
+                  ref.read(appPreferencesProvider.notifier).setThemeMode(mode),
+            ),
+            onVisualThemeChanged: (theme) => _save(
+              () => ref
+                  .read(appPreferencesProvider.notifier)
+                  .setVisualTheme(theme),
+            ),
+            onPrimaryColorChanged: (color) => _save(
+              () => ref
+                  .read(appPreferencesProvider.notifier)
+                  .setPrimaryColor(color),
+            ),
+            onAccentColorChanged: (color) => _save(
+              () => ref
+                  .read(appPreferencesProvider.notifier)
+                  .setAccentColor(color),
+            ),
+            onCurrencyFormatChanged: (style) => _save(
+              () => ref
+                  .read(appPreferencesProvider.notifier)
+                  .setCurrencyFormatStyle(style),
+            ),
+            onNotificationsChanged: _setNotificationsEnabled,
+            onReset: _resetPreferences,
+          );
+        },
       ),
     );
   }
@@ -372,6 +412,7 @@ class _SettingsContent extends StatelessWidget {
     required this.preferences,
     required this.colorOptions,
     required this.onThemeChanged,
+    required this.onVisualThemeChanged,
     required this.onPrimaryColorChanged,
     required this.onAccentColorChanged,
     required this.onCurrencyFormatChanged,
@@ -382,6 +423,7 @@ class _SettingsContent extends StatelessWidget {
   final AppPreferences preferences;
   final List<_ColorOption> colorOptions;
   final ValueChanged<AppThemeMode> onThemeChanged;
+  final ValueChanged<AppVisualTheme> onVisualThemeChanged;
   final ValueChanged<int> onPrimaryColorChanged;
   final ValueChanged<int> onAccentColorChanged;
   final ValueChanged<CurrencyFormatStyle> onCurrencyFormatChanged;
@@ -391,6 +433,19 @@ class _SettingsContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final bloom = preferences.visualTheme == AppVisualTheme.coquetteBloom;
+    final primaryColor =
+        bloom &&
+            preferences.primaryColorArgb ==
+                AppPreferences.defaults.primaryColorArgb
+        ? CoquetteThemeColors.defaults.berry.toARGB32()
+        : preferences.primaryColorArgb;
+    final accentColor =
+        bloom &&
+            preferences.accentColorArgb ==
+                AppPreferences.defaults.accentColorArgb
+        ? CoquetteThemeColors.defaults.champagne.toARGB32()
+        : preferences.accentColorArgb;
 
     return Center(
       child: ConstrainedBox(
@@ -460,6 +515,55 @@ class _SettingsContent extends StatelessWidget {
                 );
               },
             ),
+            const SizedBox(height: 16),
+            Text(
+              'Estilo visual',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final options = <Widget>[
+                  _VisualThemeChoice(
+                    theme: AppVisualTheme.mony,
+                    selected: preferences.visualTheme == AppVisualTheme.mony,
+                    onSelected: () => onVisualThemeChanged(AppVisualTheme.mony),
+                  ),
+                  _VisualThemeChoice(
+                    theme: AppVisualTheme.japaneseSumie,
+                    selected:
+                        preferences.visualTheme == AppVisualTheme.japaneseSumie,
+                    onSelected: () =>
+                        onVisualThemeChanged(AppVisualTheme.japaneseSumie),
+                  ),
+                  _VisualThemeChoice(
+                    theme: AppVisualTheme.coquetteBloom,
+                    selected:
+                        preferences.visualTheme == AppVisualTheme.coquetteBloom,
+                    onSelected: () =>
+                        onVisualThemeChanged(AppVisualTheme.coquetteBloom),
+                  ),
+                  _VisualThemeChoice(
+                    theme: AppVisualTheme.cyberpunk,
+                    selected:
+                        preferences.visualTheme == AppVisualTheme.cyberpunk,
+                    onSelected: () =>
+                        onVisualThemeChanged(AppVisualTheme.cyberpunk),
+                  ),
+                ];
+                if (constraints.maxWidth < 720) {
+                  return Wrap(spacing: 8, runSpacing: 4, children: options);
+                }
+                return Row(
+                  children: [
+                    for (var i = 0; i < options.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 8),
+                      Expanded(child: options[i]),
+                    ],
+                  ],
+                );
+              },
+            ),
             const SizedBox(height: 28),
             const _SectionHeading(
               title: 'COLORES',
@@ -470,7 +574,7 @@ class _SettingsContent extends StatelessWidget {
             _ColorPreference(
               title: 'Color principal',
               description: 'Acciones y elementos destacados',
-              selectedColor: preferences.primaryColorArgb,
+              selectedColor: primaryColor,
               options: colorOptions,
               onSelected: onPrimaryColorChanged,
             ),
@@ -478,12 +582,16 @@ class _SettingsContent extends StatelessWidget {
             _ColorPreference(
               title: 'Color secundario',
               description: 'Acentos y detalles visuales',
-              selectedColor: preferences.accentColorArgb,
+              selectedColor: accentColor,
               options: colorOptions,
               onSelected: onAccentColorChanged,
             ),
             const SizedBox(height: 14),
-            _ColorPreview(preferences: preferences),
+            _ColorPreview(
+              preferences: preferences,
+              primaryArgb: primaryColor,
+              accentArgb: accentColor,
+            ),
             const SizedBox(height: 28),
             const _SectionHeading(
               title: 'MONEDA Y FORMATO',
@@ -586,6 +694,36 @@ class _SettingsContent extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _VisualThemeChoice extends StatelessWidget {
+  const _VisualThemeChoice({
+    required this.theme,
+    required this.selected,
+    required this.onSelected,
+  });
+  final AppVisualTheme theme;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, icon) = switch (theme) {
+      AppVisualTheme.mony => ('Mony', Icons.auto_awesome_outlined),
+      AppVisualTheme.japaneseSumie => ('Japanese Sumi-e', Icons.brush_outlined),
+      AppVisualTheme.coquetteBloom => (
+        'Coquette Atelier',
+        Icons.card_giftcard_outlined,
+      ),
+      AppVisualTheme.cyberpunk => ('Cyberpunk', Icons.electric_bolt),
+    };
+    return ChoiceChip(
+      avatar: Icon(icon, size: 18),
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onSelected(),
     );
   }
 }
@@ -769,14 +907,20 @@ class _ColorSwatch extends StatelessWidget {
 }
 
 class _ColorPreview extends StatelessWidget {
-  const _ColorPreview({required this.preferences});
+  const _ColorPreview({
+    required this.preferences,
+    required this.primaryArgb,
+    required this.accentArgb,
+  });
 
   final AppPreferences preferences;
+  final int primaryArgb;
+  final int accentArgb;
 
   @override
   Widget build(BuildContext context) {
-    final primary = Color(preferences.primaryColorArgb);
-    final accent = Color(preferences.accentColorArgb);
+    final primary = Color(primaryArgb);
+    final accent = Color(accentArgb);
 
     return Card(
       child: Padding(

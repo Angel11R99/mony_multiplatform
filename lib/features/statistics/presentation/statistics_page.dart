@@ -6,6 +6,8 @@ import 'package:fl_chart/fl_chart.dart';
 
 import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/money/money_formatter.dart';
+import '../../../core/theme/sumi_visuals.dart';
+import '../../../core/theme/coquette_visuals.dart';
 import '../../../core/widgets/mony_settings_action.dart';
 import '../../../core/widgets/mony_states.dart';
 import '../../budgets/domain/budget.dart';
@@ -496,64 +498,78 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return Card(
-      color: colors.primaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final sumi = SumiThemeColors.maybeOf(context);
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'BALANCE DEL PERÍODO',
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: sumi?.paper ?? colors.onPrimaryContainer,
+          ),
+        ),
+        const SizedBox(height: 5),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            _money(report.balanceInCents, currencyStyle),
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: report.balanceInCents < 0
+                  ? colors.error
+                  : sumi?.paper ?? colors.onPrimaryContainer,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
           children: [
-            Text(
-              'BALANCE DEL PERÍODO',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: colors.onPrimaryContainer,
+            Expanded(
+              child: _AmountLabel(
+                label: 'Ingresos',
+                amount: report.incomeInCents,
+                style: currencyStyle,
               ),
             ),
-            const SizedBox(height: 5),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                _money(report.balanceInCents, currencyStyle),
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: report.balanceInCents < 0
-                      ? colors.error
-                      : colors.onPrimaryContainer,
-                ),
+            Expanded(
+              child: _AmountLabel(
+                label: 'Gastos',
+                amount: report.expenseInCents,
+                style: currencyStyle,
+                expense: true,
               ),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _AmountLabel(
-                    label: 'Ingresos',
-                    amount: report.incomeInCents,
-                    style: currencyStyle,
-                  ),
-                ),
-                Expanded(
-                  child: _AmountLabel(
-                    label: 'Gastos',
-                    amount: report.expenseInCents,
-                    style: currencyStyle,
-                    expense: true,
-                  ),
-                ),
-                Expanded(
-                  child: _AmountLabel(
-                    label: 'Movimientos',
-                    amount: report.transactionCount,
-                    style: currencyStyle,
-                    count: true,
-                  ),
-                ),
-              ],
+            Expanded(
+              child: _AmountLabel(
+                label: 'Movimientos',
+                amount: report.transactionCount,
+                style: currencyStyle,
+                count: true,
+              ),
             ),
           ],
         ),
-      ),
+      ],
+    );
+    if (sumi != null) {
+      return SumiSurface(
+        variant: SumiSurfaceVariant.inkBlock,
+        padding: const EdgeInsets.all(18),
+        child: content,
+      );
+    }
+    final coquette = CoquetteThemeColors.maybeOf(context);
+    if (coquette != null) {
+      return CoquetteSurface(
+        variant: CoquetteSurfaceVariant.scalloped,
+        padding: const EdgeInsets.all(18),
+        child: content,
+      );
+    }
+    return Card(
+      color: colors.primaryContainer,
+      child: Padding(padding: const EdgeInsets.all(18), child: content),
     );
   }
 }
@@ -696,7 +712,12 @@ class _ComparisonCard extends StatelessWidget {
             style: currencyStyle,
             upIsGood: false,
           ),
-          const Divider(height: 18),
+          if (SumiThemeColors.maybeOf(context) != null)
+            const SumiBrushDivider(height: 18)
+          else if (CoquetteThemeColors.maybeOf(context) != null)
+            const CoquetteRibbonDivider(height: 18)
+          else
+            const Divider(height: 18),
           _TrendRow(
             label: 'Ingresos',
             current: current.incomeInCents,

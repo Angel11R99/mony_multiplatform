@@ -7,6 +7,8 @@ import '../../../core/money/money_formatter.dart';
 import '../../../core/widgets/mony_settings_action.dart';
 import '../../../core/widgets/mony_states.dart';
 import '../../../core/widgets/dialog_helpers.dart';
+import '../../../core/theme/sumi_visuals.dart';
+import '../../../core/theme/coquette_visuals.dart';
 import '../../categories/domain/category.dart';
 import '../../categories/presentation/categories_providers.dart';
 import '../../payment_methods/domain/payment_method.dart';
@@ -86,6 +88,15 @@ class _ObligationsPageState extends ConsumerState<ObligationsPage> {
         onPressed: () => editObligation(context, ref, categories, methods),
         icon: const Icon(Icons.add),
         label: const Text('Nueva obligación'),
+        shape: SumiThemeColors.maybeOf(context) == null
+            ? null
+            : SumiOpenFrameBorder(
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.secondary,
+                  width: 1.5,
+                ),
+                variation: .32,
+              ),
       ),
       body: state.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -391,27 +402,51 @@ class _ObligationsEmpty extends StatelessWidget {
   final int filter;
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.event_available_outlined, size: 52),
-          const SizedBox(height: 12),
-          Text(
-            filter == 3 ? 'Aún no hay historial' : 'Todo al día',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Registra cuentas que debes pagar o dinero que esperas recibir.',
-            textAlign: TextAlign.center,
-          ),
-        ],
+  Widget build(BuildContext context) {
+    final bloom = CoquetteThemeColors.maybeOf(context);
+    final icon = bloom == null
+        ? const Icon(Icons.event_available_outlined, size: 52)
+        : SizedBox(
+            width: 72,
+            height: 72,
+            child: CustomPaint(
+              painter: CoquetteSurfacePainter(
+                colors: bloom,
+                variant: CoquetteSurfaceVariant.editorial,
+                dark: Theme.of(context).brightness == Brightness.dark,
+                surfaceTokens: CoquetteSurfaceTokens.maybeOf(context),
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.event_available_outlined,
+                  size: 42,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ),
+          );
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            icon,
+            const SizedBox(height: 12),
+            Text(
+              filter == 3 ? 'Aún no hay historial' : 'Todo al día',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Registra cuentas que debes pagar o dinero que esperas recibir.',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _ObligationError extends StatelessWidget {
@@ -501,12 +536,14 @@ Future<void> editObligation(
                     });
                   },
                 ),
+              if (existing == null) const SizedBox(height: 12),
               TextField(
                 controller: name,
                 maxLength: 120,
                 readOnly: existing?.sourceShoppingListId != null,
                 decoration: const InputDecoration(labelText: 'Descripción'),
               ),
+              const SizedBox(height: 8),
               TextField(
                 controller: counterparty,
                 maxLength: 100,
@@ -514,6 +551,7 @@ Future<void> editObligation(
                   labelText: 'Persona o entidad',
                 ),
               ),
+              const SizedBox(height: 8),
               TextField(
                 controller: amount,
                 readOnly: existing?.sourceShoppingListId != null,
@@ -525,6 +563,7 @@ Future<void> editObligation(
                   prefixText: 'RD\$ ',
                 ),
               ),
+              const SizedBox(height: 8),
               DropdownButtonFormField<int>(
                 key: ValueKey(direction),
                 initialValue: categoryId,
@@ -545,6 +584,7 @@ Future<void> editObligation(
                 ],
                 onChanged: (value) => categoryId = value,
               ),
+              const SizedBox(height: 8),
               DropdownButtonFormField<int>(
                 initialValue: methodId,
                 decoration: const InputDecoration(
@@ -563,6 +603,7 @@ Future<void> editObligation(
                 ],
                 onChanged: (value) => methodId = value,
               ),
+              const SizedBox(height: 4),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Vencimiento'),
@@ -585,6 +626,7 @@ Future<void> editObligation(
                   icon: const Icon(Icons.calendar_today_outlined),
                 ),
               ),
+              const SizedBox(height: 4),
               TextField(
                 controller: notes,
                 maxLength: 500,

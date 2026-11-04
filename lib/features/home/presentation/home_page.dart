@@ -10,6 +10,8 @@ import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/money/money_formatter.dart';
 import '../../../core/theme/mony_tokens.dart';
 import '../../../core/theme/mony_finance_colors.dart';
+import '../../../core/theme/sumi_visuals.dart';
+import '../../../core/theme/coquette_visuals.dart';
 import '../../../core/widgets/mony_finance_widgets.dart';
 import '../../../core/widgets/mony_layout.dart';
 import '../../../core/widgets/mony_settings_action.dart';
@@ -141,6 +143,7 @@ class _DashboardContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final categoryNames = {for (final item in categories) item.id: item.name};
     final theme = Theme.of(context);
+    final sumi = SumiThemeColors.maybeOf(context);
     return ResponsiveContainer(
       maxWidth: 760,
       padding: EdgeInsets.zero,
@@ -242,6 +245,8 @@ class _DashboardContent extends StatelessWidget {
             const SizedBox(height: MonySpace.x3),
             MonyCard(
               padding: const EdgeInsets.all(MonySpace.x4),
+              sumiVariant: SumiSurfaceVariant.inkWash,
+              coquetteVariant: CoquetteSurfaceVariant.ribbon,
               child: Row(
                 children: [
                   Expanded(
@@ -250,13 +255,17 @@ class _DashboardContent extends StatelessWidget {
                       children: [
                         Text(
                           'Empieza con un movimiento',
-                          style: theme.textTheme.titleMedium,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: sumi?.ink,
+                          ),
                         ),
                         const SizedBox(height: MonySpace.x1),
                         Text(
                           'Registra un ingreso o un gasto para activar tu resumen.',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                            color:
+                                sumi?.inkGray ??
+                                theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -398,6 +407,7 @@ class _EmptyTrendCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final sumi = SumiThemeColors.maybeOf(context);
     return MonyCard(
       padding: const EdgeInsets.fromLTRB(
         MonySpace.x4,
@@ -405,6 +415,8 @@ class _EmptyTrendCard extends StatelessWidget {
         MonySpace.x4,
         MonySpace.x2,
       ),
+      sumiVariant: SumiSurfaceVariant.inkWash,
+      coquetteVariant: CoquetteSurfaceVariant.editorial,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -413,17 +425,20 @@ class _EmptyTrendCard extends StatelessWidget {
               Icon(
                 PhosphorIconsRegular.chartLineUp,
                 size: 19,
-                color: theme.colorScheme.primary,
+                color: sumi?.vermilion ?? theme.colorScheme.primary,
               ),
               const SizedBox(width: MonySpace.x2),
-              Text('Tu evolución', style: theme.textTheme.titleMedium),
+              Text(
+                'Tu evolución',
+                style: theme.textTheme.titleMedium?.copyWith(color: sumi?.ink),
+              ),
             ],
           ),
           const SizedBox(height: 2),
           Text(
             'Los datos del ciclo aparecerán aquí',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+              color: sumi?.inkGray ?? theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: MonySpace.x2),
@@ -436,15 +451,18 @@ class _EmptyTrendCard extends StatelessWidget {
                 CustomPaint(
                   painter: _TrendGridPainter(
                     color: theme.colorScheme.outlineVariant.withValues(
-                      alpha: .4,
+                      alpha: sumi == null ? .4 : .25,
                     ),
                   ),
                 ),
                 Center(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainer,
-                      borderRadius: BorderRadius.circular(MonyRadius.medium),
+                      color:
+                          sumi?.deepInk ?? theme.colorScheme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(
+                        sumi == null ? MonyRadius.medium : 2,
+                      ),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -454,7 +472,8 @@ class _EmptyTrendCard extends StatelessWidget {
                       child: Text(
                         'Sin movimientos todavía',
                         style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                          color:
+                              sumi?.paper ?? theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -479,13 +498,14 @@ class _TrendGridPainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..strokeWidth = 1;
+    const inset = .5;
     for (var row = 1; row <= 3; row++) {
       final y = size.height * row / 4;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+      canvas.drawLine(Offset(inset, y), Offset(size.width - inset, y), paint);
     }
     for (var column = 1; column <= 5; column++) {
       final x = size.width * column / 6;
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+      canvas.drawLine(Offset(x, inset), Offset(x, size.height - inset), paint);
     }
   }
 

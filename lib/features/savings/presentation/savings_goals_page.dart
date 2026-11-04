@@ -5,6 +5,8 @@ import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 import '../../../core/date_time/mony_date_formatter.dart';
 import '../../../core/money/money_formatter.dart';
+import '../../../core/theme/sumi_visuals.dart';
+import '../../../core/theme/coquette_visuals.dart';
 import '../../../core/theme/mony_tokens.dart';
 import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_confirm_dialog.dart';
@@ -468,123 +470,130 @@ class _SavingsGoalCard extends StatelessWidget {
     final isManuallyCompleted = goal.completedAt != null;
     final percent = progress.percent;
     final colors = Theme.of(context).colorScheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final cardContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    goal.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+            Expanded(
+              child: Text(
+                goal.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+            PopupMenuButton<String>(
+              tooltip: 'Acciones para ${goal.name}',
+              onSelected: (action) {
+                switch (action) {
+                  case 'edit':
+                    onEdit();
+                  case 'complete':
+                    onComplete();
+                  case 'reopen':
+                    onReopen();
+                  case 'history':
+                    onHistory();
+                  case 'delete':
+                    onDelete();
+                }
+              },
+              itemBuilder: (context) => [
+                if (!isManuallyCompleted)
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Text('Editar meta'),
                   ),
+                if (progress.canComplete)
+                  const PopupMenuItem(
+                    value: 'complete',
+                    child: Text('Completar meta'),
+                  ),
+                if (isManuallyCompleted)
+                  const PopupMenuItem(
+                    value: 'reopen',
+                    child: Text('Reabrir meta'),
+                  ),
+                const PopupMenuItem(
+                  value: 'history',
+                  child: Text('Ver aportes'),
                 ),
-                PopupMenuButton<String>(
-                  tooltip: 'Acciones para ${goal.name}',
-                  onSelected: (action) {
-                    switch (action) {
-                      case 'edit':
-                        onEdit();
-                      case 'complete':
-                        onComplete();
-                      case 'reopen':
-                        onReopen();
-                      case 'history':
-                        onHistory();
-                      case 'delete':
-                        onDelete();
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    if (!isManuallyCompleted)
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Text('Editar meta'),
-                      ),
-                    if (progress.canComplete)
-                      const PopupMenuItem(
-                        value: 'complete',
-                        child: Text('Completar meta'),
-                      ),
-                    if (isManuallyCompleted)
-                      const PopupMenuItem(
-                        value: 'reopen',
-                        child: Text('Reabrir meta'),
-                      ),
-                    const PopupMenuItem(
-                      value: 'history',
-                      child: Text('Ver aportes'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Text('Eliminar meta'),
-                    ),
-                  ],
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Text('Eliminar meta'),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              '${MoneyFormatter.formatDopMinorUnits(progress.savedInCents, style: currencyStyle)} de ${MoneyFormatter.formatDopMinorUnits(goal.targetAmountInCents, style: currencyStyle)}',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 10),
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: (percent.clamp(0, 100)) / 100),
-              duration: MonyMotion.durationFor(context, MonyMotion.emphasis),
-              curve: MonyMotion.curveFor(context, Curves.easeOutCubic),
-              builder: (context, value, _) => LinearProgressIndicator(
-                value: value,
-                minHeight: 8,
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    progress.excessInCents > 0
-                        ? 'Objetivo superado · ${MoneyFormatter.formatDopMinorUnits(progress.excessInCents, style: currencyStyle)} extra'
-                        : progress.isCompleted
-                        ? 'Meta alcanzada · $percent%'
-                        : 'Falta ${MoneyFormatter.formatDopMinorUnits(progress.remainingInCents, style: currencyStyle)} · $percent%',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: progress.isCompleted
-                          ? colors.primary
-                          : colors.onSurfaceVariant,
-                      fontWeight: progress.isCompleted ? FontWeight.w600 : null,
-                    ),
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: onHistory,
-                  icon: const Icon(Icons.history, size: 18),
-                  label: const Text('Aportes'),
-                ),
-              ],
-            ),
-            if (!isManuallyCompleted) ...[
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: onContribute,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Aportar'),
-                ),
-              ),
-            ],
           ],
         ),
-      ),
+        const SizedBox(height: 4),
+        Text(
+          '${MoneyFormatter.formatDopMinorUnits(progress.savedInCents, style: currencyStyle)} de ${MoneyFormatter.formatDopMinorUnits(goal.targetAmountInCents, style: currencyStyle)}',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 10),
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: (percent.clamp(0, 100)) / 100),
+          duration: MonyMotion.durationFor(context, MonyMotion.emphasis),
+          curve: MonyMotion.curveFor(context, Curves.easeOutCubic),
+          builder: (context, value, _) => LinearProgressIndicator(
+            value: value,
+            minHeight: 8,
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                progress.excessInCents > 0
+                    ? 'Objetivo superado · ${MoneyFormatter.formatDopMinorUnits(progress.excessInCents, style: currencyStyle)} extra'
+                    : progress.isCompleted
+                    ? 'Meta alcanzada · $percent%'
+                    : 'Falta ${MoneyFormatter.formatDopMinorUnits(progress.remainingInCents, style: currencyStyle)} · $percent%',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: progress.isCompleted
+                      ? colors.primary
+                      : colors.onSurfaceVariant,
+                  fontWeight: progress.isCompleted ? FontWeight.w600 : null,
+                ),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: onHistory,
+              icon: const Icon(Icons.history, size: 18),
+              label: const Text('Aportes'),
+            ),
+          ],
+        ),
+        if (!isManuallyCompleted) ...[
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: onContribute,
+              icon: const Icon(Icons.add),
+              label: const Text('Aportar'),
+            ),
+          ),
+        ],
+      ],
+    );
+    if (CoquetteThemeColors.maybeOf(context) != null) {
+      return CoquetteSurface(
+        variant: CoquetteSurfaceVariant.scalloped,
+        padding: const EdgeInsets.all(18),
+        child: cardContent,
+      );
+    }
+    return SumiSurface(
+      variant: SumiSurfaceVariant.minimalJade,
+      padding: const EdgeInsets.all(18),
+      child: cardContent,
     );
   }
 }
