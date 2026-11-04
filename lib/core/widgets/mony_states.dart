@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../theme/mony_tokens.dart';
+import '../theme/sumi_visuals.dart';
 
 class EmptyState extends StatelessWidget {
   const EmptyState({
@@ -23,6 +24,7 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final sumi = SumiThemeColors.maybeOf(context);
     return Semantics(
       liveRegion: true,
       child: Padding(
@@ -31,16 +33,23 @@ class EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ExcludeSemantics(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer,
-                  borderRadius: BorderRadius.circular(22),
-                ),
-                child: SizedBox(
-                  width: 72,
-                  height: 72,
-                  child: Icon(icon, size: 34, color: colors.primary),
-                ),
+              child: SizedBox(
+                width: 72,
+                height: 72,
+                child: sumi == null
+                    ? DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.primaryContainer,
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        child: Icon(icon, size: 34, color: colors.primary),
+                      )
+                    : CustomPaint(
+                        painter: _SumiEmptyMarkPainter(sumi.vermilion),
+                        child: Center(
+                          child: Icon(icon, size: 34, color: colors.onSurface),
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: MonySpace.x3),
@@ -71,6 +80,46 @@ class EmptyState extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SumiEmptyMarkPainter extends CustomPainter {
+  const _SumiEmptyMarkPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final dryStroke = Path()
+      ..moveTo(size.width * .17, size.height * .79)
+      ..cubicTo(
+        size.width * .36,
+        size.height * .76,
+        size.width * .51,
+        size.height * .81,
+        size.width * .72,
+        size.height * .77,
+      );
+    canvas.drawPath(
+      dryStroke,
+      Paint()
+        ..color = color.withValues(alpha: .9)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.3
+        ..strokeCap = StrokeCap.square,
+    );
+    canvas.drawLine(
+      Offset(size.width * .79, size.height * .77),
+      Offset(size.width * .86, size.height * .76),
+      Paint()
+        ..color = color.withValues(alpha: .48)
+        ..strokeWidth = .8
+        ..strokeCap = StrokeCap.square,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _SumiEmptyMarkPainter oldDelegate) =>
+      color != oldDelegate.color;
 }
 
 class ErrorState extends StatelessWidget {
