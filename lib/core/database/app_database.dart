@@ -137,6 +137,10 @@ class AppDatabase extends _$AppDatabase {
           schema.shoppingListItems.barcode,
         );
       },
+      from9To10: (migrator, schema) async {
+        await customStatement('DROP INDEX IF EXISTS transactions_date_idx');
+        await migrator.create(schema.transactionsDateCreatedIdx);
+      },
     ),
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -144,7 +148,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 }
 
 const _initialCategories = <(String, CategoryType, String, int)>[

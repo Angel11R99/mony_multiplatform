@@ -67,6 +67,44 @@ void main() {
     );
   });
 
+  test('summarizes a period in SQLite by type and expense category', () async {
+    await repository.create(
+      movement(amountInCents: 1200, date: DateTime(2025, 3, 3)),
+    );
+    await repository.create(
+      movement(
+        amountInCents: 700,
+        date: DateTime(2025, 3, 12),
+        description: 'Segundo gasto',
+      ),
+    );
+    await repository.create(
+      movement(amountInCents: 900, categoryId: 7, date: DateTime(2025, 3, 14)),
+    );
+    await repository.create(
+      movement(
+        amountInCents: 400,
+        type: TransactionType.income,
+        categoryId: 1,
+        date: DateTime(2025, 3, 10),
+      ),
+    );
+    await repository.create(
+      movement(amountInCents: 5000, date: DateTime(2025, 4, 1)),
+    );
+
+    final summary = await repository
+        .watchPeriodSummary(
+          start: DateTime(2025, 3, 1),
+          endInclusive: DateTime(2025, 3, 31),
+        )
+        .first;
+
+    expect(summary.incomeInCents, 400);
+    expect(summary.expenseInCents, 2800);
+    expect(summary.expenseByCategory, {6: 1900, 7: 900});
+  });
+
   test(
     'rejects inactive, mismatched and missing references and invalid amount',
     () async {

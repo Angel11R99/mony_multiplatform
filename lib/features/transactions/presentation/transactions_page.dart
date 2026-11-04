@@ -485,7 +485,13 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final transactions = ref.watch(filteredTransactionsProvider(_filter));
+    final filter = _filter;
+    final transactions = ref.watch(
+      filteredTransactionsProvider((filter, _visibleCount + 1)),
+    );
+    final historySummary = ref.watch(
+      filteredTransactionSummaryProvider(filter),
+    );
     final categories = ref.watch(categoriesProvider);
     final methods = ref.watch(paymentMethodsProvider);
 
@@ -513,22 +519,35 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         loading: () =>
             const LoadingPlaceholder(message: 'Cargando movimientos'),
         error: (error, stack) => _TransactionsError(
-          onRetry: () => ref.invalidate(filteredTransactionsProvider(_filter)),
+          onRetry: () {
+            ref.invalidate(
+              filteredTransactionsProvider((filter, _visibleCount + 1)),
+            );
+            ref.invalidate(filteredTransactionSummaryProvider(filter));
+          },
         ),
-        data: (items) => categories.when(
+        data: (items) => historySummary.when(
           loading: () =>
-              const LoadingPlaceholder(message: 'Cargando categorías'),
+              const LoadingPlaceholder(message: 'Calculando el resumen'),
           error: (error, stack) => _TransactionsError(
-            onRetry: () => ref.invalidate(categoriesProvider),
+            onRetry: () =>
+                ref.invalidate(filteredTransactionSummaryProvider(filter)),
           ),
-          data: (categoryItems) => methods.when(
+          data: (summary) => categories.when(
             loading: () =>
-                const LoadingPlaceholder(message: 'Cargando métodos de pago'),
+                const LoadingPlaceholder(message: 'Cargando categorías'),
             error: (error, stack) => _TransactionsError(
-              onRetry: () => ref.invalidate(paymentMethodsProvider),
+              onRetry: () => ref.invalidate(categoriesProvider),
             ),
-            data: (methodItems) => MonyEntrance(
-              child: _history(items, categoryItems, methodItems),
+            data: (categoryItems) => methods.when(
+              loading: () =>
+                  const LoadingPlaceholder(message: 'Cargando métodos de pago'),
+              error: (error, stack) => _TransactionsError(
+                onRetry: () => ref.invalidate(paymentMethodsProvider),
+              ),
+              data: (methodItems) => MonyEntrance(
+                child: _history(items, summary, categoryItems, methodItems),
+              ),
             ),
           ),
         ),
@@ -538,11 +557,14 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
   Widget _history(
     List<FinanceTransaction> items,
+    TransactionHistorySummary summary,
     List<Category> categories,
     List<PaymentMethod> methods,
   ) {
-    final filtered = items;
-    final shown = filtered.take(_visibleCount).toList(growable: false);
+    final shown = items.take(_visibleCount).toList(growable: false);
+    final hasMore = items.length > _visibleCount;
+    final categoryById = {for (final item in categories) item.id: item};
+    final methodById = {for (final item in methods) item.id: item};
     final groupByDate =
         _sortOrder == TransactionSortOrder.newest ||
         _sortOrder == TransactionSortOrder.oldest;
@@ -554,14 +576,8 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         entries.add(_HistoryDateHeader(date));
       }
       previousDate = date;
-      final category = _firstWhereOrNull(
-        categories,
-        (entry) => entry.id == item.categoryId,
-      );
-      final method = _firstWhereOrNull(
-        methods,
-        (entry) => entry.id == item.paymentMethodId,
-      );
+      final category = categoryById[item.categoryId];
+      final method = methodById[item.paymentMethodId];
       entries.add(
         _HistoryMovement(
           transaction: item,
@@ -783,16 +799,16 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                   runSpacing: 4,
                   children: [
                     Text(
-                      '${filtered.length} ${filtered.length == 1 ? 'movimiento' : 'movimientos'}',
+                      '${summary.totalCount} ${summary.totalCount == 1 ? 'movimiento' : 'movimientos'}',
                     ),
                     Text(
-                      'Ingresos ${MoneyFormatter.formatDopMinorUnits(filtered.where((item) => item.type == TransactionType.income).fold<int>(0, (total, item) => total + item.amountInCents))}',
+                      'Ingresos ${MoneyFormatter.formatDopMinorUnits(summary.incomeInCents)}',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     Text(
-                      'Gastos ${MoneyFormatter.formatDopMinorUnits(filtered.where((item) => item.type == TransactionType.expense).fold<int>(0, (total, item) => total + item.amountInCents))}',
+                      'Gastos ${MoneyFormatter.formatDopMinorUnits(summary.expenseInCents)}',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
                       ),
@@ -804,7 +820,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           ),
         ),
         Expanded(
-          child: filtered.isEmpty
+          child: summary.totalCount == 0
               ? _TransactionsEmpty(
                   filtered: _filter.hasCriteria,
                   onClear: _filter.hasCriteria ? _clearFilters : null,
@@ -812,9 +828,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
               : SlidableAutoCloseBehavior(
                   child: ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 104),
-                    itemCount:
-                        entries.length +
-                        (shown.length < filtered.length ? 1 : 0),
+                    itemCount: entries.length + (hasMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == entries.length) {
                         return Padding(
@@ -824,9 +838,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                               onPressed: () =>
                                   setState(() => _visibleCount += _pageSize),
                               icon: const Icon(Icons.expand_more),
-                              label: Text(
-                                'Cargar más (${filtered.length - shown.length})',
-                              ),
+                              label: Text('Cargar más'),
                             ),
                           ),
                         );
@@ -1120,7 +1132,13 @@ class _TransactionActivityCalendarState
 
   @override
   Widget build(BuildContext context) {
-    final transactions = ref.watch(transactionsProvider);
+    final monthStart = DateTime(_focusedDay.year, _focusedDay.month);
+    final filter = TransactionHistoryFilter(
+      startDate: monthStart.subtract(const Duration(days: 7)),
+      endDate: DateTime(_focusedDay.year, _focusedDay.month + 1, 7),
+    );
+    final request = filteredTransactionsProvider((filter, null));
+    final transactions = ref.watch(request);
     return transactions.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Center(
@@ -1129,7 +1147,7 @@ class _TransactionActivityCalendarState
           children: [
             const Text('No pudimos cargar la actividad.'),
             TextButton(
-              onPressed: () => ref.invalidate(transactionsProvider),
+              onPressed: () => ref.invalidate(request),
               child: const Text('Reintentar'),
             ),
           ],
@@ -1197,7 +1215,9 @@ class _TransactionActivityCalendarState
                   focusedDay.day,
                 );
               }),
-              onPageChanged: (focusedDay) => _focusedDay = focusedDay,
+              onPageChanged: (focusedDay) => setState(() {
+                _focusedDay = focusedDay;
+              }),
               calendarStyle: CalendarStyle(
                 outsideDaysVisible: true,
                 markersMaxCount: 3,
@@ -1524,10 +1544,3 @@ class _TransactionsError extends StatelessWidget {
 }
 
 String _dateLabel(DateTime date) => MonyDateFormatter.formatDate(date);
-
-T? _firstWhereOrNull<T>(Iterable<T> values, bool Function(T) test) {
-  for (final value in values) {
-    if (test(value)) return value;
-  }
-  return null;
-}

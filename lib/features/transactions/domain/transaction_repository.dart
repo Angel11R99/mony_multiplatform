@@ -3,9 +3,21 @@ import 'transaction_history_filter.dart';
 
 abstract interface class TransactionRepository {
   Stream<List<FinanceTransaction>> watchAll();
+  Stream<TransactionPeriodSummary> watchPeriodSummary({
+    required DateTime start,
+    required DateTime endInclusive,
+  });
   Stream<List<FinanceTransaction>> watchFiltered(
+    TransactionHistoryFilter filter, {
+    int? limit,
+  });
+  Stream<TransactionHistorySummary> watchFilteredSummary(
     TransactionHistoryFilter filter,
   );
+  Future<List<FinanceTransaction>> findDuplicateCandidates({
+    required int amountInCents,
+    required DateTime date,
+  });
   Future<FinanceTransaction?> get(int id);
   Future<int> create(FinanceTransaction transaction);
   Future<void> update(FinanceTransaction transaction);

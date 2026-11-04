@@ -14,6 +14,7 @@ import 'generated/schema_v6.dart' as v6;
 import 'generated/schema_v7.dart' as v7;
 import 'generated/schema_v8.dart' as v8;
 import 'generated/schema_v9.dart' as v9;
+import 'generated/schema_v10.dart' as v10;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -81,6 +82,76 @@ void main() {
       },
     );
   });
+
+  test(
+    'v9 to v10 preserves transactions and replaces the date index',
+    () async {
+      await verifier.testWithDataIntegrity(
+        oldVersion: 9,
+        newVersion: 10,
+        createOld: v9.DatabaseAtV9.new,
+        createNew: v10.DatabaseAtV10.new,
+        openTestedDatabase: AppDatabase.new,
+        createItems: (batch, oldDatabase) {
+          batch.insert(
+            oldDatabase.categories,
+            const v9.CategoriesData(
+              id: 31,
+              name: 'Alimentación',
+              normalizedName: 'alimentacion',
+              type: 'expense',
+              icon: 'restaurant',
+              colorArgb: 0xFFEA580C,
+              isActive: 1,
+              createdAt: 1_762_000_000,
+            ),
+          );
+          batch.insert(
+            oldDatabase.paymentMethods,
+            const v9.PaymentMethodsData(
+              id: 41,
+              name: 'Efectivo',
+              normalizedName: 'efectivo',
+              icon: 'cash',
+              colorArgb: 0xFF16A34A,
+              isActive: 1,
+              isDefault: 1,
+              createdAt: 1_762_000_000,
+            ),
+          );
+          batch.insert(
+            oldDatabase.transactions,
+            const v9.TransactionsData(
+              id: 51,
+              amountInCents: 1250,
+              type: 'expense',
+              categoryId: 31,
+              paymentMethodId: 41,
+              description: 'Compra migrada',
+              dateEpochDay: 20600,
+              createdAt: 1_762_000_001,
+              updatedAt: 1_762_000_002,
+            ),
+          );
+        },
+        validateItems: (database) async {
+          final transaction = await database
+              .select(database.transactions)
+              .getSingle();
+          expect(transaction.id, 51);
+          expect(transaction.amountInCents, 1250);
+          expect(transaction.description, 'Compra migrada');
+
+          final indexes = await database
+              .customSelect('PRAGMA index_list(transactions)')
+              .get();
+          final names = indexes.map((row) => row.read<String>('name')).toSet();
+          expect(names, contains('transactions_date_created_idx'));
+          expect(names, isNot(contains('transactions_date_idx')));
+        },
+      );
+    },
+  );
 
   test('v1 to v2 keeps categories and seeds payment methods', () async {
     const oldCategories = <v1.CategoriesData>[
