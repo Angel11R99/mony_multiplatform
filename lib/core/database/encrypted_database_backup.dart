@@ -42,21 +42,33 @@ class EncryptedDatabaseBackup {
   Future<Uint8List> create(String passphrase) async {
     _validatePassphrase(passphrase);
     final tables = await _database.transaction(() async {
-      final snapshot = <String, List<Map<String, Object?>>>{};
+      final encodedTables = <String, String>{};
       for (final table in _tableOrder) {
         final rows = await _database
             .customSelect('SELECT * FROM "$table"')
             .get();
-        snapshot[table] = rows.map((row) => row.data).toList(growable: false);
+        encodedTables[table] = jsonEncode(
+          rows.map((row) => row.data).toList(growable: false),
+        );
       }
-      return snapshot;
+      return encodedTables;
     });
-    final payload = jsonEncode({
-      'application': 'mony',
-      'schemaVersion': _database.schemaVersion,
-      'createdAt': DateTime.now().toUtc().toIso8601String(),
-      'tables': tables,
-    });
+    final payloadBuffer = StringBuffer()
+      ..write('{"application":"mony","schemaVersion":')
+      ..write(_database.schemaVersion)
+      ..write(',"createdAt":')
+      ..write(jsonEncode(DateTime.now().toUtc().toIso8601String()))
+      ..write(',"tables":{');
+    for (var index = 0; index < _tableOrder.length; index++) {
+      if (index > 0) payloadBuffer.write(',');
+      final table = _tableOrder[index];
+      payloadBuffer
+        ..write(jsonEncode(table))
+        ..write(':')
+        ..write(tables[table]);
+    }
+    payloadBuffer.write('}}');
+    final payload = payloadBuffer.toString();
     final clearBytes = utf8.encode(payload);
     if (clearBytes.length > _maxPayloadBytes) {
       throw const DatabaseBackupException(
@@ -174,26 +186,24 @@ class EncryptedDatabaseBackup {
           .get();
       tableColumns[table] = info.map((row) => row.read<String>('name')).toSet();
     }
-    final normalized = <String, List<Map<String, Object?>>>{};
+    final rowsByTable = <String, List<dynamic>>{};
     for (final table in _tableOrder) {
       final rows = sourceTables[table];
       if (rows is! List) {
         throw const DatabaseBackupException('Hay datos inválidos en la copia.');
       }
       final columns = tableColumns[table]!;
-      normalized[table] = rows
-          .map((row) {
-            final values = _asMap(row, 'Hay una fila inválida en la copia.');
-            if (values.isEmpty ||
-                values.keys.any((column) => !columns.contains(column)) ||
-                !values.keys.toSet().containsAll(columns)) {
-              throw const DatabaseBackupException(
-                'La estructura de la copia no coincide con Mony.',
-              );
-            }
-            return Map<String, Object?>.from(values);
-          })
-          .toList(growable: false);
+      for (final row in rows) {
+        final values = _asMap(row, 'Hay una fila inválida en la copia.');
+        if (values.isEmpty ||
+            values.keys.any((column) => !columns.contains(column)) ||
+            !columns.every(values.containsKey)) {
+          throw const DatabaseBackupException(
+            'La estructura de la copia no coincide con Mony.',
+          );
+        }
+      }
+      rowsByTable[table] = rows;
     }
 
     await _database.transaction(() async {
@@ -201,17 +211,20 @@ class EncryptedDatabaseBackup {
       for (final table in _tableOrder.reversed) {
         await _database.customStatement('DELETE FROM "$table"');
       }
-      for (final table in _tableOrder) {
-        final columns = tableColumns[table]!.toList(growable: false);
-        final quotedColumns = columns.map((column) => '"$column"').join(', ');
-        final placeholders = List.filled(columns.length, '?').join(', ');
-        final insert =
-            'INSERT INTO "$table" ($quotedColumns) VALUES ($placeholders)';
-        for (final row in normalized[table]!) {
-          final values = columns.map((column) => row[column]).toList();
-          await _database.customStatement(insert, values);
+      await _database.batch((batch) {
+        for (final table in _tableOrder) {
+          final columns = tableColumns[table]!.toList(growable: false);
+          final quotedColumns = columns.map((column) => '"$column"').join(', ');
+          final placeholders = List.filled(columns.length, '?').join(', ');
+          final insert =
+              'INSERT INTO "$table" ($quotedColumns) VALUES ($placeholders)';
+          for (final row in rowsByTable[table]!) {
+            final values = row as Map<String, dynamic>;
+            final parameters = columns.map((column) => values[column]).toList();
+            batch.customStatement(insert, parameters);
+          }
         }
-      }
+      });
       final violations = await _database
           .customSelect('PRAGMA foreign_key_check')
           .get();

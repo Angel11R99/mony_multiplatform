@@ -8,8 +8,8 @@ void main() {
     (tester) async {
       await tester.pumpWidget(const MaterialApp(home: DatabaseBackupPage()));
       final semantics = tester.ensureSemantics();
-    await tester.drag(find.byType(ListView), const Offset(0, -520));
-    await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -520));
+      await tester.pumpAndSettle();
       expect(find.text('Copia de seguridad'), findsOneWidget);
       expect(find.text('Crear y guardar copia'), findsOneWidget);
       expect(find.text('Seleccionar y restaurar copia'), findsOneWidget);
