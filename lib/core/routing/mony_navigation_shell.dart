@@ -99,7 +99,13 @@ class MonyNavigationShell extends ConsumerWidget {
         NavBarItem(
           icon: _iconData[index],
           customIcon: japanese
-              ? Icon(_iconData[index], color: scheme.onSurface)
+              ? Transform.translate(
+                  offset: Offset(
+                    0,
+                    index == navigationShell.currentIndex ? 5 : 0,
+                  ),
+                  child: Icon(_iconData[index], color: scheme.onSurface),
+                )
               : null,
         ),
     ];
@@ -133,7 +139,9 @@ class MonyNavigationShell extends ConsumerWidget {
                 items: items,
                 style: japanese ? NavBarStyle.sumi : NavBarStyle.synapse,
                 theme: japanese ? sumieNavTheme : FuturisticTheme.cyberpunk(),
-                iconAnimationType: IconAnimationType.slide,
+                iconAnimationType: japanese
+                    ? IconAnimationType.fade
+                    : IconAnimationType.slide,
                 showGlow: !japanese,
                 showLiquid: !japanese,
               ),
