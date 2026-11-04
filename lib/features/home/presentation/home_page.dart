@@ -23,8 +23,8 @@ import '../../categories/presentation/categories_providers.dart';
 import '../../preferences/domain/app_preferences.dart';
 import '../../preferences/presentation/preferences_controller.dart';
 import '../../transactions/domain/transaction.dart';
-import '../../transactions/presentation/transactions_providers.dart';
 import '../../dashboard/domain/financial_dashboard_summary.dart';
+import '../../dashboard/presentation/dashboard_providers.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -38,20 +38,18 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final transactions = ref.watch(transactionsProvider);
     final budget = ref.watch(budgetConfigProvider);
     final range = budgetPeriodForView(
       budget.value,
       _periodView,
       DateTime.now(),
     );
-    final summary = transactions.whenData(
-      (items) => FinancialDashboardSummary.fromTransactions(
-        items,
-        month: range.start,
-        selectedPeriod: range,
-      ),
+    final summaryRequest = (
+      month: range.start,
+      start: range.start,
+      end: range.endInclusive,
     );
+    final summary = ref.watch(dashboardSummaryProvider(summaryRequest));
     final categories = ref.watch(categoriesProvider);
     final preferences =
         ref.watch(appPreferencesProvider).value ?? AppPreferences.defaults;
@@ -75,7 +73,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                   error: (error, stack) => ErrorState(
                     message: 'No pudimos cargar el resumen financiero.',
                     retryLabel: 'Reintentar',
-                    onRetry: () => ref.invalidate(transactionsProvider),
+                    onRetry: () => ref.invalidate(
+                      dashboardSummaryProvider(summaryRequest),
+                    ),
                   ),
                   data: (value) => categories.when(
                     loading: () => _DashboardContent(
