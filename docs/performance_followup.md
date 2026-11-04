@@ -9,6 +9,7 @@ Este archivo conserva trabajo que requiere otra sesión o un entorno distinto. L
 - [ ] Perfilar con datos poblados en Android el historial, Presupuesto y Estadísticas; registrar latencia y cuadros en desplazamiento, no solo estado vacío.
 - [ ] Medir memoria pico y duración de exportar/restaurar una copia cifrada próxima al límite de tamaño configurado (47 MiB).
 - [ ] Validar Android en un dispositivo físico, incluyendo consumo de memoria y fluidez prolongada.
+- [ ] Generar el Android App Bundle release con firma local y comparar el tamaño de descarga por dispositivo. Los APK de perfil separados miden 62.6–72.2 MiB y contienen los runtimes de depuración junto con bibliotecas nativas de OCR/código de barras; estas cifras no predicen el tamaño de distribución.
 
 ## Entornos de compilación pendientes
 
