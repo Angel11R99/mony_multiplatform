@@ -5,7 +5,7 @@ Este archivo conserva trabajo que requiere otra sesión o un entorno distinto. L
 ## Siguiente sesión
 
 - [ ] Repetir una captura visual del navbar Sumi-e en emulador/dispositivo y confirmar que el sello bermellón queda fuera del icono Historial. La captura ADB del emulador actual salió negra, aunque la actividad y el árbol semántico Flutter estaban activos.
-- [ ] Ejecutar `flutter test` completo después del último test de navegación (el último resultado completo previo fue 200; el test de navegación añadido después también pasa por separado).
+- [x] Ejecutar `flutter test` completo después del último test de navegación y del cambio de fuentes locales. Resultado: 202 pruebas pasaron.
 - [ ] Perfilar con datos poblados en Android el historial, Presupuesto y Estadísticas; registrar latencia y cuadros en desplazamiento, no solo estado vacío.
 - [ ] Medir memoria pico y duración de exportar/restaurar una copia cifrada próxima al límite de tamaño configurado (47 MiB).
 - [ ] Validar Android en un dispositivo físico, incluyendo consumo de memoria y fluidez prolongada.
@@ -19,4 +19,4 @@ Este archivo conserva trabajo que requiere otra sesión o un entorno distinto. L
 
 ## Cierre
 
-- [ ] Actualizar [performance_review.md](performance_review.md) con resultados reproducibles, límites del hardware usado y cualquier regresión encontrada.
+- [x] Actualizar [performance_review.md](performance_review.md) con la suite completa (202 pruebas), builds tras las fuentes locales y el límite conocido de captura ADB. Añadir nuevos resultados cuando se completen los perfiles pendientes.
