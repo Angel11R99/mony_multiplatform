@@ -11,6 +11,7 @@ import '../../../core/money/money_formatter.dart';
 import '../../../core/theme/mony_tokens.dart';
 import '../../../core/theme/mony_finance_colors.dart';
 import '../../../core/theme/sumi_visuals.dart';
+import '../../../core/theme/coquette_visuals.dart';
 import '../../../core/widgets/mony_finance_widgets.dart';
 import '../../../core/widgets/mony_layout.dart';
 import '../../../core/widgets/mony_settings_action.dart';
@@ -414,6 +415,7 @@ class _EmptyTrendCard extends StatelessWidget {
         MonySpace.x2,
       ),
       sumiVariant: SumiSurfaceVariant.inkWash,
+      coquetteVariant: CoquetteSurfaceVariant.editorial,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

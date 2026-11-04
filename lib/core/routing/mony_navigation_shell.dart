@@ -7,6 +7,7 @@ import '../../features/preferences/domain/app_preferences.dart';
 import '../../features/preferences/presentation/preferences_controller.dart';
 import '../theme/mony_tokens.dart';
 import '../theme/sumi_visuals.dart';
+import '../theme/coquette_visuals.dart';
 
 class MonyNavigationShell extends ConsumerWidget {
   const MonyNavigationShell({required this.navigationShell, super.key});
@@ -39,6 +40,7 @@ class MonyNavigationShell extends ConsumerWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final japanese = preferences?.visualTheme == AppVisualTheme.japaneseSumie;
+    final coquette = preferences?.visualTheme == AppVisualTheme.coquetteBloom;
     final sumi = SumiThemeColors.maybeOf(context);
     final destinations = [
       for (final index in visibleIndices)
@@ -90,6 +92,26 @@ class MonyNavigationShell extends ConsumerWidget {
             ),
             Expanded(child: navigationShell),
           ],
+        ),
+      );
+    }
+
+    if (coquette) {
+      return Scaffold(
+        body: navigationShell,
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: CoquetteBottomNavigationBar(
+            items: [
+              for (final index in visibleIndices)
+                CoquetteNavigationItem(
+                  icon: _iconData[index],
+                  label: _moduleLabels[index],
+                ),
+            ],
+            selectedIndex: selectedVisibleIndex,
+            onSelected: (index) => _selectBranch(visibleIndices[index]),
+          ),
         ),
       );
     }
@@ -161,6 +183,17 @@ class MonyNavigationShell extends ConsumerWidget {
     'statistics',
     'cyclePlan',
     'transactions',
+  ];
+
+  static const _moduleLabels = [
+    'Inicio',
+    'Fijos',
+    'Recordatorios',
+    'Ahorros',
+    'Lista',
+    'Estadísticas',
+    'Plan de ciclo',
+    'Historial',
   ];
 
   static const _iconData = <IconData>[

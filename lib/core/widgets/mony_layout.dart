@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/mony_tokens.dart';
 import '../theme/sumi_visuals.dart';
+import '../theme/coquette_visuals.dart';
 
 class MonyCard extends StatelessWidget {
   const MonyCard({
@@ -10,6 +11,7 @@ class MonyCard extends StatelessWidget {
     this.onTap,
     this.semanticLabel,
     this.sumiVariant = SumiSurfaceVariant.openFrame,
+    this.coquetteVariant,
     super.key,
   });
 
@@ -18,9 +20,31 @@ class MonyCard extends StatelessWidget {
   final VoidCallback? onTap;
   final String? semanticLabel;
   final SumiSurfaceVariant sumiVariant;
+  final CoquetteSurfaceVariant? coquetteVariant;
 
   @override
   Widget build(BuildContext context) {
+    if (CoquetteThemeColors.maybeOf(context) != null) {
+      final variant =
+          coquetteVariant ??
+          switch (sumiVariant) {
+            SumiSurfaceVariant.inkBlock => CoquetteSurfaceVariant.petal,
+            SumiSurfaceVariant.inkWash => CoquetteSurfaceVariant.ribbon,
+            SumiSurfaceVariant.openFrame => CoquetteSurfaceVariant.pearl,
+            SumiSurfaceVariant.minimalJade =>
+              CoquetteSurfaceVariant.incomePearl,
+            SumiSurfaceVariant.minimalVermilion =>
+              CoquetteSurfaceVariant.expensePearl,
+            SumiSurfaceVariant.minimalInk => CoquetteSurfaceVariant.scalloped,
+          };
+      return CoquetteSurface(
+        semanticLabel: semanticLabel,
+        variant: variant,
+        padding: padding,
+        onTap: onTap,
+        child: child,
+      );
+    }
     return SumiSurface(
       semanticLabel: semanticLabel,
       variant: sumiVariant,

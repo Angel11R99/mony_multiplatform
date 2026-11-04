@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/mony_finance_colors.dart';
 import '../theme/mony_tokens.dart';
 import '../theme/sumi_visuals.dart';
+import '../theme/coquette_visuals.dart';
 import 'mony_layout.dart';
 
 enum AmountEmphasis { neutral, income, expense }
@@ -58,6 +59,7 @@ class BalanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final japanese = SumiThemeColors.maybeOf(context) != null;
+    final coquette = CoquetteThemeColors.maybeOf(context) != null;
     final sumiPaper = SumiThemeColors.defaults.paper;
     final content = Padding(
       padding: const EdgeInsets.all(MonySpace.x6),
@@ -92,7 +94,7 @@ class BalanceCard extends StatelessWidget {
       semanticLabel: '$label. $amount. $supportingText',
       padding: EdgeInsets.zero,
       sumiVariant: SumiSurfaceVariant.inkBlock,
-      child: japanese
+      child: japanese || coquette
           ? content
           : DecoratedBox(
               decoration: BoxDecoration(

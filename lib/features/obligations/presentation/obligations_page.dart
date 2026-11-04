@@ -8,6 +8,7 @@ import '../../../core/widgets/mony_settings_action.dart';
 import '../../../core/widgets/mony_states.dart';
 import '../../../core/widgets/dialog_helpers.dart';
 import '../../../core/theme/sumi_visuals.dart';
+import '../../../core/theme/coquette_visuals.dart';
 import '../../categories/domain/category.dart';
 import '../../categories/presentation/categories_providers.dart';
 import '../../payment_methods/domain/payment_method.dart';
@@ -401,27 +402,50 @@ class _ObligationsEmpty extends StatelessWidget {
   final int filter;
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.event_available_outlined, size: 52),
-          const SizedBox(height: 12),
-          Text(
-            filter == 3 ? 'Aún no hay historial' : 'Todo al día',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Registra cuentas que debes pagar o dinero que esperas recibir.',
-            textAlign: TextAlign.center,
-          ),
-        ],
+  Widget build(BuildContext context) {
+    final bloom = CoquetteThemeColors.maybeOf(context);
+    final icon = bloom == null
+        ? const Icon(Icons.event_available_outlined, size: 52)
+        : SizedBox(
+            width: 72,
+            height: 72,
+            child: CustomPaint(
+              painter: CoquetteSurfacePainter(
+                colors: bloom,
+                variant: CoquetteSurfaceVariant.editorial,
+                dark: Theme.of(context).brightness == Brightness.dark,
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.event_available_outlined,
+                  size: 42,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ),
+          );
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            icon,
+            const SizedBox(height: 12),
+            Text(
+              filter == 3 ? 'Aún no hay historial' : 'Todo al día',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Registra cuentas que debes pagar o dinero que esperas recibir.',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _ObligationError extends StatelessWidget {

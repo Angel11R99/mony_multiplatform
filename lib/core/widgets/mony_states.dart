@@ -4,6 +4,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../theme/mony_tokens.dart';
 import '../theme/sumi_visuals.dart';
+import '../theme/coquette_visuals.dart';
 
 class EmptyState extends StatelessWidget {
   const EmptyState({
@@ -25,6 +26,7 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final sumi = SumiThemeColors.maybeOf(context);
+    final coquette = CoquetteThemeColors.maybeOf(context);
     return Semantics(
       liveRegion: true,
       child: Padding(
@@ -36,19 +38,30 @@ class EmptyState extends StatelessWidget {
               child: SizedBox(
                 width: 72,
                 height: 72,
-                child: sumi == null
-                    ? DecoratedBox(
+                child: sumi != null
+                    ? CustomPaint(
+                        painter: _SumiEmptyMarkPainter(sumi.vermilion),
+                        child: Center(
+                          child: Icon(icon, size: 34, color: colors.onSurface),
+                        ),
+                      )
+                    : coquette != null
+                    ? CustomPaint(
+                        painter: CoquetteSurfacePainter(
+                          colors: coquette,
+                          variant: CoquetteSurfaceVariant.editorial,
+                          dark: Theme.of(context).brightness == Brightness.dark,
+                        ),
+                        child: Center(
+                          child: Icon(icon, size: 34, color: colors.primary),
+                        ),
+                      )
+                    : DecoratedBox(
                         decoration: BoxDecoration(
                           color: colors.primaryContainer,
                           borderRadius: BorderRadius.circular(22),
                         ),
                         child: Icon(icon, size: 34, color: colors.primary),
-                      )
-                    : CustomPaint(
-                        painter: _SumiEmptyMarkPainter(sumi.vermilion),
-                        child: Center(
-                          child: Icon(icon, size: 34, color: colors.onSurface),
-                        ),
                       ),
               ),
             ),

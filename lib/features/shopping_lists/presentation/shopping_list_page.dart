@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/widgets/dialog_helpers.dart';
 import '../../../core/money/money_formatter.dart';
 import '../../../core/theme/sumi_visuals.dart';
+import '../../../core/theme/coquette_visuals.dart';
 import '../../categories/domain/category.dart';
 import '../../categories/presentation/categories_providers.dart';
 import '../../payment_methods/domain/payment_method.dart';
@@ -557,6 +558,10 @@ class _TotalsCard extends StatelessWidget {
     final adjustments = details.adjustmentTotalInCents;
     final colors = Theme.of(context).colorScheme;
     final sumi = SumiThemeColors.maybeOf(context);
+    final bloom = CoquetteThemeColors.maybeOf(context);
+    Widget separator(double height) => bloom == null
+        ? SumiBrushDivider(height: height)
+        : CoquetteRibbonDivider(height: height);
     final content = Column(
       children: [
         _TotalRow(
@@ -571,14 +576,14 @@ class _TotalsCard extends StatelessWidget {
           style: currencyStyle,
         ),
         if (adjustments != 0) ...[
-          const SumiBrushDivider(height: 19),
+          separator(19),
           _TotalRow(
             label: adjustments > 0 ? 'Recargos e impuestos' : 'Descuentos',
             value: adjustments,
             style: currencyStyle,
           ),
         ],
-        const SumiBrushDivider(height: 22),
+        separator(22),
         _TotalRow(
           label: 'Total actual',
           value: details.actualTotalInCents,
@@ -603,6 +608,13 @@ class _TotalsCard extends StatelessWidget {
     if (sumi != null) {
       return SumiSurface(
         variant: SumiSurfaceVariant.inkWash,
+        padding: const EdgeInsets.all(16),
+        child: content,
+      );
+    }
+    if (bloom != null) {
+      return CoquetteSurface(
+        variant: CoquetteSurfaceVariant.ribbon,
         padding: const EdgeInsets.all(16),
         child: content,
       );

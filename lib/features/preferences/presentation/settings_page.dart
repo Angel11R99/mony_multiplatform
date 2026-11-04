@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_confirm_dialog.dart';
+import '../../../core/theme/coquette_visuals.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -339,33 +340,59 @@ class _SettingsPageState extends ConsumerState<PersonalizationSettingsPage> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) =>
             _LoadError(onRetry: () => ref.invalidate(appPreferencesProvider)),
-        data: (value) => _SettingsContent(
-          preferences: value,
-          colorOptions: _colorOptions,
-          onThemeChanged: (mode) => _save(
-            () => ref.read(appPreferencesProvider.notifier).setThemeMode(mode),
-          ),
-          onVisualThemeChanged: (theme) => _save(
-            () =>
-                ref.read(appPreferencesProvider.notifier).setVisualTheme(theme),
-          ),
-          onPrimaryColorChanged: (color) => _save(
-            () => ref
-                .read(appPreferencesProvider.notifier)
-                .setPrimaryColor(color),
-          ),
-          onAccentColorChanged: (color) => _save(
-            () =>
-                ref.read(appPreferencesProvider.notifier).setAccentColor(color),
-          ),
-          onCurrencyFormatChanged: (style) => _save(
-            () => ref
-                .read(appPreferencesProvider.notifier)
-                .setCurrencyFormatStyle(style),
-          ),
-          onNotificationsChanged: _setNotificationsEnabled,
-          onReset: _resetPreferences,
-        ),
+        data: (value) {
+          final colorOptions = value.visualTheme == AppVisualTheme.coquetteBloom
+              ? <_ColorOption>[
+                  _ColorOption(
+                    'Berry Rose',
+                    CoquetteThemeColors.defaults.berry.toARGB32(),
+                  ),
+                  _ColorOption(
+                    'Blush Pink',
+                    CoquetteThemeColors.defaults.blush.toARGB32(),
+                  ),
+                  _ColorOption(
+                    'Soft Lavender',
+                    CoquetteThemeColors.defaults.lavender.toARGB32(),
+                  ),
+                  _ColorOption(
+                    'Champagne',
+                    CoquetteThemeColors.defaults.champagne.toARGB32(),
+                  ),
+                  ..._colorOptions,
+                ]
+              : _colorOptions;
+          return _SettingsContent(
+            preferences: value,
+            colorOptions: colorOptions,
+            onThemeChanged: (mode) => _save(
+              () =>
+                  ref.read(appPreferencesProvider.notifier).setThemeMode(mode),
+            ),
+            onVisualThemeChanged: (theme) => _save(
+              () => ref
+                  .read(appPreferencesProvider.notifier)
+                  .setVisualTheme(theme),
+            ),
+            onPrimaryColorChanged: (color) => _save(
+              () => ref
+                  .read(appPreferencesProvider.notifier)
+                  .setPrimaryColor(color),
+            ),
+            onAccentColorChanged: (color) => _save(
+              () => ref
+                  .read(appPreferencesProvider.notifier)
+                  .setAccentColor(color),
+            ),
+            onCurrencyFormatChanged: (style) => _save(
+              () => ref
+                  .read(appPreferencesProvider.notifier)
+                  .setCurrencyFormatStyle(style),
+            ),
+            onNotificationsChanged: _setNotificationsEnabled,
+            onReset: _resetPreferences,
+          );
+        },
       ),
     );
   }
@@ -397,6 +424,19 @@ class _SettingsContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final bloom = preferences.visualTheme == AppVisualTheme.coquetteBloom;
+    final primaryColor =
+        bloom &&
+            preferences.primaryColorArgb ==
+                AppPreferences.defaults.primaryColorArgb
+        ? CoquetteThemeColors.defaults.berry.toARGB32()
+        : preferences.primaryColorArgb;
+    final accentColor =
+        bloom &&
+            preferences.accentColorArgb ==
+                AppPreferences.defaults.accentColorArgb
+        ? CoquetteThemeColors.defaults.champagne.toARGB32()
+        : preferences.accentColorArgb;
 
     return Center(
       child: ConstrainedBox(
@@ -487,8 +527,15 @@ class _SettingsContent extends StatelessWidget {
                     onSelected: () =>
                         onVisualThemeChanged(AppVisualTheme.japaneseSumie),
                   ),
+                  _VisualThemeChoice(
+                    theme: AppVisualTheme.coquetteBloom,
+                    selected:
+                        preferences.visualTheme == AppVisualTheme.coquetteBloom,
+                    onSelected: () =>
+                        onVisualThemeChanged(AppVisualTheme.coquetteBloom),
+                  ),
                 ];
-                if (constraints.maxWidth < 380) {
+                if (constraints.maxWidth < 560) {
                   return Wrap(spacing: 8, runSpacing: 4, children: options);
                 }
                 return Row(
@@ -511,7 +558,7 @@ class _SettingsContent extends StatelessWidget {
             _ColorPreference(
               title: 'Color principal',
               description: 'Acciones y elementos destacados',
-              selectedColor: preferences.primaryColorArgb,
+              selectedColor: primaryColor,
               options: colorOptions,
               onSelected: onPrimaryColorChanged,
             ),
@@ -519,12 +566,16 @@ class _SettingsContent extends StatelessWidget {
             _ColorPreference(
               title: 'Color secundario',
               description: 'Acentos y detalles visuales',
-              selectedColor: preferences.accentColorArgb,
+              selectedColor: accentColor,
               options: colorOptions,
               onSelected: onAccentColorChanged,
             ),
             const SizedBox(height: 14),
-            _ColorPreview(preferences: preferences),
+            _ColorPreview(
+              preferences: preferences,
+              primaryArgb: primaryColor,
+              accentArgb: accentColor,
+            ),
             const SizedBox(height: 28),
             const _SectionHeading(
               title: 'MONEDA Y FORMATO',
@@ -643,10 +694,14 @@ class _VisualThemeChoice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = theme == AppVisualTheme.mony ? 'Mony' : 'Japanese Sumi-e';
-    final icon = theme == AppVisualTheme.mony
-        ? Icons.auto_awesome_outlined
-        : Icons.brush_outlined;
+    final (label, icon) = switch (theme) {
+      AppVisualTheme.mony => ('Mony', Icons.auto_awesome_outlined),
+      AppVisualTheme.japaneseSumie => ('Japanese Sumi-e', Icons.brush_outlined),
+      AppVisualTheme.coquetteBloom => (
+        'Coquette Bloom',
+        Icons.local_florist_outlined,
+      ),
+    };
     return ChoiceChip(
       avatar: Icon(icon, size: 18),
       label: Text(label),
@@ -835,14 +890,20 @@ class _ColorSwatch extends StatelessWidget {
 }
 
 class _ColorPreview extends StatelessWidget {
-  const _ColorPreview({required this.preferences});
+  const _ColorPreview({
+    required this.preferences,
+    required this.primaryArgb,
+    required this.accentArgb,
+  });
 
   final AppPreferences preferences;
+  final int primaryArgb;
+  final int accentArgb;
 
   @override
   Widget build(BuildContext context) {
-    final primary = Color(preferences.primaryColorArgb);
-    final accent = Color(preferences.accentColorArgb);
+    final primary = Color(primaryArgb);
+    final accent = Color(accentArgb);
 
     return Card(
       child: Padding(

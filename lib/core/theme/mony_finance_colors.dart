@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'mony_tokens.dart';
+import 'coquette_visuals.dart';
 
 @immutable
 class MonyFinanceColors extends ThemeExtension<MonyFinanceColors> {
@@ -23,8 +24,20 @@ class MonyFinanceColors extends ThemeExtension<MonyFinanceColors> {
   static MonyFinanceColors forBrightness(
     Brightness brightness, {
     bool japanese = false,
+    bool coquette = false,
   }) {
     final dark = brightness == Brightness.dark;
+    if (coquette) {
+      const bloom = CoquetteThemeColors.defaults;
+      return MonyFinanceColors(
+        income: dark ? const Color(0xFF9DC6AE) : bloom.income,
+        onIncome: dark ? const Color(0xFF1B2A22) : Colors.white,
+        expense: dark ? const Color(0xFFE99AAF) : const Color(0xFF9B3E57),
+        onExpense: dark ? const Color(0xFF351B25) : Colors.white,
+        warning: dark ? const Color(0xFFE3C893) : const Color(0xFF80613C),
+        onWarning: dark ? const Color(0xFF342916) : Colors.white,
+      );
+    }
     if (japanese) {
       return MonyFinanceColors(
         income: dark ? const Color(0xFF8EAC91) : const Color(0xFF496B50),
