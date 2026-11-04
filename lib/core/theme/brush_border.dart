@@ -152,65 +152,110 @@ class BrushOutlineInputBorder extends OutlineInputBorder {
     double gapPercentage = 0,
     TextDirection? textDirection,
   }) {
-    super.paint(
-      canvas,
-      rect,
-      gapStart: gapStart,
-      gapExtent: gapExtent,
-      gapPercentage: gapPercentage,
-      textDirection: textDirection,
-    );
     if (borderSide.style == BorderStyle.none || borderSide.width <= 0) return;
+    final radius = borderRadius.resolve(textDirection).topLeft.x;
+    final half = borderSide.width / 2;
+    final left = rect.left + half;
+    final right = rect.right - half;
+    final top = rect.top + half;
+    final bottom = rect.bottom - half;
+    final paths = <(Path, double)>[];
 
-    final path = getOuterPath(rect);
-    for (final metric in path.computeMetrics()) {
-      for (var start = 0.0; start < metric.length; start += 7) {
-        final end = math.min(start + 7.8, metric.length);
-        final middle = (start + end) / 2;
-        final tangent = metric.getTangentForOffset(middle);
-        if (tangent == null) continue;
-        final point = tangent.position;
-        if (gapStart != null &&
-            gapExtent > 0 &&
-            point.dy <= rect.top + borderSide.width &&
-            _insideLabelGap(
-              point.dx,
-              rect,
-              gapStart,
-              gapExtent,
-              gapPadding,
-              gapPercentage,
-              textDirection,
-            )) {
-          continue;
-        }
-        final grain = math.sin(middle * .19) * variation;
-        canvas.drawPath(
-          metric.extractPath(start, end),
-          Paint()
-            ..color = borderSide.color.withValues(alpha: .78 + grain)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = borderSide.width * (1 + grain)
-            ..strokeCap = StrokeCap.butt,
-        );
+    // Strong left edge and only the upper portion of the right edge.
+    paths.add((
+      Path()
+        ..moveTo(left, top + radius)
+        ..cubicTo(
+          left - .5,
+          rect.center.dy,
+          left + .8,
+          rect.bottom - radius,
+          left,
+          bottom - 3,
+        ),
+      borderSide.width * 1.7,
+    ));
+    paths.add((
+      Path()
+        ..moveTo(right, top + radius)
+        ..lineTo(right, top + rect.height * .3),
+      borderSide.width * .75,
+    ));
+
+    final topStart = left + radius + 5;
+    final topEnd = right - radius - 7;
+    final gap = gapStart;
+    final hasGap = gap != null && gapExtent > 0 && gapPercentage > 0;
+    if (!hasGap) {
+      paths.add((
+        Path()
+          ..moveTo(topStart, top)
+          ..lineTo(topEnd, top),
+        borderSide.width * .7,
+      ));
+    } else {
+      final extent = (gapExtent + gapPadding * 2) * gapPercentage;
+      final gapLeft = textDirection == TextDirection.rtl
+          ? rect.left + gap + gapPadding - extent
+          : rect.left + gap - gapPadding;
+      final gapRight = gapLeft + extent;
+      if (gapLeft > topStart) {
+        paths.add((
+          Path()
+            ..moveTo(topStart, top)
+            ..lineTo(math.min(gapLeft, topEnd), top),
+          borderSide.width * .7,
+        ));
+      }
+      if (gapRight < topEnd) {
+        paths.add((
+          Path()
+            ..moveTo(math.max(gapRight, topStart), top)
+            ..lineTo(topEnd, top),
+          borderSide.width * .7,
+        ));
       }
     }
-  }
 
-  bool _insideLabelGap(
-    double x,
-    Rect rect,
-    double start,
-    double extent,
-    double padding,
-    double percentage,
-    TextDirection? direction,
-  ) {
-    final gapWidth = (extent + padding * 2) * percentage;
-    final left = direction == TextDirection.rtl
-        ? rect.right - start - padding
-        : rect.left + start - padding;
-    return x >= left && x <= left + gapWidth;
+    // One dry-brush lower stroke leaves intentional open space on the left.
+    paths.add((
+      Path()
+        ..moveTo(rect.left + rect.width * .58, bottom)
+        ..cubicTo(
+          rect.left + rect.width * .7,
+          bottom - .8,
+          right - radius - 12,
+          bottom + .5,
+          right - radius,
+          bottom,
+        ),
+      borderSide.width * .95,
+    ));
+    paths.add((
+      Path()
+        ..moveTo(left, top + 2)
+        ..lineTo(left + radius + 3, top + 2)
+        ..moveTo(left, top + 2)
+        ..lineTo(left, top + radius + 4),
+      borderSide.width * 1.35,
+    ));
+
+    for (final (path, baseWidth) in paths) {
+      for (final metric in path.computeMetrics()) {
+        for (var start = 0.0; start < metric.length; start += 6) {
+          final end = math.min(start + 6.8, metric.length);
+          final pressure = .7 + .3 * math.sin(start * .21 + variation * 8);
+          canvas.drawPath(
+            metric.extractPath(start, end),
+            Paint()
+              ..color = borderSide.color.withValues(alpha: .64 + .34 * pressure)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = baseWidth * pressure
+              ..strokeCap = StrokeCap.butt,
+          );
+        }
+      }
+    }
   }
 }
 

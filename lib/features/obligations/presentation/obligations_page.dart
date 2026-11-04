@@ -7,6 +7,7 @@ import '../../../core/money/money_formatter.dart';
 import '../../../core/widgets/mony_settings_action.dart';
 import '../../../core/widgets/mony_states.dart';
 import '../../../core/widgets/dialog_helpers.dart';
+import '../../../core/theme/sumi_visuals.dart';
 import '../../categories/domain/category.dart';
 import '../../categories/presentation/categories_providers.dart';
 import '../../payment_methods/domain/payment_method.dart';
@@ -86,6 +87,15 @@ class _ObligationsPageState extends ConsumerState<ObligationsPage> {
         onPressed: () => editObligation(context, ref, categories, methods),
         icon: const Icon(Icons.add),
         label: const Text('Nueva obligación'),
+        shape: SumiThemeColors.maybeOf(context) == null
+            ? null
+            : SumiOpenFrameBorder(
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.secondary,
+                  width: 1.5,
+                ),
+                variation: .32,
+              ),
       ),
       body: state.when(
         loading: () => const Center(child: CircularProgressIndicator()),

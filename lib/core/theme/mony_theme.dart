@@ -6,6 +6,7 @@ import '../../features/preferences/domain/app_preferences.dart';
 import 'mony_finance_colors.dart';
 import 'mony_tokens.dart';
 import 'brush_border.dart';
+import 'sumi_visuals.dart';
 
 abstract final class MonyTheme {
   static ThemeData light(AppPreferences preferences) =>
@@ -26,21 +27,18 @@ abstract final class MonyTheme {
   }) {
     final japanese = preferences.visualTheme == AppVisualTheme.japaneseSumie;
     final dark = brightness == Brightness.dark;
-    const sumieVermilion = Color(0xFFB63A2B);
-    const sumieDeepVermilion = Color(0xFF8F2A22);
-    const sumieAgedGold = Color(0xFFA98A52);
-    const sumieMutedJade = Color(0xFF3E6B64);
+    const sumie = SumiThemeColors.defaults;
     final brandColor =
         japanese &&
             preferences.primaryColorArgb ==
                 AppPreferences.defaults.primaryColorArgb
-        ? sumieVermilion
+        ? sumie.vermilion
         : Color(preferences.primaryColorArgb);
     final accentColor =
         japanese &&
             preferences.accentColorArgb ==
                 AppPreferences.defaults.accentColorArgb
-        ? sumieAgedGold
+        ? sumie.gold
         : Color(preferences.accentColorArgb);
     final accessiblePrimary = brightness == Brightness.light
         ? _lightSurfaceAccent(brandColor)
@@ -58,13 +56,13 @@ abstract final class MonyTheme {
       onPrimary: _contrastingForeground(accessiblePrimary),
       secondary: accessibleSecondary,
       onSecondary: _contrastingForeground(accessibleSecondary),
-      tertiary: japanese ? sumieMutedJade : seedScheme.tertiary,
-      onTertiary: japanese ? const Color(0xFFFFF7E8) : seedScheme.onTertiary,
+      tertiary: japanese ? sumie.jade : seedScheme.tertiary,
+      onTertiary: japanese ? sumie.paper : seedScheme.onTertiary,
       primaryContainer: japanese
-          ? (dark ? sumieDeepVermilion : const Color(0xFFE9CFC6))
+          ? (dark ? sumie.deepVermilion : const Color(0xFFE9CFC6))
           : seedScheme.primaryContainer,
       onPrimaryContainer: japanese
-          ? (dark ? const Color(0xFFF3E7D3) : const Color(0xFF3B1D18))
+          ? (dark ? sumie.paper : const Color(0xFF3B1D18))
           : seedScheme.onPrimaryContainer,
       secondaryContainer: japanese
           ? (dark ? const Color(0xFF463A25) : const Color(0xFFE8D8B8))
@@ -73,21 +71,21 @@ abstract final class MonyTheme {
           ? (dark ? const Color(0xFFF3E7D3) : const Color(0xFF342A1A))
           : seedScheme.onSecondaryContainer,
       surface: japanese
-          ? (dark ? const Color(0xFF151311) : const Color(0xFFF3E7D3))
+          ? (dark ? sumie.ink : sumie.paper)
           : dark
           ? MonyPalette.darkBackground
           : MonyPalette.lightBackground,
       onSurface: japanese
-          ? (dark ? const Color(0xFFF3E7D3) : const Color(0xFF221D1A))
+          ? (dark ? sumie.paper : sumie.ink)
           : dark
           ? const Color(0xFFF4EFF8)
           : const Color(0xFF241D2B),
       surfaceContainerLow: dark
-          ? (japanese ? const Color(0xFF221D1A) : MonyPalette.darkSurface)
+          ? (japanese ? sumie.charcoal : MonyPalette.darkSurface)
           : (japanese ? const Color(0xFFF8EFE2) : MonyPalette.lightSurface),
       surfaceContainer: dark
           ? (japanese
-                ? const Color(0xFF2A2420)
+                ? const Color(0xFF342A23)
                 : MonyPalette.darkSurfaceVariant)
           : (japanese
                 ? const Color(0xFFE7D7BE)
@@ -96,12 +94,12 @@ abstract final class MonyTheme {
           ? (japanese ? const Color(0xFFCDBA9E) : const Color(0xFFD0C6D8))
           : (japanese ? const Color(0xFF6A5944) : const Color(0xFF5F5667)),
       outline: japanese
-          ? (dark ? sumieAgedGold : const Color(0xFF8B6B3F))
+          ? (dark ? sumie.gold : sumie.bronze)
           : dark
           ? const Color(0xFF81778A)
           : const Color(0xFF817889),
       outlineVariant: japanese
-          ? (dark ? const Color(0xFF705938) : const Color(0xFFCDBA9E))
+          ? (dark ? sumie.bronze : sumie.warmPaper)
           : dark
           ? const Color(0xFF51485A)
           : const Color(0xFFD8D1DE),
@@ -131,6 +129,7 @@ abstract final class MonyTheme {
       useMaterial3: true,
       extensions: [
         MonyFinanceColors.forBrightness(brightness, japanese: japanese),
+        if (japanese) sumie,
       ],
       appBarStyle: FlexAppBarStyle.surface,
       appBarElevation: 0,
@@ -152,18 +151,15 @@ abstract final class MonyTheme {
     );
     final text = GoogleFonts.plusJakartaSansTextTheme(baseTheme.textTheme);
     final readingText = GoogleFonts.interTextTheme(text);
-    final brushSubtle = BrushBorder(
-      radius: MonyRadius.medium,
+    final brushSubtle = SumiOpenFrameBorder(
       variation: .12,
       side: BorderSide(color: colorScheme.outlineVariant, width: 1.05),
     );
-    final brushMedium = BrushBorder(
-      radius: MonyRadius.large,
+    final brushMedium = SumiOpenFrameBorder(
       variation: .24,
       side: BorderSide(color: colorScheme.outline, width: 1.55),
     );
-    final brushStrong = BrushBorder(
-      radius: MonyRadius.medium,
+    final brushStrong = SumiOpenFrameBorder(
       variation: .32,
       side: BorderSide(color: colorScheme.primary, width: 1.9),
     );
@@ -264,8 +260,7 @@ abstract final class MonyTheme {
       dialogTheme: baseTheme.dialogTheme.copyWith(
         backgroundColor: colorScheme.surfaceContainerLow,
         shape: japanese
-            ? BrushBorder(
-                radius: MonyRadius.extraLarge,
+            ? SumiOpenFrameBorder(
                 variation: .2,
                 side: BorderSide(color: colorScheme.outline, width: 1.35),
               )
@@ -277,8 +272,7 @@ abstract final class MonyTheme {
       bottomSheetTheme: baseTheme.bottomSheetTheme.copyWith(
         backgroundColor: colorScheme.surfaceContainerLow,
         shape: japanese
-            ? BrushTopBorder(
-                radius: MonyRadius.extraLarge,
+            ? SumiOpenFrameBorder(
                 side: BorderSide(color: colorScheme.outline, width: 1.35),
                 variation: .18,
               )
@@ -295,7 +289,15 @@ abstract final class MonyTheme {
       ),
       cardTheme: baseTheme.cardTheme.copyWith(
         color: colorScheme.surfaceContainerLow,
-        shape: japanese ? brushMedium : baseTheme.cardTheme.shape,
+        shape: japanese
+            ? SumiOpenFrameBorder(
+                variation: .24,
+                side: BorderSide(
+                  color: colorScheme.onSurfaceVariant,
+                  width: 1.25,
+                ),
+              )
+            : baseTheme.cardTheme.shape,
       ),
       outlinedButtonTheme: japanese
           ? OutlinedButtonThemeData(
@@ -344,9 +346,9 @@ abstract final class MonyTheme {
           ? baseTheme.floatingActionButtonTheme.copyWith(
               backgroundColor: colorScheme.primary,
               foregroundColor: colorScheme.onPrimary,
-              shape: BrushCircleBorder(
+              shape: SumiOpenFrameBorder(
                 side: BorderSide(color: colorScheme.secondary, width: 1.5),
-                variation: .24,
+                variation: .32,
               ),
             )
           : baseTheme.floatingActionButtonTheme,
@@ -357,24 +359,24 @@ abstract final class MonyTheme {
                   return colorScheme.surfaceContainer;
                 }
                 if (states.contains(WidgetState.selected)) {
-                  return colorScheme.primary.withValues(alpha: .16);
+                  return colorScheme.primary;
                 }
                 return colorScheme.surfaceContainerLow;
               }),
               backgroundColor: colorScheme.surfaceContainerLow,
-              selectedColor: colorScheme.primary.withValues(alpha: .16),
-              checkmarkColor: colorScheme.primary,
+              selectedColor: colorScheme.primary,
+              showCheckmark: true,
+              checkmarkColor: colorScheme.onPrimary,
               side: BorderSide(color: colorScheme.outlineVariant, width: .95),
-              shape: BrushBorder(
-                radius: MonyRadius.small,
+              shape: SumiOpenFrameBorder(
                 variation: .2,
-                side: BorderSide(color: colorScheme.outlineVariant, width: 1.1),
+                side: BorderSide(color: colorScheme.outline, width: 1.1),
               ),
               labelStyle: baseTheme.textTheme.labelLarge?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
               secondaryLabelStyle: baseTheme.textTheme.labelLarge?.copyWith(
-                color: colorScheme.primary,
+                color: colorScheme.onPrimary,
                 fontWeight: FontWeight.w700,
               ),
             )
@@ -384,17 +386,16 @@ abstract final class MonyTheme {
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith(
                   (states) => states.contains(WidgetState.selected)
-                      ? colorScheme.primary.withValues(alpha: .16)
-                      : colorScheme.surfaceContainerLow,
+                      ? colorScheme.primary
+                      : Colors.transparent,
                 ),
                 foregroundColor: WidgetStateProperty.resolveWith(
                   (states) => states.contains(WidgetState.selected)
-                      ? colorScheme.primary
+                      ? colorScheme.onPrimary
                       : colorScheme.onSurfaceVariant,
                 ),
                 shape: WidgetStateProperty.resolveWith(
-                  (states) => BrushBorder(
-                    radius: MonyRadius.small,
+                  (states) => SumiOpenFrameBorder(
                     variation: states.contains(WidgetState.selected)
                         ? .28
                         : .16,
@@ -402,7 +403,7 @@ abstract final class MonyTheme {
                       color: states.contains(WidgetState.selected)
                           ? colorScheme.primary
                           : colorScheme.outlineVariant,
-                      width: states.contains(WidgetState.selected) ? 1.8 : 1.05,
+                      width: states.contains(WidgetState.selected) ? 2.1 : .8,
                     ),
                   ),
                 ),
@@ -427,12 +428,8 @@ abstract final class MonyTheme {
       navigationRailTheme: japanese
           ? baseTheme.navigationRailTheme.copyWith(
               backgroundColor: colorScheme.surfaceContainerLow,
-              indicatorColor: colorScheme.primary.withValues(alpha: .16),
-              indicatorShape: BrushBorder(
-                radius: MonyRadius.medium,
-                variation: .26,
-                side: BorderSide(color: colorScheme.primary, width: 1.6),
-              ),
+              indicatorColor: Colors.transparent,
+              indicatorShape: const RoundedRectangleBorder(),
               selectedIconTheme: IconThemeData(color: colorScheme.primary),
               selectedLabelTextStyle: TextStyle(
                 color: colorScheme.primary,

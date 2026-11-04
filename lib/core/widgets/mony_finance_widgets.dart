@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/mony_finance_colors.dart';
 import '../theme/mony_tokens.dart';
+import '../theme/sumi_visuals.dart';
 import 'mony_layout.dart';
 
 enum AmountEmphasis { neutral, income, expense }
@@ -56,40 +57,54 @@ class BalanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final japanese = SumiThemeColors.maybeOf(context) != null;
+    final sumiPaper = SumiThemeColors.defaults.paper;
+    final content = Padding(
+      padding: const EdgeInsets.all(MonySpace.x6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: japanese ? sumiPaper : null,
+            ),
+          ),
+          const SizedBox(height: MonySpace.x2),
+          AmountText(
+            amount,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: japanese ? sumiPaper : null,
+            ),
+          ),
+          const SizedBox(height: MonySpace.x1),
+          Text(
+            supportingText,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: japanese ? SumiThemeColors.defaults.warmPaper : null,
+            ),
+          ),
+        ],
+      ),
+    );
     return MonyCard(
       semanticLabel: '$label. $amount. $supportingText',
       padding: EdgeInsets.zero,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [scheme.primaryContainer, scheme.surfaceContainerLow],
-          ),
-          borderRadius: BorderRadius.circular(MonyRadius.medium),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(MonySpace.x6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: MonySpace.x2),
-              AmountText(
-                amount,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
+      sumiVariant: SumiSurfaceVariant.inkBlock,
+      child: japanese
+          ? content
+          : DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [scheme.primaryContainer, scheme.surfaceContainerLow],
                 ),
+                borderRadius: BorderRadius.circular(MonyRadius.medium),
               ),
-              const SizedBox(height: MonySpace.x1),
-              Text(
-                supportingText,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ),
-      ),
+              child: content,
+            ),
     );
   }
 }
@@ -119,6 +134,11 @@ class StatTile extends StatelessWidget {
     return MonyCard(
       semanticLabel: '$title: $value',
       padding: const EdgeInsets.all(MonySpace.x3),
+      sumiVariant: switch (emphasis) {
+        AmountEmphasis.neutral => SumiSurfaceVariant.openFrame,
+        AmountEmphasis.income => SumiSurfaceVariant.minimalJade,
+        AmountEmphasis.expense => SumiSurfaceVariant.minimalVermilion,
+      },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -27,11 +27,11 @@ class MonyFinanceColors extends ThemeExtension<MonyFinanceColors> {
     final dark = brightness == Brightness.dark;
     if (japanese) {
       return MonyFinanceColors(
-        income: dark ? const Color(0xFFA7C29A) : const Color(0xFF376744),
-        onIncome: dark ? const Color(0xFF171C14) : Colors.white,
-        expense: dark ? const Color(0xFFE58C7D) : const Color(0xFF8F2A22),
+        income: dark ? const Color(0xFF8EAC91) : const Color(0xFF496B50),
+        onIncome: dark ? const Color(0xFF151311) : Colors.white,
+        expense: dark ? const Color(0xFFD67B68) : const Color(0xFF8F2C22),
         onExpense: dark ? const Color(0xFF241512) : Colors.white,
-        warning: dark ? const Color(0xFFD1B06D) : const Color(0xFF765B27),
+        warning: dark ? const Color(0xFFB5955D) : const Color(0xFF806443),
         onWarning: dark ? const Color(0xFF211A0D) : Colors.white,
       );
     }

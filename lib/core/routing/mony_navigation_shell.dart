@@ -5,8 +5,8 @@ import 'package:nav_bar/nav_bar.dart';
 
 import '../../features/preferences/domain/app_preferences.dart';
 import '../../features/preferences/presentation/preferences_controller.dart';
-import '../theme/brush_border.dart';
 import '../theme/mony_tokens.dart';
+import '../theme/sumi_visuals.dart';
 
 class MonyNavigationShell extends ConsumerWidget {
   const MonyNavigationShell({required this.navigationShell, super.key});
@@ -35,13 +35,15 @@ class MonyNavigationShell extends ConsumerWidget {
     final selectedVisibleIndex = visibleIndices.indexOf(
       navigationShell.currentIndex,
     );
-    final destinations = [
-      for (final index in visibleIndices) _railDestinations[index],
-    ];
     final wide = MediaQuery.sizeOf(context).width >= MonyBreakpoints.expanded;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final japanese = preferences?.visualTheme == AppVisualTheme.japaneseSumie;
+    final sumi = SumiThemeColors.maybeOf(context);
+    final destinations = [
+      for (final index in visibleIndices)
+        _railDestination(index, japanese: japanese, accent: scheme.primary),
+    ];
     final sumieNavTheme = FuturisticTheme(
       name: 'Japanese Sumi-e',
       glowGradient: LinearGradient(
@@ -52,15 +54,15 @@ class MonyNavigationShell extends ConsumerWidget {
       particleColor: scheme.outline,
       backgroundColor: scheme.surfaceContainerLow,
       customColors: {
-        'paperColor': scheme.surfaceContainerLow,
+        'paperColor': sumi?.deepInk ?? scheme.surfaceContainerLow,
         'inkColor': scheme.primary,
         'sealColor': scheme.secondary,
         'impactColor': scheme.secondary,
       },
       effectToggles: const {
-        'showPaperTexture': true,
+        'showPaperTexture': false,
         'showInkSplatter': false,
-        'showSeal': true,
+        'showSeal': false,
         'showImpact': false,
       },
     );
@@ -73,6 +75,11 @@ class MonyNavigationShell extends ConsumerWidget {
               selectedIndex: selectedVisibleIndex,
               onDestinationSelected: (index) =>
                   _selectBranch(visibleIndices[index]),
+              useIndicator: japanese ? false : true,
+              indicatorColor: japanese ? Colors.transparent : null,
+              indicatorShape: japanese
+                  ? const RoundedRectangleBorder(side: BorderSide.none)
+                  : null,
               labelType: NavigationRailLabelType.all,
               destinations: destinations,
             ),
@@ -110,15 +117,11 @@ class MonyNavigationShell extends ConsumerWidget {
                 right: 20,
                 height: 80,
                 child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: ShapeDecoration(
-                      color: scheme.surfaceContainerLow,
-                      shape: BrushBorder(
-                        radius: MonyRadius.large,
-                        variation: .19,
-                        side: BorderSide(color: scheme.outline, width: 1.25),
-                      ),
+                  child: CustomPaint(
+                    painter: SumiNavigationPainter(
+                      colors: sumi ?? SumiThemeColors.defaults,
                     ),
+                    child: const SizedBox.expand(),
                   ),
                 ),
               ),
@@ -205,4 +208,55 @@ class MonyNavigationShell extends ConsumerWidget {
       label: Text('Historial'),
     ),
   ];
+
+  static NavigationRailDestination _railDestination(
+    int index, {
+    required bool japanese,
+    required Color accent,
+  }) {
+    final destination = _railDestinations[index];
+    if (!japanese) return destination;
+    return NavigationRailDestination(
+      icon: destination.icon,
+      selectedIcon: CustomPaint(
+        painter: _NavigationSelectionBrush(accent),
+        child: destination.selectedIcon,
+      ),
+      label: destination.label,
+      padding: destination.padding,
+      indicatorColor: Colors.transparent,
+    );
+  }
+}
+
+class _NavigationSelectionBrush extends CustomPainter {
+  const _NavigationSelectionBrush(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final line = Path()
+      ..moveTo(2, size.height - 1.5)
+      ..cubicTo(
+        size.width * .35,
+        size.height - 2.5,
+        size.width * .68,
+        size.height,
+        size.width - 2,
+        size.height - 1,
+      );
+    canvas.drawPath(
+      line,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.2
+        ..strokeCap = StrokeCap.square,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _NavigationSelectionBrush oldDelegate) =>
+      color != oldDelegate.color;
 }

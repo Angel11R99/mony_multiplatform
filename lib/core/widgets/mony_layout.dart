@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/mony_tokens.dart';
+import '../theme/sumi_visuals.dart';
 
 class MonyCard extends StatelessWidget {
   const MonyCard({
@@ -8,6 +9,7 @@ class MonyCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(MonySpace.x4),
     this.onTap,
     this.semanticLabel,
+    this.sumiVariant = SumiSurfaceVariant.openFrame,
     super.key,
   });
 
@@ -15,17 +17,16 @@ class MonyCard extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final VoidCallback? onTap;
   final String? semanticLabel;
+  final SumiSurfaceVariant sumiVariant;
 
   @override
   Widget build(BuildContext context) {
-    final content = Padding(padding: padding, child: child);
-    return Semantics(
-      label: semanticLabel,
-      container: semanticLabel != null,
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        child: onTap == null ? content : InkWell(onTap: onTap, child: content),
-      ),
+    return SumiSurface(
+      semanticLabel: semanticLabel,
+      variant: sumiVariant,
+      padding: padding,
+      onTap: onTap,
+      child: child,
     );
   }
 }

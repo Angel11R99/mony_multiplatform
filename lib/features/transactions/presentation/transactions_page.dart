@@ -9,6 +9,7 @@ import '../../../core/widgets/mony_feedback.dart';
 import '../../../core/widgets/mony_confirm_dialog.dart';
 import '../../../core/widgets/mony_settings_action.dart';
 import '../../../core/widgets/mony_states.dart';
+import '../../../core/theme/sumi_visuals.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -582,6 +583,9 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                 decoration: InputDecoration(
                   labelText: 'Buscar movimientos',
                   hintText: 'Descripción, categoría o método',
+                  filled: SumiThemeColors.maybeOf(context) == null
+                      ? null
+                      : false,
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: _search.text.isEmpty
                       ? null

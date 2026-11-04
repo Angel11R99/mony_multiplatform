@@ -5,6 +5,7 @@ import '../../../core/widgets/mony_settings_action.dart';
 import '../../../core/widgets/mony_layout.dart';
 import '../../../core/widgets/mony_states.dart';
 import '../../../core/theme/mony_tokens.dart';
+import '../../../core/theme/sumi_visuals.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/money/money_formatter.dart';
 import '../../categories/domain/category.dart';
@@ -37,18 +38,32 @@ class _ScheduleMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final sumi = SumiThemeColors.maybeOf(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(MonyRadius.medium),
+        color: sumi?.warmPaper ?? colors.surfaceContainerHighest,
+        border: sumi == null
+            ? null
+            : Border(
+                left: BorderSide(color: sumi.gold, width: 2.2),
+                bottom: BorderSide(color: sumi.inkGray.withValues(alpha: .45)),
+              ),
+        borderRadius: sumi == null
+            ? BorderRadius.circular(MonyRadius.medium)
+            : BorderRadius.zero,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 17, color: colors.primary),
+          Icon(icon, size: 17, color: sumi?.vermilion ?? colors.primary),
           const SizedBox(width: 7),
-          Text('$value $label', style: Theme.of(context).textTheme.labelLarge),
+          Text(
+            '$value $label',
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(color: sumi?.ink),
+          ),
         ],
       ),
     );
