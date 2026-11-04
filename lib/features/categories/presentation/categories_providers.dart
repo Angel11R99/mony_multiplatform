@@ -13,7 +13,7 @@ final categoriesProvider = StreamProvider<List<Category>>(
   (ref) => ref.watch(categoriesRepositoryProvider).watchAll(),
 );
 
-final activeCategoriesProvider =
-    StreamProvider.family<List<Category>, CategoryType>(
+final activeCategoriesProvider = StreamProvider.autoDispose
+    .family<List<Category>, CategoryType>(
       (ref, type) => ref.watch(categoriesRepositoryProvider).watchActive(type),
     );

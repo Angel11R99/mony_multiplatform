@@ -9,11 +9,11 @@ final obligationRepositoryProvider = Provider<ObligationRepository>(
   (ref) => DriftObligationRepository(ref.watch(appDatabaseProvider)),
 );
 
-final obligationsProvider = StreamProvider<List<Obligation>>(
+final obligationsProvider = StreamProvider.autoDispose<List<Obligation>>(
   (ref) => ref.watch(obligationRepositoryProvider).watchAll(),
 );
 
-final obligationDetailsProvider =
-    StreamProvider.family<ObligationDetails?, int>(
+final obligationDetailsProvider = StreamProvider.autoDispose
+    .family<ObligationDetails?, int>(
       (ref, id) => ref.watch(obligationRepositoryProvider).watchDetails(id),
     );

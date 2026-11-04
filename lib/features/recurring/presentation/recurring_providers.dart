@@ -7,6 +7,7 @@ import '../domain/recurring_entry.dart';
 final recurringRepositoryProvider = Provider<RecurringRepository>(
   (ref) => DriftRecurringRepository(ref.watch(appDatabaseProvider)),
 );
-final recurringEntriesProvider = StreamProvider<List<RecurringEntry>>(
-  (ref) => ref.watch(recurringRepositoryProvider).watchAll(),
-);
+final recurringEntriesProvider =
+    StreamProvider.autoDispose<List<RecurringEntry>>(
+      (ref) => ref.watch(recurringRepositoryProvider).watchAll(),
+    );

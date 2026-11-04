@@ -1,13 +1,13 @@
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mony_multiplatform/core/database/app_database.dart';
+import 'package:toastification/toastification.dart';
 import 'package:mony_multiplatform/core/database/app_database_provider.dart';
 import 'package:mony_multiplatform/features/preferences/domain/app_preferences.dart';
 import 'package:mony_multiplatform/features/preferences/domain/preferences_repository.dart';
 import 'package:mony_multiplatform/features/preferences/presentation/preferences_controller.dart';
 import 'package:mony_multiplatform/features/savings/presentation/savings_goals_page.dart';
+import '../../support/test_database.dart';
 
 class _MemoryPreferencesRepository implements PreferencesRepository {
   @override
@@ -21,7 +21,7 @@ void main() {
   testWidgets(
     'creates a goal, records one contribution and shows its history',
     (tester) async {
-      final database = AppDatabase(NativeDatabase.memory());
+      final database = createTestDatabase();
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -30,7 +30,9 @@ void main() {
               _MemoryPreferencesRepository(),
             ),
           ],
-          child: const MaterialApp(home: SavingsGoalsPage()),
+          child: ToastificationWrapper(
+            child: const MaterialApp(home: SavingsGoalsPage()),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -58,8 +60,9 @@ void main() {
       expect(find.text('Aporte · Viaje · Vuelo'), findsOneWidget);
       expect(find.text('RD\$25.00'), findsOneWidget);
 
+      toastification.dismissAll(delayForAnimation: false);
+      await tester.pump(const Duration(milliseconds: 250));
       await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pumpAndSettle();
       await database.close();
     },
   );

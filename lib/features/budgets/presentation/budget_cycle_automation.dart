@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'budgets_providers.dart';
+import '../domain/budget.dart';
 import '../../recurring/presentation/recurring_providers.dart';
 
 /// Checks for due budget cycles while the app is running and when it resumes.
@@ -22,15 +23,13 @@ class _BudgetCycleAutomationState extends ConsumerState<BudgetCycleAutomation>
     with WidgetsBindingObserver {
   Timer? _timer;
   bool _checking = false;
+  bool _checkRequested = false;
+  int _scheduleGeneration = 0;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _timer = Timer.periodic(
-      const Duration(minutes: 1),
-      (_) => _checkDueCycles(),
-    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkDueCycles());
   }
 
@@ -40,24 +39,63 @@ class _BudgetCycleAutomationState extends ConsumerState<BudgetCycleAutomation>
   }
 
   Future<void> _checkDueCycles() async {
-    if (_checking || !mounted) return;
+    if (!mounted) return;
+    if (_checking) {
+      _checkRequested = true;
+      return;
+    }
     _checking = true;
-    try {
-      await ref
-          .read(budgetRepositoryProvider)
-          .closeDueCycles(now: DateTime.now());
-    } catch (_) {
-      // A later periodic tick or app resume retries an automatic close.
+    var failed = false;
+    do {
+      _checkRequested = false;
+      try {
+        await ref
+            .read(budgetRepositoryProvider)
+            .closeDueCycles(now: DateTime.now());
+      } catch (_) {
+        failed = true;
+      }
+      try {
+        await ref
+            .read(recurringRepositoryProvider)
+            .processDue(now: DateTime.now());
+      } catch (_) {
+        failed = true;
+      }
+    } while (_checkRequested && mounted);
+    _checking = false;
+    if (mounted) {
+      await _scheduleNextCheck(retryAfterFailure: failed);
     }
-    try {
-      await ref
-          .read(recurringRepositoryProvider)
-          .processDue(now: DateTime.now());
-    } catch (_) {
-      // A later periodic tick or app resume retries overdue occurrences.
-    } finally {
-      _checking = false;
+  }
+
+  Future<void> _scheduleNextCheck({bool retryAfterFailure = false}) async {
+    if (!mounted) return;
+    final generation = ++_scheduleGeneration;
+    _timer?.cancel();
+    if (retryAfterFailure) {
+      _timer = Timer(const Duration(minutes: 5), _checkDueCycles);
+      return;
     }
+
+    final now = DateTime.now();
+    var nextCheck = nextBudgetAutomationCheckAt(null, now);
+    try {
+      final budget = await ref.read(budgetRepositoryProvider).getConfig();
+      final budgetCheck = nextBudgetAutomationCheckAt(budget, now);
+      if (budgetCheck.isBefore(nextCheck)) nextCheck = budgetCheck;
+    } catch (_) {
+      nextCheck = now.add(const Duration(minutes: 5));
+    }
+    if (!mounted || generation != _scheduleGeneration) return;
+
+    final delay = nextCheck.difference(DateTime.now());
+    _timer = Timer(
+      delay.isNegative || delay == Duration.zero
+          ? const Duration(seconds: 1)
+          : delay,
+      _checkDueCycles,
+    );
   }
 
   @override
@@ -68,5 +106,13 @@ class _BudgetCycleAutomationState extends ConsumerState<BudgetCycleAutomation>
   }
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) {
+    ref.listen(budgetConfigProvider, (previous, next) {
+      if (next.hasValue) _scheduleNextCheck();
+    });
+    ref.listen(recurringEntriesProvider, (previous, next) {
+      if (next.hasValue) _checkDueCycles();
+    });
+    return widget.child;
+  }
 }
