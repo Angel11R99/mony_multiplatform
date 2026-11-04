@@ -5,6 +5,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../theme/mony_tokens.dart';
 import '../theme/sumi_visuals.dart';
 import '../theme/coquette_visuals.dart';
+import '../theme/cyberpunk_visuals.dart';
 
 class EmptyState extends StatelessWidget {
   const EmptyState({
@@ -27,6 +28,7 @@ class EmptyState extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final sumi = SumiThemeColors.maybeOf(context);
     final coquette = CoquetteThemeColors.maybeOf(context);
+    final cyberpunk = CyberpunkTokens.maybeOf(context);
     return Semantics(
       liveRegion: true,
       child: Padding(
@@ -38,7 +40,17 @@ class EmptyState extends StatelessWidget {
               child: SizedBox(
                 width: 72,
                 height: 72,
-                child: sumi != null
+                child: cyberpunk != null
+                    ? CustomPaint(
+                        painter: CyberSurfacePainter(
+                          tokens: cyberpunk,
+                          variant: CyberSurfaceVariant.openGrid,
+                        ),
+                        child: Center(
+                          child: Icon(icon, size: 30, color: cyberpunk.cyan),
+                        ),
+                      )
+                    : sumi != null
                     ? CustomPaint(
                         painter: _SumiEmptyMarkPainter(sumi.vermilion),
                         child: Center(

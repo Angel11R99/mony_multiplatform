@@ -8,6 +8,7 @@ import 'mony_tokens.dart';
 import 'brush_border.dart';
 import 'sumi_visuals.dart';
 import 'coquette_visuals.dart';
+import 'cyberpunk_visuals.dart';
 
 abstract final class MonyTheme {
   static ThemeData light(AppPreferences preferences) =>
@@ -28,15 +29,20 @@ abstract final class MonyTheme {
   }) {
     final japanese = preferences.visualTheme == AppVisualTheme.japaneseSumie;
     final coquette = preferences.visualTheme == AppVisualTheme.coquetteBloom;
-    final dark = brightness == Brightness.dark;
+    final cyberpunk = preferences.visualTheme == AppVisualTheme.cyberpunk;
+    final dark = cyberpunk || brightness == Brightness.dark;
     const sumie = SumiThemeColors.defaults;
     const bloom = CoquetteThemeColors.defaults;
     const atelierDark = CoquetteSurfaceTokens.dark;
     final atelier = CoquetteSurfaceTokens.forBrightness(brightness);
     final brandColor =
-        coquette &&
+        cyberpunk &&
             preferences.primaryColorArgb ==
                 AppPreferences.defaults.primaryColorArgb
+        ? CyberpunkTokens.defaults.cyan
+        : coquette &&
+              preferences.primaryColorArgb ==
+                  AppPreferences.defaults.primaryColorArgb
         ? (dark ? atelierDark.primaryAccent : bloom.berry)
         : japanese &&
               preferences.primaryColorArgb ==
@@ -44,27 +50,37 @@ abstract final class MonyTheme {
         ? sumie.vermilion
         : Color(preferences.primaryColorArgb);
     final accentColor =
-        coquette &&
+        cyberpunk &&
             preferences.accentColorArgb ==
                 AppPreferences.defaults.accentColorArgb
+        ? CyberpunkTokens.defaults.magenta
+        : coquette &&
+              preferences.accentColorArgb ==
+                  AppPreferences.defaults.accentColorArgb
         ? (dark ? atelierDark.secondaryAccent : bloom.champagne)
         : japanese &&
               preferences.accentColorArgb ==
                   AppPreferences.defaults.accentColorArgb
         ? sumie.gold
         : Color(preferences.accentColorArgb);
-    final accessiblePrimary = brightness == Brightness.light
+    final accessiblePrimary = !dark
         ? _lightSurfaceAccent(brandColor)
         : brandColor;
-    final accessibleSecondary = brightness == Brightness.light
+    final accessibleSecondary = !dark
         ? _lightSurfaceAccent(accentColor)
         : accentColor;
     final seedScheme = ColorScheme.fromSeed(
       seedColor: brandColor,
       secondary: accentColor,
-      brightness: brightness,
+      brightness: dark ? Brightness.dark : Brightness.light,
     );
-    final colorScheme = coquette
+    final colorScheme = cyberpunk
+        ? _cyberpunkColorScheme(
+            seedScheme,
+            brandColor: brandColor,
+            accentColor: accentColor,
+          )
+        : coquette
         ? _coquetteColorScheme(
             seedScheme,
             brandColor: accessiblePrimary,
@@ -144,7 +160,9 @@ abstract final class MonyTheme {
                 : seedScheme.surfaceContainerHighest,
           );
 
-    final themeBuilder = brightness == Brightness.light
+    final themeBuilder = dark
+        ? FlexThemeData.dark
+        : brightness == Brightness.light
         ? FlexThemeData.light
         : FlexThemeData.dark;
 
@@ -153,13 +171,15 @@ abstract final class MonyTheme {
       useMaterial3: true,
       extensions: [
         MonyFinanceColors.forBrightness(
-          brightness,
+          dark ? Brightness.dark : Brightness.light,
           japanese: japanese,
           coquette: coquette,
+          cyberpunk: cyberpunk,
         ),
         if (japanese) sumie,
         if (coquette) bloom,
         if (coquette) atelier,
+        if (cyberpunk) CyberpunkTokens.defaults,
       ],
       appBarStyle: FlexAppBarStyle.surface,
       appBarElevation: 0,
@@ -208,7 +228,9 @@ abstract final class MonyTheme {
           borderSide: BorderSide(color: color, width: width),
         );
     return baseTheme.copyWith(
-      scaffoldBackgroundColor: colorScheme.surface,
+      scaffoldBackgroundColor: cyberpunk
+          ? Colors.transparent
+          : colorScheme.surface,
       textTheme: readingText.copyWith(
         headlineLarge:
             GoogleFonts.plusJakartaSans(textStyle: text.headlineLarge).copyWith(
@@ -268,12 +290,25 @@ abstract final class MonyTheme {
           horizontal: MonySpace.x4,
           vertical: MonySpace.x3,
         ),
-        border: coquette
+        border: cyberpunk
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.zero,
+                borderSide: BorderSide(color: colorScheme.outline),
+              )
+            : coquette
             ? bloomInput(colorScheme.outline, 1)
             : japanese
             ? brushInput(colorScheme.outline, 1.05, .1)
             : baseTheme.inputDecorationTheme.border,
-        enabledBorder: coquette
+        enabledBorder: cyberpunk
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.zero,
+                borderSide: BorderSide(
+                  color: colorScheme.outlineVariant,
+                  width: .9,
+                ),
+              )
+            : coquette
             ? bloomInput(colorScheme.outlineVariant, 1)
             : japanese
             ? brushInput(colorScheme.outlineVariant, 1.05, .1)
@@ -281,7 +316,12 @@ abstract final class MonyTheme {
                 borderRadius: BorderRadius.circular(MonyRadius.medium),
                 borderSide: BorderSide(color: colorScheme.outlineVariant),
               ),
-        focusedBorder: coquette
+        focusedBorder: cyberpunk
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.zero,
+                borderSide: BorderSide(color: colorScheme.primary, width: 1.7),
+              )
+            : coquette
             ? bloomInput(colorScheme.primary, 2)
             : japanese
             ? brushInput(colorScheme.primary, 1.8, .2)
@@ -289,7 +329,12 @@ abstract final class MonyTheme {
                 borderRadius: BorderRadius.circular(MonyRadius.medium),
                 borderSide: BorderSide(color: colorScheme.primary, width: 1.6),
               ),
-        errorBorder: coquette
+        errorBorder: cyberpunk
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.zero,
+                borderSide: BorderSide(color: colorScheme.error, width: 1.2),
+              )
+            : coquette
             ? bloomInput(colorScheme.error, 1.2)
             : japanese
             ? brushInput(colorScheme.error, 1.2, .12)
@@ -297,7 +342,12 @@ abstract final class MonyTheme {
                 borderRadius: BorderRadius.circular(MonyRadius.medium),
                 borderSide: BorderSide(color: colorScheme.error),
               ),
-        focusedErrorBorder: coquette
+        focusedErrorBorder: cyberpunk
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.zero,
+                borderSide: BorderSide(color: colorScheme.error, width: 1.8),
+              )
+            : coquette
             ? bloomInput(colorScheme.error, 2)
             : japanese
             ? brushInput(colorScheme.error, 1.8, .2)
@@ -308,7 +358,11 @@ abstract final class MonyTheme {
       ),
       dialogTheme: baseTheme.dialogTheme.copyWith(
         backgroundColor: colorScheme.surfaceContainerLow,
-        shape: coquette
+        shape: cyberpunk
+            ? HudPanelBorder(
+                side: BorderSide(color: colorScheme.outline, width: 1),
+              )
+            : coquette
             ? RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
                 side: BorderSide(
@@ -327,7 +381,11 @@ abstract final class MonyTheme {
       ),
       bottomSheetTheme: baseTheme.bottomSheetTheme.copyWith(
         backgroundColor: colorScheme.surfaceContainerLow,
-        shape: coquette
+        shape: cyberpunk
+            ? HudPanelBorder(
+                side: BorderSide(color: colorScheme.outline, width: 1),
+              )
+            : coquette
             ? const RoundedRectangleBorder(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               )
@@ -349,7 +407,11 @@ abstract final class MonyTheme {
       ),
       cardTheme: baseTheme.cardTheme.copyWith(
         color: colorScheme.surfaceContainerLow,
-        shape: coquette
+        shape: cyberpunk
+            ? HudPanelBorder(
+                side: BorderSide(color: colorScheme.outlineVariant, width: .8),
+              )
+            : coquette
             ? RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(22),
                 side: BorderSide(
@@ -366,7 +428,17 @@ abstract final class MonyTheme {
               )
             : baseTheme.cardTheme.shape,
       ),
-      outlinedButtonTheme: japanese
+      outlinedButtonTheme: cyberpunk
+          ? OutlinedButtonThemeData(
+              style: ButtonStyle(
+                shape: const WidgetStatePropertyAll(HudPanelBorder()),
+                side: WidgetStatePropertyAll(
+                  BorderSide(color: colorScheme.outline, width: 1),
+                ),
+                foregroundColor: WidgetStatePropertyAll(colorScheme.primary),
+              ),
+            )
+          : japanese
           ? OutlinedButtonThemeData(
               style: ButtonStyle(
                 shape: WidgetStatePropertyAll(brushSubtle),
@@ -396,7 +468,22 @@ abstract final class MonyTheme {
               ),
             )
           : baseTheme.outlinedButtonTheme,
-      filledButtonTheme: japanese
+      filledButtonTheme: cyberpunk
+          ? FilledButtonThemeData(
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.disabled)
+                      ? colorScheme.surfaceContainer
+                      : colorScheme.primary,
+                ),
+                foregroundColor: WidgetStatePropertyAll(colorScheme.onPrimary),
+                shape: const WidgetStatePropertyAll(HudPanelBorder()),
+                side: WidgetStatePropertyAll(
+                  BorderSide(color: colorScheme.secondary, width: 1),
+                ),
+              ),
+            )
+          : japanese
           ? FilledButtonThemeData(
               style: ButtonStyle(
                 backgroundColor: WidgetStatePropertyAll(colorScheme.primary),
@@ -452,7 +539,20 @@ abstract final class MonyTheme {
               ),
             )
           : baseTheme.filledButtonTheme,
-      elevatedButtonTheme: japanese
+      elevatedButtonTheme: cyberpunk
+          ? ElevatedButtonThemeData(
+              style: ButtonStyle(
+                backgroundColor: WidgetStatePropertyAll(
+                  colorScheme.surfaceContainer,
+                ),
+                foregroundColor: WidgetStatePropertyAll(colorScheme.onSurface),
+                elevation: const WidgetStatePropertyAll(0),
+                shape: WidgetStatePropertyAll(
+                  HudPanelBorder(side: BorderSide(color: colorScheme.outline)),
+                ),
+              ),
+            )
+          : japanese
           ? ElevatedButtonThemeData(
               style: ButtonStyle(
                 backgroundColor: WidgetStatePropertyAll(
@@ -492,7 +592,16 @@ abstract final class MonyTheme {
               ),
             )
           : baseTheme.elevatedButtonTheme,
-      floatingActionButtonTheme: coquette
+      floatingActionButtonTheme: cyberpunk
+          ? baseTheme.floatingActionButtonTheme.copyWith(
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              shape: const HudPanelBorder(),
+              elevation: 4,
+              focusElevation: 5,
+              hoverElevation: 6,
+            )
+          : coquette
           ? baseTheme.floatingActionButtonTheme.copyWith(
               backgroundColor: colorScheme.primary,
               foregroundColor: colorScheme.onPrimary,
@@ -513,7 +622,27 @@ abstract final class MonyTheme {
               ),
             )
           : baseTheme.floatingActionButtonTheme,
-      chipTheme: coquette
+      chipTheme: cyberpunk
+          ? baseTheme.chipTheme.copyWith(
+              color: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.selected)
+                    ? colorScheme.primaryContainer
+                    : colorScheme.surfaceContainer,
+              ),
+              backgroundColor: colorScheme.surfaceContainer,
+              selectedColor: colorScheme.primaryContainer,
+              checkmarkColor: colorScheme.primary,
+              side: BorderSide(color: colorScheme.outlineVariant),
+              shape: const HudPanelBorder(),
+              labelStyle: baseTheme.textTheme.labelLarge?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+              secondaryLabelStyle: baseTheme.textTheme.labelLarge?.copyWith(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            )
+          : coquette
           ? baseTheme.chipTheme.copyWith(
               color: WidgetStateProperty.resolveWith((states) {
                 if (states.contains(WidgetState.disabled)) {
@@ -581,7 +710,32 @@ abstract final class MonyTheme {
               ),
             )
           : baseTheme.chipTheme,
-      segmentedButtonTheme: coquette
+      segmentedButtonTheme: cyberpunk
+          ? SegmentedButtonThemeData(
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.selected)
+                      ? colorScheme.primaryContainer
+                      : colorScheme.surfaceContainerLow,
+                ),
+                foregroundColor: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.selected)
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                ),
+                shape: WidgetStateProperty.resolveWith(
+                  (states) => HudPanelBorder(
+                    side: BorderSide(
+                      color: states.contains(WidgetState.selected)
+                          ? colorScheme.primary
+                          : colorScheme.outlineVariant,
+                      width: states.contains(WidgetState.selected) ? 1.3 : .8,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : coquette
           ? SegmentedButtonThemeData(
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith(
@@ -643,7 +797,18 @@ abstract final class MonyTheme {
               ),
             )
           : baseTheme.segmentedButtonTheme,
-      searchBarTheme: coquette
+      searchBarTheme: cyberpunk
+          ? SearchBarThemeData(
+              backgroundColor: WidgetStatePropertyAll(
+                colorScheme.surfaceContainerLow,
+              ),
+              elevation: const WidgetStatePropertyAll(0),
+              side: WidgetStatePropertyAll(
+                BorderSide(color: colorScheme.outlineVariant),
+              ),
+              shape: const WidgetStatePropertyAll(HudPanelBorder()),
+            )
+          : coquette
           ? SearchBarThemeData(
               backgroundColor: WidgetStatePropertyAll(
                 colorScheme.surfaceContainerLow,
@@ -673,7 +838,18 @@ abstract final class MonyTheme {
               ),
             )
           : baseTheme.searchBarTheme,
-      navigationRailTheme: coquette
+      navigationRailTheme: cyberpunk
+          ? baseTheme.navigationRailTheme.copyWith(
+              backgroundColor: colorScheme.surface,
+              indicatorColor: colorScheme.primaryContainer,
+              indicatorShape: const HudPanelBorder(),
+              selectedIconTheme: IconThemeData(color: colorScheme.primary),
+              selectedLabelTextStyle: TextStyle(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            )
+          : coquette
           ? baseTheme.navigationRailTheme.copyWith(
               backgroundColor: colorScheme.surfaceContainerLow,
               indicatorColor: colorScheme.primaryContainer,
@@ -761,6 +937,42 @@ abstract final class MonyTheme {
       outlineVariant: dark ? darkTokens.mutedBorder : const Color(0xFFE8D4DB),
       shadow: dark ? Colors.black : bloom.cocoa.withValues(alpha: .12),
       scrim: Colors.black.withValues(alpha: .54),
+    );
+  }
+
+  static ColorScheme _cyberpunkColorScheme(
+    ColorScheme seed, {
+    required Color brandColor,
+    required Color accentColor,
+  }) {
+    const cyber = CyberpunkTokens.defaults;
+    return seed.copyWith(
+      primary: brandColor,
+      onPrimary: _contrastingForeground(brandColor),
+      secondary: accentColor,
+      onSecondary: _contrastingForeground(accentColor),
+      tertiary: cyber.purple,
+      onTertiary: cyber.text,
+      error: cyber.expense,
+      onError: _contrastingForeground(cyber.expense),
+      primaryContainer: const Color(0xFF12303A),
+      onPrimaryContainer: cyber.text,
+      secondaryContainer: const Color(0xFF35172D),
+      onSecondaryContainer: cyber.text,
+      surface: cyber.voidBlack,
+      onSurface: cyber.text,
+      surfaceContainerLowest: cyber.voidBlack,
+      surfaceContainerLow: cyber.deepNight,
+      surfaceContainer: cyber.panel,
+      surfaceContainerHigh: cyber.elevatedPanel,
+      surfaceContainerHighest: const Color(0xFF222B40),
+      surfaceDim: cyber.voidBlack,
+      surfaceBright: cyber.elevatedPanel,
+      onSurfaceVariant: cyber.mutedText,
+      outline: cyber.cyan.withValues(alpha: .72),
+      outlineVariant: cyber.steel.withValues(alpha: .55),
+      shadow: Colors.black,
+      scrim: Colors.black.withValues(alpha: .7),
     );
   }
 

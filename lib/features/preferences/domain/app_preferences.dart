@@ -1,6 +1,6 @@
 enum AppThemeMode { system, light, dark }
 
-enum AppVisualTheme { mony, japaneseSumie, coquetteBloom }
+enum AppVisualTheme { mony, japaneseSumie, coquetteBloom, cyberpunk }
 
 enum CurrencyFormatStyle { symbol, code }
 

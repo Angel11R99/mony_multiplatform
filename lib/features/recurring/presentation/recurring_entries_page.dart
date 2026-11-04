@@ -7,6 +7,7 @@ import '../../../core/widgets/mony_states.dart';
 import '../../../core/theme/mony_tokens.dart';
 import '../../../core/theme/sumi_visuals.dart';
 import '../../../core/theme/coquette_visuals.dart';
+import '../../../core/theme/cyberpunk_visuals.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/money/money_formatter.dart';
 import '../../categories/domain/category.dart';
@@ -41,13 +42,18 @@ class _ScheduleMetric extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final sumi = SumiThemeColors.maybeOf(context);
     final bloom = CoquetteThemeColors.maybeOf(context);
+    final cyberpunk = CyberpunkTokens.maybeOf(context);
     final content = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
           icon,
           size: 17,
-          color: sumi?.vermilion ?? bloom?.berry ?? colors.primary,
+          color:
+              cyberpunk?.cyan ??
+              sumi?.vermilion ??
+              bloom?.berry ??
+              colors.primary,
         ),
         const SizedBox(width: 7),
         Text(
@@ -61,6 +67,14 @@ class _ScheduleMetric extends StatelessWidget {
     if (bloom != null) {
       return CoquetteSurface(
         variant: CoquetteSurfaceVariant.floating,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        margin: EdgeInsets.zero,
+        child: content,
+      );
+    }
+    if (cyberpunk != null) {
+      return CyberSurface(
+        variant: CyberSurfaceVariant.dataBlock,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         margin: EdgeInsets.zero,
         child: content,

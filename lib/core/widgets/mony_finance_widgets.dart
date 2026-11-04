@@ -4,6 +4,7 @@ import '../theme/mony_finance_colors.dart';
 import '../theme/mony_tokens.dart';
 import '../theme/sumi_visuals.dart';
 import '../theme/coquette_visuals.dart';
+import '../theme/cyberpunk_visuals.dart';
 import 'mony_layout.dart';
 
 enum AmountEmphasis { neutral, income, expense }
@@ -60,6 +61,7 @@ class BalanceCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final japanese = SumiThemeColors.maybeOf(context) != null;
     final coquette = CoquetteThemeColors.maybeOf(context) != null;
+    final cyberpunk = CyberpunkTokens.maybeOf(context) != null;
     final sumiPaper = SumiThemeColors.defaults.paper;
     final content = Padding(
       padding: const EdgeInsets.all(MonySpace.x6),
@@ -95,7 +97,8 @@ class BalanceCard extends StatelessWidget {
       padding: EdgeInsets.zero,
       sumiVariant: SumiSurfaceVariant.inkBlock,
       coquetteVariant: CoquetteSurfaceVariant.petal,
-      child: japanese || coquette
+      cyberVariant: CyberSurfaceVariant.hud,
+      child: japanese || coquette || cyberpunk
           ? content
           : DecoratedBox(
               decoration: BoxDecoration(
@@ -147,6 +150,7 @@ class StatTile extends StatelessWidget {
         AmountEmphasis.income => CoquetteSurfaceVariant.incomePearl,
         AmountEmphasis.expense => CoquetteSurfaceVariant.expensePearl,
       },
+      cyberVariant: CyberSurfaceVariant.dataBlock,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

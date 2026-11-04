@@ -341,7 +341,16 @@ class _SettingsPageState extends ConsumerState<PersonalizationSettingsPage> {
         error: (error, stackTrace) =>
             _LoadError(onRetry: () => ref.invalidate(appPreferencesProvider)),
         data: (value) {
-          final colorOptions = value.visualTheme == AppVisualTheme.coquetteBloom
+          final colorOptions = value.visualTheme == AppVisualTheme.cyberpunk
+              ? <_ColorOption>[
+                  const _ColorOption('Neón cian', 0xFF00E5FF),
+                  const _ColorOption('Magenta', 0xFFFF2DA6),
+                  const _ColorOption('Azul eléctrico', 0xFF3A86FF),
+                  const _ColorOption('Púrpura', 0xFF9D4EDD),
+                  const _ColorOption('Lima señal', 0xFFB8FF3D),
+                  const _ColorOption('Ámbar', 0xFFFFC857),
+                ]
+              : value.visualTheme == AppVisualTheme.coquetteBloom
               ? <_ColorOption>[
                   _ColorOption(
                     'Berry Rose',
@@ -534,8 +543,15 @@ class _SettingsContent extends StatelessWidget {
                     onSelected: () =>
                         onVisualThemeChanged(AppVisualTheme.coquetteBloom),
                   ),
+                  _VisualThemeChoice(
+                    theme: AppVisualTheme.cyberpunk,
+                    selected:
+                        preferences.visualTheme == AppVisualTheme.cyberpunk,
+                    onSelected: () =>
+                        onVisualThemeChanged(AppVisualTheme.cyberpunk),
+                  ),
                 ];
-                if (constraints.maxWidth < 560) {
+                if (constraints.maxWidth < 720) {
                   return Wrap(spacing: 8, runSpacing: 4, children: options);
                 }
                 return Row(
@@ -701,6 +717,7 @@ class _VisualThemeChoice extends StatelessWidget {
         'Coquette Atelier',
         Icons.card_giftcard_outlined,
       ),
+      AppVisualTheme.cyberpunk => ('Cyberpunk', Icons.electric_bolt),
     };
     return ChoiceChip(
       avatar: Icon(icon, size: 18),

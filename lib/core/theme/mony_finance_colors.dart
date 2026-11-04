@@ -25,8 +25,20 @@ class MonyFinanceColors extends ThemeExtension<MonyFinanceColors> {
     Brightness brightness, {
     bool japanese = false,
     bool coquette = false,
+    bool cyberpunk = false,
   }) {
     final dark = brightness == Brightness.dark;
+    if (cyberpunk) {
+      const cyber = Color(0xFFB8FF3D);
+      return const MonyFinanceColors(
+        income: cyber,
+        onIncome: Color(0xFF10131D),
+        expense: Color(0xFFFF2DA6),
+        onExpense: Color(0xFF160812),
+        warning: Color(0xFFFFC857),
+        onWarning: Color(0xFF211A0D),
+      );
+    }
     if (coquette) {
       const bloom = CoquetteThemeColors.defaults;
       const atelierDark = CoquetteSurfaceTokens.dark;

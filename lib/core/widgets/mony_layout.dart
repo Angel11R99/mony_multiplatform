@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/mony_tokens.dart';
 import '../theme/sumi_visuals.dart';
 import '../theme/coquette_visuals.dart';
+import '../theme/cyberpunk_visuals.dart';
 
 class MonyCard extends StatelessWidget {
   const MonyCard({
@@ -12,6 +13,7 @@ class MonyCard extends StatelessWidget {
     this.semanticLabel,
     this.sumiVariant = SumiSurfaceVariant.openFrame,
     this.coquetteVariant,
+    this.cyberVariant,
     super.key,
   });
 
@@ -21,9 +23,19 @@ class MonyCard extends StatelessWidget {
   final String? semanticLabel;
   final SumiSurfaceVariant sumiVariant;
   final CoquetteSurfaceVariant? coquetteVariant;
+  final CyberSurfaceVariant? cyberVariant;
 
   @override
   Widget build(BuildContext context) {
+    if (CyberpunkTokens.maybeOf(context) != null) {
+      return CyberSurface(
+        semanticLabel: semanticLabel,
+        variant: cyberVariant ?? CyberSurfaceVariant.neonFrame,
+        padding: padding,
+        onTap: onTap,
+        child: child,
+      );
+    }
     if (CoquetteThemeColors.maybeOf(context) != null) {
       return CoquetteSurface(
         semanticLabel: semanticLabel,
