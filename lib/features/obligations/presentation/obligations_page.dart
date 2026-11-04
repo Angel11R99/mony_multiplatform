@@ -501,12 +501,14 @@ Future<void> editObligation(
                     });
                   },
                 ),
+              if (existing == null) const SizedBox(height: 12),
               TextField(
                 controller: name,
                 maxLength: 120,
                 readOnly: existing?.sourceShoppingListId != null,
                 decoration: const InputDecoration(labelText: 'Descripción'),
               ),
+              const SizedBox(height: 8),
               TextField(
                 controller: counterparty,
                 maxLength: 100,
@@ -514,6 +516,7 @@ Future<void> editObligation(
                   labelText: 'Persona o entidad',
                 ),
               ),
+              const SizedBox(height: 8),
               TextField(
                 controller: amount,
                 readOnly: existing?.sourceShoppingListId != null,
@@ -525,6 +528,7 @@ Future<void> editObligation(
                   prefixText: 'RD\$ ',
                 ),
               ),
+              const SizedBox(height: 8),
               DropdownButtonFormField<int>(
                 key: ValueKey(direction),
                 initialValue: categoryId,
@@ -545,6 +549,7 @@ Future<void> editObligation(
                 ],
                 onChanged: (value) => categoryId = value,
               ),
+              const SizedBox(height: 8),
               DropdownButtonFormField<int>(
                 initialValue: methodId,
                 decoration: const InputDecoration(
@@ -563,6 +568,7 @@ Future<void> editObligation(
                 ],
                 onChanged: (value) => methodId = value,
               ),
+              const SizedBox(height: 4),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Vencimiento'),
@@ -585,6 +591,7 @@ Future<void> editObligation(
                   icon: const Icon(Icons.calendar_today_outlined),
                 ),
               ),
+              const SizedBox(height: 4),
               TextField(
                 controller: notes,
                 maxLength: 500,
