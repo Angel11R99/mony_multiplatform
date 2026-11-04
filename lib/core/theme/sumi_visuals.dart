@@ -571,9 +571,15 @@ class SumiOpenFrameBorder extends OutlinedBorder {
 
 /// Dark, squared navigation lacquer with a custom calligraphic active stroke.
 class SumiNavigationPainter extends CustomPainter {
-  const SumiNavigationPainter({required this.colors});
+  const SumiNavigationPainter({
+    required this.colors,
+    required this.activeIndex,
+    required this.itemCount,
+  });
 
   final SumiThemeColors colors;
+  final double activeIndex;
+  final int itemCount;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -603,9 +609,63 @@ class SumiNavigationPainter extends CustomPainter {
         ..strokeWidth = 1.3
         ..strokeCap = StrokeCap.butt,
     );
+
+    if (itemCount <= 0) return;
+    final itemWidth = size.width / itemCount;
+    final activeX = (activeIndex + .5) * itemWidth;
+    final washRadius = itemWidth < 46 ? itemWidth * .7 : 32.0;
+    final washCenter = Offset(activeX, size.height * .66);
+    canvas.drawCircle(
+      washCenter,
+      washRadius,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            colors.ink.withValues(alpha: .2),
+            colors.ink.withValues(alpha: .08),
+            Colors.transparent,
+          ],
+          stops: const [0, .48, 1],
+        ).createShader(Rect.fromCircle(center: washCenter, radius: washRadius))
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9),
+    );
+
+    final strokeHalfWidth = itemWidth < 54 ? itemWidth * .3 : 16.0;
+    final stroke = Path()
+      ..moveTo(activeX - strokeHalfWidth, size.height - 15)
+      ..quadraticBezierTo(
+        activeX,
+        size.height - 21,
+        activeX + strokeHalfWidth,
+        size.height - 15,
+      );
+    canvas.drawPath(
+      stroke,
+      Paint()
+        ..color = colors.gold.withValues(alpha: .96)
+        ..strokeWidth = 2.5
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke,
+    );
+
+    final seal = Rect.fromCenter(
+      center: Offset(size.width - 14, 7),
+      width: 10,
+      height: 10,
+    );
+    canvas.drawRect(
+      seal,
+      Paint()..color = colors.vermilion.withValues(alpha: .9),
+    );
+    canvas.drawRect(
+      seal.deflate(3),
+      Paint()..color = colors.paper.withValues(alpha: .72),
+    );
   }
 
   @override
   bool shouldRepaint(covariant SumiNavigationPainter oldDelegate) =>
-      colors != oldDelegate.colors;
+      colors != oldDelegate.colors ||
+      activeIndex != oldDelegate.activeIndex ||
+      itemCount != oldDelegate.itemCount;
 }

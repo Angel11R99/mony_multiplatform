@@ -941,14 +941,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.19.2"
-  nav_bar:
-    dependency: "direct main"
-    description:
-      name: nav_bar
-      sha256: "66d0af87d04418b2adc59a7f2747fc89b2dc9b910cd5f46c6a17c2f144e7bc2e"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.1"
   objective_c:
     dependency: transitive
     description:
