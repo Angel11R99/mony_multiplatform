@@ -371,7 +371,7 @@ class _NavigationButton extends StatelessWidget {
                       key: selected
                           ? const ValueKey('sumi-selected-icon-lift')
                           : null,
-                      offset: Offset(0, -.15625 * value),
+                      offset: Offset(0, -.0390625 * value),
                       child: Transform.scale(
                         key: selected
                             ? const ValueKey('sumi-selected-icon-scale')
@@ -383,7 +383,7 @@ class _NavigationButton extends StatelessWidget {
                     child: Icon(
                       icon,
                       color: foreground,
-                      size: selected ? 36 : 30,
+                      size: selected ? 42 : 30,
                     ),
                   )
                 : AnimatedContainer(
