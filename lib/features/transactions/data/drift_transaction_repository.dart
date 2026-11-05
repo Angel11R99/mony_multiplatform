@@ -67,56 +67,54 @@ class DriftTransactionRepository implements TransactionRepository {
     final transactions = _database.transactions;
     final categories = _database.categories;
     final methods = _database.paymentMethods;
+    final normalizedQuery = filter.query.trim().toLowerCase();
+    final predicates = _basicTransactionPredicates(filter, transactions);
+    final sortByCategory =
+        filter.sortOrder == TransactionSortOrder.categoryAscending ||
+        filter.sortOrder == TransactionSortOrder.categoryDescending;
+    if (normalizedQuery.isEmpty && !sortByCategory) {
+      final query = _database.select(transactions);
+      if (predicates.isNotEmpty) {
+        query.where((_) => predicates.reduce((a, b) => a & b));
+      }
+      query.orderBy(switch (filter.sortOrder) {
+        TransactionSortOrder.newest => [
+          (row) => OrderingTerm.desc(row.dateEpochDay),
+          (row) => OrderingTerm.desc(row.createdAt),
+          (row) => OrderingTerm.desc(row.id),
+        ],
+        TransactionSortOrder.oldest => [
+          (row) => OrderingTerm.asc(row.dateEpochDay),
+          (row) => OrderingTerm.asc(row.createdAt),
+          (row) => OrderingTerm.asc(row.id),
+        ],
+        TransactionSortOrder.amountHighToLow => [
+          (row) => OrderingTerm.desc(row.amountInCents),
+          (row) => OrderingTerm.desc(row.dateEpochDay),
+          (row) => OrderingTerm.desc(row.createdAt),
+          (row) => OrderingTerm.desc(row.id),
+        ],
+        TransactionSortOrder.amountLowToHigh => [
+          (row) => OrderingTerm.asc(row.amountInCents),
+          (row) => OrderingTerm.desc(row.dateEpochDay),
+          (row) => OrderingTerm.desc(row.createdAt),
+          (row) => OrderingTerm.desc(row.id),
+        ],
+        TransactionSortOrder.categoryAscending ||
+        TransactionSortOrder.categoryDescending => throw StateError(
+          'Category sorts require joined rows.',
+        ),
+      });
+      if (limit != null) query.limit(limit);
+      return query.watch().map(
+        (rows) => rows.map(_fromRow).toList(growable: false),
+      );
+    }
+
     final query = _database.select(transactions).join([
       innerJoin(categories, categories.id.equalsExp(transactions.categoryId)),
       innerJoin(methods, methods.id.equalsExp(transactions.paymentMethodId)),
     ]);
-    final predicates = <Expression<bool>>[];
-    if (filter.type != null) {
-      predicates.add(transactions.type.equals(filter.type!.name));
-    }
-    final categoryIds = filter.categoryIds.isNotEmpty
-        ? filter.categoryIds
-        : filter.categoryId == null
-        ? const <int>{}
-        : {filter.categoryId!};
-    if (categoryIds.isNotEmpty) {
-      predicates.add(transactions.categoryId.isIn(categoryIds));
-    }
-    if (filter.paymentMethodIds.isNotEmpty) {
-      predicates.add(
-        transactions.paymentMethodId.isIn(filter.paymentMethodIds),
-      );
-    }
-    if (filter.minimumAmountInCents != null) {
-      predicates.add(
-        transactions.amountInCents.isBiggerOrEqualValue(
-          filter.minimumAmountInCents!,
-        ),
-      );
-    }
-    if (filter.maximumAmountInCents != null) {
-      predicates.add(
-        transactions.amountInCents.isSmallerOrEqualValue(
-          filter.maximumAmountInCents!,
-        ),
-      );
-    }
-    if (filter.startDate != null) {
-      predicates.add(
-        transactions.dateEpochDay.isBiggerOrEqualValue(
-          dateToEpochDay(filter.startDate!),
-        ),
-      );
-    }
-    if (filter.endDate != null) {
-      predicates.add(
-        transactions.dateEpochDay.isSmallerOrEqualValue(
-          dateToEpochDay(filter.endDate!),
-        ),
-      );
-    }
-    final normalizedQuery = filter.query.trim().toLowerCase();
     if (normalizedQuery.isNotEmpty) {
       final escaped = normalizedQuery
           .replaceAll(r'\', r'\\')
@@ -165,6 +163,58 @@ class DriftTransactionRepository implements TransactionRepository {
           .map((row) => _fromRow(row.readTable(transactions)))
           .toList(growable: false),
     );
+  }
+
+  List<Expression<bool>> _basicTransactionPredicates(
+    TransactionHistoryFilter filter,
+    $TransactionsTable transactions,
+  ) {
+    final predicates = <Expression<bool>>[];
+    if (filter.type != null) {
+      predicates.add(transactions.type.equals(filter.type!.name));
+    }
+    final categoryIds = filter.categoryIds.isNotEmpty
+        ? filter.categoryIds
+        : filter.categoryId == null
+        ? const <int>{}
+        : {filter.categoryId!};
+    if (categoryIds.isNotEmpty) {
+      predicates.add(transactions.categoryId.isIn(categoryIds));
+    }
+    if (filter.paymentMethodIds.isNotEmpty) {
+      predicates.add(
+        transactions.paymentMethodId.isIn(filter.paymentMethodIds),
+      );
+    }
+    if (filter.minimumAmountInCents != null) {
+      predicates.add(
+        transactions.amountInCents.isBiggerOrEqualValue(
+          filter.minimumAmountInCents!,
+        ),
+      );
+    }
+    if (filter.maximumAmountInCents != null) {
+      predicates.add(
+        transactions.amountInCents.isSmallerOrEqualValue(
+          filter.maximumAmountInCents!,
+        ),
+      );
+    }
+    if (filter.startDate != null) {
+      predicates.add(
+        transactions.dateEpochDay.isBiggerOrEqualValue(
+          dateToEpochDay(filter.startDate!),
+        ),
+      );
+    }
+    if (filter.endDate != null) {
+      predicates.add(
+        transactions.dateEpochDay.isSmallerOrEqualValue(
+          dateToEpochDay(filter.endDate!),
+        ),
+      );
+    }
+    return predicates;
   }
 
   @override
@@ -223,7 +273,15 @@ class DriftTransactionRepository implements TransactionRepository {
       );
     }
     final normalizedQuery = filter.query.trim().toLowerCase();
+    final searchJoins = normalizedQuery.isEmpty
+        ? ''
+        : '''INNER JOIN categories c ON c.id = t.category_id
+            INNER JOIN payment_methods m ON m.id = t.payment_method_id''';
+    final watchedTables = <TableInfo>{_database.transactions};
     if (normalizedQuery.isNotEmpty) {
+      watchedTables
+        ..add(_database.categories)
+        ..add(_database.paymentMethods);
       final escaped = normalizedQuery
           .replaceAll(r'\', r'\\')
           .replaceAll('%', r'\%')
@@ -250,15 +308,10 @@ class DriftTransactionRepository implements TransactionRepository {
               COALESCE(SUM(CASE WHEN t.type = 'expense'
                 THEN t.amount_in_cents ELSE 0 END), 0) AS expense_in_cents
             FROM transactions t
-            INNER JOIN categories c ON c.id = t.category_id
-            INNER JOIN payment_methods m ON m.id = t.payment_method_id
+            $searchJoins
             $where''',
           variables: variables,
-          readsFrom: {
-            _database.transactions,
-            _database.categories,
-            _database.paymentMethods,
-          },
+          readsFrom: watchedTables,
         )
         .watchSingle()
         .map(
