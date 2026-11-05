@@ -61,6 +61,49 @@ void main() {
     );
   });
 
+  test(
+    'batches large daily catch-up and skips existing occurrence dates',
+    () async {
+      final start = DateTime(2025, 1, 1);
+      final id = await repository.create(
+        RecurringEntry(
+          title: 'Pago diario',
+          amountInCents: 500,
+          type: TransactionType.expense,
+          categoryId: 8,
+          paymentMethodId: 1,
+          frequency: RecurrenceFrequency.daily,
+          startDate: start,
+          nextDate: start,
+        ),
+      );
+      await db
+          .into(db.transactions)
+          .insert(
+            TransactionsCompanion.insert(
+              amountInCents: 500,
+              type: 'expense',
+              categoryId: 8,
+              paymentMethodId: 1,
+              description: const Value('Pago diario'),
+              dateEpochDay: dateToEpochDay(start),
+              fixedEntryId: Value(id),
+            ),
+          );
+
+      final through = start.add(const Duration(days: 600));
+      expect(await repository.processDue(now: through), 600);
+      final rows = await (db.select(
+        db.transactions,
+      )..where((row) => row.fixedEntryId.equals(id))).get();
+      expect(rows, hasLength(601));
+      expect(
+        (await repository.watchAll().first).single.nextDate,
+        through.add(const Duration(days: 1)),
+      );
+    },
+  );
+
   test('pause skips paused periods and end date stops the series', () async {
     final id = await repository.create(
       monthly(start: DateTime(2026, 1, 1), end: DateTime(2026, 4, 1)),
