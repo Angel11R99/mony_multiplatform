@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mony_multiplatform/core/database/app_database.dart';
 import 'package:mony_multiplatform/features/categories/data/drift_categories_repository.dart';
+import 'package:mony_multiplatform/features/obligations/data/drift_obligation_repository.dart';
 import 'package:mony_multiplatform/features/recurring/data/drift_recurring_repository.dart';
 import 'package:mony_multiplatform/features/statistics/data/drift_statistics_repository.dart';
 import 'package:mony_multiplatform/features/statistics/domain/financial_statistics.dart';
@@ -315,6 +316,69 @@ void main() {
     final recurrenceSamples = recurrenceTimings.skip(1).toList()..sort();
     report['50 recurring series x 180 days'] =
         recurrenceSamples[recurrenceSamples.length ~/ 2];
+
+    await database.batch((batch) {
+      batch.insertAll(database.obligations, [
+        for (var index = 0; index < 10000; index++)
+          ObligationsCompanion.insert(
+            direction: 'payable',
+            title: 'Profile obligation $index',
+            amountInCents: 10000,
+            dueDateEpochDay: Value(todayEpochDay),
+            categoryId: 6,
+            defaultPaymentMethodId: const Value(1),
+            isCancelled: Value(index < 1000),
+          ),
+      ]);
+    });
+    await database.batch((batch) {
+      batch.insertAll(database.obligationPayments, [
+        for (var index = 1000; index < 6000; index++)
+          ObligationPaymentsCompanion.insert(
+            obligationId: index + 1,
+            amountInCents: index < 3000 ? 10000 : 5000,
+            dateEpochDay: todayEpochDay,
+            paymentMethodId: 1,
+          ),
+      ]);
+    });
+    final obligationRepository = DriftObligationRepository(database);
+    final reminderQueryTimings = <int>[];
+    final previousReminderTimings = <int>[];
+    Set<int>? reminderCandidateIds;
+    for (var sample = 0; sample < 6; sample++) {
+      reminderQueryTimings.add(
+        await measure(() async {
+          final candidates = await obligationRepository.getReminderCandidates();
+          expect(candidates, hasLength(7000));
+          reminderCandidateIds = candidates.map((item) => item.id).toSet();
+        }),
+      );
+      previousReminderTimings.add(
+        await measure(() async {
+          final obligations = await obligationRepository.watchAll().first;
+          final candidates = obligations
+              .where(
+                (item) =>
+                    !item.isCancelled &&
+                    item.dueDate != null &&
+                    item.remainingAmountInCents > 0,
+              )
+              .map((item) => item.id)
+              .toSet();
+          expect(candidates, reminderCandidateIds);
+        }),
+      );
+    }
+    final sortedReminderQueryTimings = reminderQueryTimings.skip(1).toList()
+      ..sort();
+    final sortedPreviousReminderTimings =
+        previousReminderTimings.skip(1).toList()..sort();
+    report['reminder candidate query (10k obligations)'] =
+        sortedReminderQueryTimings[sortedReminderQueryTimings.length ~/ 2];
+    report['previous all reminder obligations'] =
+        sortedPreviousReminderTimings[sortedPreviousReminderTimings.length ~/
+            2];
 
     // ignore: avoid_print
     print(
