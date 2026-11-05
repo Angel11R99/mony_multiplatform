@@ -1,6 +1,6 @@
 # Revisión de rendimiento
 
-Fecha: 2026-11-04
+Fecha: 2026-11-05
 
 ## Cambios aplicados
 
@@ -34,7 +34,7 @@ Fecha: 2026-11-04
 - El refresco de recordatorios solo observa obligaciones y recurrencias cuando las notificaciones están activadas; esos proveedores se liberan cuando no quedan pantallas ni widgets que los observen.
 - El procesador de ciclos programa un temporizador de una sola ejecución para la próxima medianoche o la hora de cierre automático configurada, en vez de consultar SQLite cada minuto; también revisa al inicio, al reanudar y ante cambios de configuración/series.
 - La conciliación de recordatorios continúa al inicio, al reanudar y cuando cambian obligaciones, recurrentes o preferencias; un error programa un único reintento de respaldo a los cinco minutos.
-- La barra inferior anterior (`nav_bar`) mantenía un ticker global que llamaba `setState` cada cuadro y controladores repetidos, incluso con efectos visuales apagados. Se retiró la dependencia y su identidad Sumi-e se reprodujo con pintado local: lavado de tinta y trazo que se animan solo al cambiar de módulo, sello bermellón separado del glifo de Historial e iconos de alto contraste. El icono seleccionado conserva el movimiento vertical y reduce su escala al 75%; respeta “reducir movimiento” y no mantiene ticker en reposo.
+- La barra inferior anterior (`nav_bar`) mantenía un ticker global que llamaba `setState` cada cuadro y controladores repetidos, incluso con efectos visuales apagados. Se retiró la dependencia y su identidad Sumi-e se reprodujo con pintado local: lavado de tinta y trazo que se animan solo al cambiar de módulo. El ajuste visual del 2026-11-05 elimina el panel rectangular y el sello fijo que aparecía como un cuadro rojo sobre Historial; deja el lavado localizado en la selección, sin ticker en reposo. El glifo usa una base de 30 px, escala al 75% (22,5 px efectivos) y se eleva 2,5 px en lugar de 10; respeta “reducir movimiento”.
 - Las fuentes Inter y Plus Jakarta Sans se empaquetan en variantes estáticas subseteadas para Latin/acentos y símbolos monetarios; la interfaz no solicita esas fuentes por red en el primer render. Se conserva Roboto porque la exportación PDF lo carga para generar documentos.
 - El snapshot del widget reúne totales de obligaciones, metas y recurrencias durante el mismo recorrido de selección de elementos activos; antes repetía filtros y folds sobre esas listas. La pantalla de metas crea solo una lista filtrada por estado/búsqueda y calcula la consulta normalizada una vez por reconstrucción.
 
@@ -70,6 +70,7 @@ Fecha: 2026-11-04
 - `flutter build windows --profile`: no disponible en este equipo porque falta habilitar Developer Mode para symlinks; Flutter Doctor también informa componentes faltantes de Desktop C++.
 - `flutter build apk --release`: Gradle llegó a la etapa de empaquetado, pero el proyecto requiere firma de release mediante `MONY_RELEASE_*` o `android/key.properties`, ausente en este entorno. El build de perfil sí compila.
 - Las capturas ADB del emulador siguen saliendo negras aun cuando la actividad está en primer plano y expone el árbol semántico Flutter. Se reprodujo tanto con Impeller como con una ejecución de perfil `--no-enable-impeller` (Skia); `FLAG_SECURE` aparece desactivado. Android Computer Use tampoco expone una ventana del emulador para capturarla desde el escritorio. La prueba automatizada confirma la escala del 75% y la selección, pero no hay evidencia visual concluyente del navbar en este emulador. El siguiente paso es repetir la verificación en otra superficie capturable, como se detalla en [performance_followup.md](performance_followup.md).
+- Tras el ajuste visual del navbar, `flutter test test/core/routing/app_navigation_test.dart` pasó sus seis pruebas y `flutter analyze --no-pub` no encontró problemas, con Flutter 3.44.4 / Dart 3.12.2. La suite completa no se pudo repetir con ese SDK: el hook de `objective_c` intenta cargar un kernel generado por Dart 3.13.7 (formato 138 frente al 130 esperado). El dispositivo Android no está conectado; aún falta revisar una captura visual real del navbar.
 - iOS/macOS no se pudieron compilar desde el host Windows; requieren un host macOS y Xcode.
 - No hay dispositivo físico conectado; las métricas Android provienen únicamente del emulador Android disponible en este host.
 
