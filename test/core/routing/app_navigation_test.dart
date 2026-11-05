@@ -9,6 +9,7 @@ import 'package:mony_multiplatform/core/database/app_database_provider.dart';
 import 'package:mony_multiplatform/core/routing/app_router.dart';
 import 'package:mony_multiplatform/core/routing/mony_navigation_shell.dart';
 import 'package:mony_multiplatform/core/theme/mony_finance_colors.dart';
+import 'package:mony_multiplatform/core/theme/sumi_visuals.dart';
 import 'package:mony_multiplatform/features/preferences/domain/app_preferences.dart';
 import 'package:mony_multiplatform/features/preferences/domain/preferences_repository.dart';
 import 'package:mony_multiplatform/features/preferences/presentation/preferences_controller.dart';
@@ -93,9 +94,12 @@ void main() {
     final selectedLift = tester.widget<Transform>(
       find.byKey(const ValueKey('sumi-selected-icon-lift')),
     );
-    expect(selectedLift.transform.storage[13], closeTo(-.625, .001));
-    expect(tester.widget<Icon>(find.byIcon(Icons.receipt_long)).size, 30);
+    expect(selectedLift.transform.storage[13], closeTo(-.15625, .001));
+    expect(tester.widget<Icon>(find.byIcon(Icons.receipt_long)).size, 36);
     expect(find.byIcon(Icons.receipt_long), findsOneWidget);
+    final unselectedHome = tester.widget<Icon>(find.byIcon(Icons.home));
+    expect(unselectedHome.size, 30);
+    expect(unselectedHome.color, isNot(SumiThemeColors.defaults.paper));
     expect(tester.takeException(), isNull);
   });
 

@@ -346,8 +346,11 @@ class _NavigationButton extends StatelessWidget {
       context,
       const Duration(milliseconds: 400),
     );
+    final sumiUnselected = Theme.of(context).brightness == Brightness.dark
+        ? sumi.paper
+        : sumi.inkGray;
     final foreground = japanese
-        ? (selected ? sumi.gold : sumi.paper)
+        ? (selected ? sumi.gold : sumiUnselected)
         : (selected ? scheme.primary : scheme.onSurfaceVariant);
     return Semantics(
       button: true,
@@ -368,7 +371,7 @@ class _NavigationButton extends StatelessWidget {
                       key: selected
                           ? const ValueKey('sumi-selected-icon-lift')
                           : null,
-                      offset: Offset(0, -.625 * value),
+                      offset: Offset(0, -.15625 * value),
                       child: Transform.scale(
                         key: selected
                             ? const ValueKey('sumi-selected-icon-scale')
@@ -377,7 +380,11 @@ class _NavigationButton extends StatelessWidget {
                         child: child,
                       ),
                     ),
-                    child: Icon(icon, color: foreground, size: 30),
+                    child: Icon(
+                      icon,
+                      color: foreground,
+                      size: selected ? 36 : 30,
+                    ),
                   )
                 : AnimatedContainer(
                     duration: duration,
