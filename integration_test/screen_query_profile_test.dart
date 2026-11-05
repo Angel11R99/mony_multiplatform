@@ -2,11 +2,21 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mony_multiplatform/core/database/app_database.dart';
+import 'package:mony_multiplatform/core/database/app_database_provider.dart';
+import 'package:mony_multiplatform/core/routing/app_router.dart';
+import 'package:mony_multiplatform/core/theme/mony_theme.dart';
+import 'package:mony_multiplatform/features/budgets/data/drift_budget_repository.dart';
+import 'package:mony_multiplatform/features/budgets/domain/budget.dart';
 import 'package:mony_multiplatform/features/categories/data/drift_categories_repository.dart';
 import 'package:mony_multiplatform/features/obligations/data/drift_obligation_repository.dart';
+import 'package:mony_multiplatform/features/preferences/domain/app_preferences.dart';
+import 'package:mony_multiplatform/features/preferences/domain/preferences_repository.dart';
+import 'package:mony_multiplatform/features/preferences/presentation/preferences_controller.dart';
 import 'package:mony_multiplatform/features/recurring/data/drift_recurring_repository.dart';
 import 'package:mony_multiplatform/features/statistics/data/drift_statistics_repository.dart';
 import 'package:mony_multiplatform/features/statistics/domain/financial_statistics.dart';
@@ -380,10 +390,102 @@ void main() {
         sortedPreviousReminderTimings[sortedPreviousReminderTimings.length ~/
             2];
 
+    await DriftBudgetRepository(database).saveConfig(
+      amountInCents: 500000,
+      period: BudgetPeriod.monthly,
+      now: today,
+    );
+    final router = createAppRouter();
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      router.dispose();
+    });
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(database),
+          preferencesRepositoryProvider.overrideWithValue(
+            _MemoryPreferencesRepository(),
+          ),
+        ],
+        child: MaterialApp.router(
+          routerConfig: router,
+          theme: MonyTheme.light(AppPreferences.defaults),
+          darkTheme: MonyTheme.dark(AppPreferences.defaults),
+          themeMode: MonyTheme.themeMode(AppPreferences.defaults.themeMode),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final binding = IntegrationTestWidgetsFlutterBinding.instance;
+    for (final (index, label, key) in [
+      (6, 'Plan de ciclo', 'budgetScroll'),
+      (5, 'Estadísticas', 'statisticsScroll'),
+      (7, 'Historial', 'historyScroll'),
+    ]) {
+      await binding.watchPerformance(() async {
+        await tester.tap(find.byTooltip(label));
+        await tester.pumpAndSettle();
+        final scrollable = find.byType(Scrollable).hitTestable().first;
+        if (index == 7) {
+          for (var page = 0; page < 4; page++) {
+            await tester.drag(scrollable, const Offset(0, -3200));
+            await tester.pumpAndSettle();
+            final loadMore = find.text('Cargar más').hitTestable();
+            if (loadMore.evaluate().isEmpty) break;
+            await tester.tap(loadMore);
+            await tester.pumpAndSettle();
+          }
+        }
+        for (var pass = 0; pass < 3; pass++) {
+          await tester.fling(scrollable, const Offset(0, -1600), 4200);
+          await tester.pumpAndSettle();
+          await tester.fling(scrollable, const Offset(0, 1600), 4200);
+          await tester.pumpAndSettle();
+        }
+      }, reportKey: key);
+      final frameSummary = binding.reportData![key]! as Map<String, dynamic>;
+      const frameMetrics = [
+        'frame_count',
+        'average_frame_build_time_millis',
+        '90th_percentile_frame_build_time_millis',
+        '99th_percentile_frame_build_time_millis',
+        'worst_frame_build_time_millis',
+        'missed_frame_build_budget_count',
+        'average_frame_rasterizer_time_millis',
+        '90th_percentile_frame_rasterizer_time_millis',
+        '99th_percentile_frame_rasterizer_time_millis',
+        'worst_frame_rasterizer_time_millis',
+        'missed_frame_rasterizer_budget_count',
+        'new_gen_gc_count',
+        'old_gen_gc_count',
+        'worst_layer_cache_memory',
+        'worst_picture_cache_memory',
+      ];
+      // ignore: avoid_print
+      print(
+        'Android UI frame profile $key: '
+        '${frameMetrics.map((metric) => '$metric=${frameSummary[metric]}').join('; ')}',
+      );
+    }
+
     // ignore: avoid_print
     print(
       'Android SQLite profile: seed=${insertWatch.elapsedMilliseconds}ms; '
       '${report.entries.map((entry) => '${entry.key}=${entry.value}us').join('; ')}',
     );
   });
+}
+
+class _MemoryPreferencesRepository implements PreferencesRepository {
+  AppPreferences _value = AppPreferences.defaults;
+
+  @override
+  Future<AppPreferences> load() async => _value;
+
+  @override
+  Future<void> save(AppPreferences preferences) async {
+    _value = preferences;
+  }
 }
