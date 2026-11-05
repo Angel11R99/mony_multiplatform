@@ -94,12 +94,12 @@ void main() {
     final selectedLift = tester.widget<Transform>(
       find.byKey(const ValueKey('sumi-selected-icon-lift')),
     );
-    expect(selectedLift.transform.storage[13], closeTo(-.0390625, .001));
+    expect(selectedLift.transform.storage[13], closeTo(-.625, .001));
     expect(tester.widget<Icon>(find.byIcon(Icons.receipt_long)).size, 42);
     expect(find.byIcon(Icons.receipt_long), findsOneWidget);
     final unselectedHome = tester.widget<Icon>(find.byIcon(Icons.home));
     expect(unselectedHome.size, 30);
-    expect(unselectedHome.color, isNot(SumiThemeColors.defaults.paper));
+    expect(unselectedHome.color, SumiThemeColors.defaults.paper);
     expect(tester.takeException(), isNull);
   });
 

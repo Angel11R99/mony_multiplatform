@@ -5,7 +5,7 @@ Este archivo conserva trabajo que requiere otra sesión o un entorno distinto. L
 ## Siguiente sesión
 
 - [x] **Auditar inicialización de fechas del arranque.** En isolates limpios del host, `intl` registró 120 locales en 6,74 ms y Flutter localizations 98 en 5,14 ms. La diferencia es pequeña y no mide primer cuadro; se conserva el bootstrap y queda pendiente medirlo en dispositivo.
-- [ ] **Navbar Sumi-e — verificación visual pendiente.** El código ya aumenta el icono activo a 42 px y reduce su elevación a 0,039 px. La captura más reciente del usuario aún muestra un cuadro rojo en Historial; no se encontró un badge rojo en el código del navbar y hace falta capturar la app en el AVD para localizar la capa que lo dibuja y confirmar el aspecto final.
+- [x] **Navbar Sumi-e — corregir y verificar en AVD.** La implementación anterior del paquete `nav_bar` dibujaba un sello rojo en la esquina de la barra; el reemplazo ya no muestra ese sello. Se recuperó el panel de tinta `deepInk` y el contraste de iconos de papel, y se afinó la elevación del icono activo a 0,625 px con tamaño de 42 px. La captura actual en AVD confirma panel rectangular oscuro, trazo dorado bajo la selección y ausencia del cuadro rojo en Historial. Verificación en emulador, no hardware físico.
 - [x] Ejecutar `flutter test --no-pub` completo después del lote de catch-up recurrente. Resultado: 203 pruebas pasaron; `flutter analyze --no-pub` también pasó con Flutter 3.44.4 / Dart 3.12.2. Para regenerar el hook de `objective_c` con ese SDK se resolvieron temporalmente cinco dependencias transitivas a versiones compatibles con Dart 3.12.2 y se restauró `pubspec.lock`; repetir con la resolución bloqueada de Dart 3.13.7 queda pendiente.
 - [x] **Historial y Estadísticas — perfil SQLite Android.** Se añadió `integration_test/screen_query_profile_test.dart`, que crea y elimina una base temporal de archivo con 50.000 movimientos y la abre con el isolate de fondo de Drift. En `Medium_Phone` perfil, la primera página de Historial bajó de 8,89 a 2,24 ms al omitir joins que no necesita la vista; el resumen bajó de 17,98 a 16,68 ms. La agregación alternativa de Estadísticas Todo se descartó porque midió 49,62 ms frente a 37,54 ms del SQL anterior. Una corrida de emulador, sin hardware físico.
 - [x] **Presupuesto — perfil de agregación SQLite en Android.** Con 50.000 movimientos en SQLite de archivo y el isolate de Drift, la consulta por período/categoría tardó 15,59 ms frente a 257,79 ms al materializar el historial completo y filtrarlo en Dart (~94% menos); los totales y grupos de categoría coincidieron. Una corrida en AVD.
@@ -25,7 +25,7 @@ Este archivo conserva trabajo que requiere otra sesión o un entorno distinto. L
 
 1. Repetir en Android físico los perfiles de desplazamiento, consultas y catch-up, y medir RSS/heap en las etapas de mayor carga.
 2. Revisar Estadísticas Todo con varias ejecuciones y perfilar copias/exportaciones cerca del límite de tamaño.
-3. Verificar visualmente en el AVD el cuadrito rojo del navbar japonés que aún muestra la captura del usuario.
+3. Repetir el perfil visual/performance del navbar Sumi-e en hardware físico cuando esté disponible.
 4. Completar el tamaño de distribución release y resolver las compilaciones específicas de plataforma; registrar los resultados en [performance_review.md](performance_review.md).
 
 ## Entornos de compilación pendientes

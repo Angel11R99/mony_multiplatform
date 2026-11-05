@@ -280,6 +280,7 @@ class _MonyBottomNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final sumi = SumiThemeColors.maybeOf(context) ?? SumiThemeColors.defaults;
     final duration = MonyMotion.durationFor(context, MonyMotion.quick);
     return Container(
       height: japanese ? 80 : 68,
@@ -287,8 +288,8 @@ class _MonyBottomNavigationBar extends StatelessWidget {
           ? const EdgeInsets.only(left: 20, right: 20, bottom: 20)
           : const EdgeInsets.fromLTRB(20, 4, 20, 8),
       decoration: BoxDecoration(
-        color: japanese ? Colors.transparent : scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(28),
+        color: japanese ? sumi.deepInk : scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(japanese ? 8 : 28),
         border: japanese
             ? null
             : Border.all(color: scheme.outlineVariant.withValues(alpha: .5)),
@@ -346,9 +347,7 @@ class _NavigationButton extends StatelessWidget {
       context,
       const Duration(milliseconds: 400),
     );
-    final sumiUnselected = Theme.of(context).brightness == Brightness.dark
-        ? sumi.paper
-        : sumi.inkGray;
+    final sumiUnselected = sumi.paper;
     final foreground = japanese
         ? (selected ? sumi.gold : sumiUnselected)
         : (selected ? scheme.primary : scheme.onSurfaceVariant);
@@ -371,7 +370,7 @@ class _NavigationButton extends StatelessWidget {
                       key: selected
                           ? const ValueKey('sumi-selected-icon-lift')
                           : null,
-                      offset: Offset(0, -.0390625 * value),
+                      offset: Offset(0, -.625 * value),
                       child: Transform.scale(
                         key: selected
                             ? const ValueKey('sumi-selected-icon-scale')
