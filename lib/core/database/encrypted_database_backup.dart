@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:cryptography_flutter/cryptography_flutter.dart';
+import 'package:drift/drift.dart' show Variable;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'app_database.dart';
@@ -12,6 +13,7 @@ const _backupVersion = 1;
 const _iterations = 600000;
 const _maxBackupBytes = 64 * 1024 * 1024;
 const _maxPayloadBytes = 47 * 1024 * 1024;
+const _backupReadBatchSize = 500;
 const _aad = 'mony.encrypted-backup:v1';
 
 /// Exports and transactionally restores all user-owned rows in the Drift DB.
@@ -41,40 +43,51 @@ class EncryptedDatabaseBackup {
 
   Future<Uint8List> create(String passphrase) async {
     _validatePassphrase(passphrase);
-    final tables = await _database.transaction(() async {
-      final encodedTables = <String, String>{};
-      for (final table in _tableOrder) {
-        final rows = await _database
-            .customSelect('SELECT * FROM "$table"')
-            .get();
-        encodedTables[table] = jsonEncode(
-          rows.map((row) => row.data).toList(growable: false),
+    final clearBytes = await _database.transaction(() async {
+      final payloadBuffer = StringBuffer()
+        ..write('{"application":"mony","schemaVersion":')
+        ..write(_database.schemaVersion)
+        ..write(',"createdAt":')
+        ..write(jsonEncode(DateTime.now().toUtc().toIso8601String()))
+        ..write(',"tables":{');
+      for (var index = 0; index < _tableOrder.length; index++) {
+        if (index > 0) payloadBuffer.write(',');
+        final table = _tableOrder[index];
+        payloadBuffer
+          ..write(jsonEncode(table))
+          ..write(':[');
+        var offset = 0;
+        var firstRow = true;
+        while (true) {
+          final rows = await _database
+              .customSelect(
+                'SELECT * FROM "$table" LIMIT ? OFFSET ?',
+                variables: [
+                  Variable.withInt(_backupReadBatchSize),
+                  Variable.withInt(offset),
+                ],
+              )
+              .get();
+          for (final row in rows) {
+            if (!firstRow) payloadBuffer.write(',');
+            payloadBuffer.write(jsonEncode(row.data));
+            firstRow = false;
+          }
+          offset += rows.length;
+          if (rows.length < _backupReadBatchSize) break;
+        }
+        payloadBuffer.write(']');
+      }
+      payloadBuffer.write('}}');
+      final payload = payloadBuffer.toString();
+      final bytes = utf8.encode(payload);
+      if (bytes.length > _maxPayloadBytes) {
+        throw const DatabaseBackupException(
+          'La copia supera el tamaño permitido.',
         );
       }
-      return encodedTables;
+      return bytes;
     });
-    final payloadBuffer = StringBuffer()
-      ..write('{"application":"mony","schemaVersion":')
-      ..write(_database.schemaVersion)
-      ..write(',"createdAt":')
-      ..write(jsonEncode(DateTime.now().toUtc().toIso8601String()))
-      ..write(',"tables":{');
-    for (var index = 0; index < _tableOrder.length; index++) {
-      if (index > 0) payloadBuffer.write(',');
-      final table = _tableOrder[index];
-      payloadBuffer
-        ..write(jsonEncode(table))
-        ..write(':')
-        ..write(tables[table]);
-    }
-    payloadBuffer.write('}}');
-    final payload = payloadBuffer.toString();
-    final clearBytes = utf8.encode(payload);
-    if (clearBytes.length > _maxPayloadBytes) {
-      throw const DatabaseBackupException(
-        'La copia supera el tamaño permitido.',
-      );
-    }
 
     final cipher = AesGcm.with256bits();
     final salt = AesGcm.with256bits(nonceLength: 16).newNonce();
@@ -85,7 +98,7 @@ class EncryptedDatabaseBackup {
       nonce: cipher.newNonce(),
       aad: utf8.encode(_aad),
     );
-    final envelope = jsonEncode({
+    final encodedEnvelope = JsonUtf8Encoder().convert({
       'format': _backupFormat,
       'version': _backupVersion,
       'kdf': {
@@ -100,7 +113,9 @@ class EncryptedDatabaseBackup {
         'ciphertext': base64Encode(box.cipherText),
       },
     });
-    final result = Uint8List.fromList(utf8.encode(envelope));
+    final result = encodedEnvelope is Uint8List
+        ? encodedEnvelope
+        : Uint8List.fromList(encodedEnvelope);
     if (result.length > _maxBackupBytes) {
       throw const DatabaseBackupException(
         'La copia supera el tamaño permitido.',
