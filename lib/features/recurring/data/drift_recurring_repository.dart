@@ -9,6 +9,9 @@ class DriftRecurringRepository implements RecurringRepository {
   const DriftRecurringRepository(this.db);
   final AppDatabase db;
 
+  static const _dueSeriesBatchSize = 250;
+  static const _occurrenceBatchSize = 500;
+
   @override
   Stream<List<RecurringEntry>> watchAll() =>
       (db.select(db.recurringEntries)..orderBy([
@@ -176,81 +179,100 @@ class DriftRecurringRepository implements RecurringRepository {
               ..orderBy([(r) => OrderingTerm.asc(r.nextDateEpochDay)]))
             .get();
     var generated = 0;
-    for (final row in due) {
-      final entry = _fromRow(row);
-      var nextDay = row.nextDateEpochDay;
-      final endDay = row.endDateEpochDay;
-      final pendingOccurrences = <TransactionsCompanion>[];
-      final pendingDates = <int>[];
-
-      Future<void> flushOccurrences() async {
-        if (pendingOccurrences.isEmpty) return;
-
-        final existingRows =
-            await (db.selectOnly(db.transactions)
-                  ..addColumns([db.transactions.dateEpochDay])
-                  ..where(
-                    db.transactions.fixedEntryId.equals(row.id) &
-                        db.transactions.dateEpochDay.isBetweenValues(
-                          pendingDates.first,
-                          pendingDates.last,
-                        ),
-                  ))
-                .get();
-        final existingDates = {
-          for (final existing in existingRows)
-            existing.read<int>(db.transactions.dateEpochDay),
-        };
-        final newOccurrences = [
-          for (var index = 0; index < pendingOccurrences.length; index++)
-            if (!existingDates.contains(pendingDates[index]))
-              pendingOccurrences[index],
-        ];
-        if (newOccurrences.isNotEmpty) {
-          await db.batch(
-            (batch) => batch.insertAll(
-              db.transactions,
-              newOccurrences,
-              onConflict: DoNothing(),
-            ),
-          );
-          generated += newOccurrences.length;
-        }
-        pendingOccurrences.clear();
-        pendingDates.clear();
+    for (var offset = 0; offset < due.length; offset += _dueSeriesBatchSize) {
+      final seriesBatch = due.skip(offset).take(_dueSeriesBatchSize).toList();
+      final seriesIds = seriesBatch.map((row) => row.id).toList();
+      var firstDay = seriesBatch.first.nextDateEpochDay;
+      for (final row in seriesBatch.skip(1)) {
+        if (row.nextDateEpochDay < firstDay) firstDay = row.nextDateEpochDay;
+      }
+      final existingRows =
+          await (db.selectOnly(db.transactions)
+                ..addColumns([
+                  db.transactions.fixedEntryId,
+                  db.transactions.dateEpochDay,
+                ])
+                ..where(
+                  db.transactions.fixedEntryId.isIn(seriesIds) &
+                      db.transactions.dateEpochDay.isBetweenValues(
+                        firstDay,
+                        today,
+                      ),
+                ))
+              .get();
+      final existingDatesBySeries = <int, Set<int>>{};
+      for (final existing in existingRows) {
+        final id = existing.read<int>(db.transactions.fixedEntryId);
+        final date = existing.read<int>(db.transactions.dateEpochDay);
+        if (id == null || date == null) continue;
+        existingDatesBySeries.putIfAbsent(id, () => <int>{}).add(date);
       }
 
-      while (nextDay <= today && (endDay == null || nextDay <= endDay)) {
-        pendingDates.add(nextDay);
-        pendingOccurrences.add(
-          TransactionsCompanion.insert(
-            amountInCents: entry.amountInCents,
-            type: entry.type.name,
-            categoryId: entry.categoryId,
-            paymentMethodId: entry.paymentMethodId,
-            description: Value(entry.title),
-            dateEpochDay: nextDay,
-            fixedEntryId: Value(entry.id),
-            createdAt: Value(now ?? DateTime.now()),
+      final pendingOccurrences = <TransactionsCompanion>[];
+      final updates = <(int, RecurringEntriesCompanion)>[];
+      for (final row in seriesBatch) {
+        final entry = _fromRow(row);
+        var nextDay = row.nextDateEpochDay;
+        final endDay = row.endDateEpochDay;
+        final existingDates = existingDatesBySeries[row.id];
+        while (nextDay <= today && (endDay == null || nextDay <= endDay)) {
+          if (!(existingDates?.contains(nextDay) ?? false)) {
+            pendingOccurrences.add(
+              TransactionsCompanion.insert(
+                amountInCents: entry.amountInCents,
+                type: entry.type.name,
+                categoryId: entry.categoryId,
+                paymentMethodId: entry.paymentMethodId,
+                description: Value(entry.title),
+                dateEpochDay: nextDay,
+                fixedEntryId: Value(entry.id),
+                createdAt: Value(now ?? DateTime.now()),
+                updatedAt: Value(now ?? DateTime.now()),
+              ),
+            );
+          }
+          nextDay = dateToEpochDay(
+            nextOccurrence(entry, dateFromEpochDay(nextDay)),
+          );
+        }
+        final exhausted = endDay != null && nextDay > endDay;
+        updates.add((
+          row.id,
+          RecurringEntriesCompanion(
+            nextDateEpochDay: Value(nextDay),
+            isActive: Value(!exhausted),
             updatedAt: Value(now ?? DateTime.now()),
           ),
-        );
-        if (pendingOccurrences.length == 500) await flushOccurrences();
-        nextDay = dateToEpochDay(
-          nextOccurrence(entry, dateFromEpochDay(nextDay)),
-        );
+        ));
       }
-      await flushOccurrences();
-      final exhausted = endDay != null && nextDay > endDay;
-      await (db.update(
-        db.recurringEntries,
-      )..where((r) => r.id.equals(row.id))).write(
-        RecurringEntriesCompanion(
-          nextDateEpochDay: Value(nextDay),
-          isActive: Value(!exhausted),
-          updatedAt: Value(now ?? DateTime.now()),
-        ),
-      );
+
+      for (
+        var index = 0;
+        index < pendingOccurrences.length;
+        index += _occurrenceBatchSize
+      ) {
+        final occurrences = pendingOccurrences
+            .skip(index)
+            .take(_occurrenceBatchSize)
+            .toList();
+        await db.batch(
+          (batch) => batch.insertAll(
+            db.transactions,
+            occurrences,
+            onConflict: DoNothing(),
+          ),
+        );
+        generated += occurrences.length;
+      }
+      await db.batch((batch) {
+        for (final (id, update) in updates) {
+          batch.update(
+            db.recurringEntries,
+            update,
+            where: (row) => row.id.equals(id),
+          );
+        }
+      });
     }
     return generated;
   });

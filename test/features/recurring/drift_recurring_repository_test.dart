@@ -76,6 +76,55 @@ void main() {
   });
 
   test(
+    'keeps catch-up dates isolated across series with overlapping ranges',
+    () async {
+      final firstStart = DateTime(2026, 1, 1);
+      final secondStart = DateTime(2026, 1, 2);
+      final firstId = await repository.create(
+        RecurringEntry(
+          title: 'Pago A',
+          amountInCents: 1000,
+          type: TransactionType.expense,
+          categoryId: 6,
+          paymentMethodId: 1,
+          frequency: RecurrenceFrequency.daily,
+          startDate: firstStart,
+          nextDate: firstStart,
+        ),
+      );
+      final secondId = await repository.create(
+        RecurringEntry(
+          title: 'Pago B',
+          amountInCents: 2000,
+          type: TransactionType.expense,
+          categoryId: 6,
+          paymentMethodId: 1,
+          frequency: RecurrenceFrequency.daily,
+          startDate: secondStart,
+          nextDate: secondStart,
+        ),
+      );
+      await db
+          .into(db.transactions)
+          .insert(
+            TransactionsCompanion.insert(
+              amountInCents: 1000,
+              type: 'expense',
+              categoryId: 6,
+              paymentMethodId: 1,
+              dateEpochDay: dateToEpochDay(DateTime(2026, 1, 2)),
+              fixedEntryId: Value(firstId),
+            ),
+          );
+
+      expect(await repository.processDue(now: DateTime(2026, 1, 3)), 4);
+      final rows = await db.select(db.transactions).get();
+      expect(rows.where((row) => row.fixedEntryId == firstId), hasLength(3));
+      expect(rows.where((row) => row.fixedEntryId == secondId), hasLength(2));
+    },
+  );
+
+  test(
     'batches large daily catch-up and skips existing occurrence dates',
     () async {
       final start = DateTime(2025, 1, 1);
