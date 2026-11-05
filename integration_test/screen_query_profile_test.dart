@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mony_multiplatform/core/database/app_database.dart';
 import 'package:mony_multiplatform/core/database/app_database_provider.dart';
+import 'package:mony_multiplatform/core/database/encrypted_database_backup.dart';
 import 'package:mony_multiplatform/core/routing/app_router.dart';
 import 'package:mony_multiplatform/core/theme/mony_theme.dart';
 import 'package:mony_multiplatform/features/budgets/data/drift_budget_repository.dart';
@@ -469,6 +470,45 @@ void main() {
         '${frameMetrics.map((metric) => '$metric=${frameSummary[metric]}').join('; ')}',
       );
     }
+
+    Future<int> tableCount(String table) async =>
+        (await database
+                .customSelect('SELECT COUNT(*) AS row_count FROM "$table"')
+                .getSingle())
+            .read<int>('row_count');
+
+    final transactionCountBeforeRestore = await tableCount('transactions');
+    final obligationCountBeforeRestore = await tableCount('obligations');
+    final paymentCountBeforeRestore = await tableCount('obligation_payments');
+    final encryptedBackup = EncryptedDatabaseBackup(database);
+    final backupCreateWatch = Stopwatch()..start();
+    final backupBytes = await encryptedBackup.create(
+      'android performance profile passphrase 2026',
+    );
+    backupCreateWatch.stop();
+    final backupRestoreWatch = Stopwatch()..start();
+    await encryptedBackup.restore(
+      backupBytes,
+      'android performance profile passphrase 2026',
+    );
+    backupRestoreWatch.stop();
+    expect(await tableCount('transactions'), transactionCountBeforeRestore);
+    expect(await tableCount('obligations'), obligationCountBeforeRestore);
+    expect(await tableCount('obligation_payments'), paymentCountBeforeRestore);
+    expect(
+      await database.customSelect('PRAGMA foreign_key_check').get(),
+      isEmpty,
+    );
+    // ignore: avoid_print
+    print(
+      'Android encrypted backup: sizeMiB='
+      '${(backupBytes.length / (1024 * 1024)).toStringAsFixed(1)}; '
+      'create=${backupCreateWatch.elapsedMilliseconds}ms; '
+      'restore=${backupRestoreWatch.elapsedMilliseconds}ms; '
+      'transactions=$transactionCountBeforeRestore; '
+      'obligations=$obligationCountBeforeRestore; '
+      'payments=$paymentCountBeforeRestore',
+    );
 
     // ignore: avoid_print
     print(
