@@ -5,7 +5,7 @@ Este archivo conserva trabajo que requiere otra sesión o un entorno distinto. L
 ## Siguiente sesión
 
 - [x] **Auditar inicialización de fechas del arranque.** En isolates limpios del host, `intl` registró 120 locales en 6,74 ms y Flutter localizations 98 en 5,14 ms. La diferencia es pequeña y no mide primer cuadro; se conserva el bootstrap y queda pendiente medirlo en dispositivo.
-- [ ] **Navbar Sumi-e — falta captura visual.** Abrir Historial en un emulador o dispositivo y guardar una captura para revisar el lavado de tinta y el trazo sin panel rectangular ni cuadro rojo. El test de navegación ya confirma el icono seleccionado a 30 px y una elevación de 0,625 px (75% menos que antes). En el emulador anterior ADB produjo una superficie negra con Impeller y Skia, aunque la actividad estaba en primer plano, el árbol semántico estaba completo y `FLAG_SECURE` estaba desactivado. No hay dispositivo Android conectado ahora.
+- [x] **Navbar Sumi-e — captura y corrección visual.** En el AVD `Medium_Phone`, capturas ADB de Inicio e Historial muestran los ocho iconos sobre el fondo claro; Historial ya no presenta el cuadro rojo. Se corrigió el contraste de iconos inactivos y el activo quedó en 36 px, con elevación de 0,156 px (75% menor que el ajuste anterior). Se conservan el lavado de tinta y el trazo inferior animado.
 - [x] Ejecutar `flutter test --no-pub` completo después del lote de catch-up recurrente. Resultado: 203 pruebas pasaron; `flutter analyze --no-pub` también pasó con Flutter 3.44.4 / Dart 3.12.2. Para regenerar el hook de `objective_c` con ese SDK se resolvieron temporalmente cinco dependencias transitivas a versiones compatibles con Dart 3.12.2 y se restauró `pubspec.lock`; repetir con la resolución bloqueada de Dart 3.13.7 queda pendiente.
 - [ ] **Perfiles de pantallas — después de la captura.** Cargar un conjunto de datos reproducible y no sensible; medir Historial, Presupuesto y Estadísticas en Android con latencia, cuadros durante desplazamiento y contraste de importes. Las verificaciones actuales en emulador usaron una base vacía y no cubren esos resultados.
 - [ ] **Catch-up de recurrencias en Android.** Repetir en perfil la carga de 50 series diarias con 180 fechas atrasadas. En SQLite in-memory del host, el lote tardó 309–315 ms frente a 328–336 ms en el baseline secuencial; la mejora observada fue pequeña y todavía no confirma un beneficio en dispositivo.
@@ -18,11 +18,10 @@ Este archivo conserva trabajo que requiere otra sesión o un entorno distinto. L
 
 ## Orden sugerido para retomar
 
-1. Cerrar la revisión visual del navbar en una superficie que permita capturas.
-2. Preparar datos de prueba reproducibles y perfilar las tres pantallas principales.
-3. Medir el flujo de copias y exportaciones cerca del límite de tamaño.
-4. Repetir los perfiles en hardware físico y completar el tamaño de distribución release.
-5. Resolver las compilaciones específicas de plataforma y volver a actualizar [performance_review.md](performance_review.md) con resultados observados.
+1. Preparar datos de prueba reproducibles y perfilar las tres pantallas principales.
+2. Medir el flujo de copias y exportaciones cerca del límite de tamaño.
+3. Repetir los perfiles en hardware físico y completar el tamaño de distribución release.
+4. Resolver las compilaciones específicas de plataforma y volver a actualizar [performance_review.md](performance_review.md) con resultados observados.
 
 ## Entornos de compilación pendientes
 
