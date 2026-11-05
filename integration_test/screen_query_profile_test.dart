@@ -15,6 +15,7 @@ import 'package:mony_multiplatform/features/budgets/data/drift_budget_repository
 import 'package:mony_multiplatform/features/budgets/domain/budget.dart';
 import 'package:mony_multiplatform/features/categories/data/drift_categories_repository.dart';
 import 'package:mony_multiplatform/features/obligations/data/drift_obligation_repository.dart';
+import 'package:mony_multiplatform/features/obligations/domain/obligation.dart';
 import 'package:mony_multiplatform/features/preferences/domain/app_preferences.dart';
 import 'package:mony_multiplatform/features/preferences/domain/preferences_repository.dart';
 import 'package:mony_multiplatform/features/preferences/presentation/preferences_controller.dart';
@@ -390,6 +391,46 @@ void main() {
     report['previous all reminder obligations'] =
         sortedPreviousReminderTimings[sortedPreviousReminderTimings.length ~/
             2];
+
+    final allObligations = await obligationRepository.watchAll().first;
+    final pendingObligations = allObligations
+        .where((item) => !item.isCancelled && item.remainingAmountInCents > 0)
+        .toList();
+    pendingObligations.sort((a, b) {
+      final left = a.dueDate;
+      final right = b.dueDate;
+      if (left == null) return right == null ? 0 : 1;
+      if (right == null) return -1;
+      final byDueDate = left.compareTo(right);
+      if (byDueDate != 0) return byDueDate;
+      final byUpdatedAt = b.updatedAt.compareTo(a.updatedAt);
+      return byUpdatedAt != 0 ? byUpdatedAt : a.id.compareTo(b.id);
+    });
+    final expectedPayable = pendingObligations
+        .where((item) => item.direction == ObligationDirection.payable)
+        .fold(0, (total, item) => total + item.remainingAmountInCents);
+    final expectedReceivable = pendingObligations
+        .where((item) => item.direction == ObligationDirection.receivable)
+        .fold(0, (total, item) => total + item.remainingAmountInCents);
+    final overviewTimings = <int>[];
+    for (var sample = 0; sample < 6; sample++) {
+      overviewTimings.add(
+        await measure(() async {
+          final overview = await obligationRepository.watchOverview().first;
+          expect(overview.payableRemainingInCents, expectedPayable);
+          expect(overview.receivableRemainingInCents, expectedReceivable);
+          expect(
+            overview.pending.map((item) => item.id),
+            pendingObligations.take(5).map((item) => item.id),
+          );
+        }),
+      );
+    }
+    final sortedOverviewTimings = overviewTimings.skip(1).toList()..sort();
+    report['widget obligation overview first query (10k obligations)'] =
+        overviewTimings.first;
+    report['widget obligation overview warmed median (10k obligations)'] =
+        sortedOverviewTimings[sortedOverviewTimings.length ~/ 2];
 
     await DriftBudgetRepository(database).saveConfig(
       amountInCents: 500000,

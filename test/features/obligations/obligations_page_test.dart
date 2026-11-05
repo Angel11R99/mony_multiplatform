@@ -43,6 +43,32 @@ class _ObligationRepositoryFake implements ObligationRepository {
   });
 
   @override
+  Stream<ObligationOverview> watchOverview() => watchAll().map((items) {
+    final pending = items
+        .where((item) => !item.isCancelled && item.remainingAmountInCents > 0)
+        .toList();
+    pending.sort((a, b) {
+      final left = a.dueDate;
+      final right = b.dueDate;
+      if (left == null) return right == null ? 0 : 1;
+      if (right == null) return -1;
+      final byDueDate = left.compareTo(right);
+      if (byDueDate != 0) return byDueDate;
+      final byUpdatedAt = b.updatedAt.compareTo(a.updatedAt);
+      return byUpdatedAt != 0 ? byUpdatedAt : a.id.compareTo(b.id);
+    });
+    return ObligationOverview(
+      pending: pending.take(5).toList(growable: false),
+      payableRemainingInCents: pending
+          .where((item) => item.direction == ObligationDirection.payable)
+          .fold(0, (total, item) => total + item.remainingAmountInCents),
+      receivableRemainingInCents: pending
+          .where((item) => item.direction == ObligationDirection.receivable)
+          .fold(0, (total, item) => total + item.remainingAmountInCents),
+    );
+  });
+
+  @override
   Future<List<Obligation>> getReminderCandidates() async => _obligations.values
       .where(
         (obligation) =>

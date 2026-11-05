@@ -151,7 +151,7 @@ final financeWidgetSnapshotProvider =
         )),
       );
       final categories = ref.watch(categoriesProvider);
-      final obligations = ref.watch(obligationsProvider);
+      final obligations = ref.watch(obligationOverviewProvider);
       final goals = ref.watch(savingsGoalsProvider);
       final recurring = ref.watch(recurringEntriesProvider);
       final preferences = ref.watch(appPreferencesProvider);
@@ -191,7 +191,8 @@ final financeWidgetSnapshotProvider =
           transactions: transactionItems,
           budget: budgetConfig,
           categories: categoryItems,
-          obligations: obligationItems,
+          obligations: const [],
+          obligationOverview: obligationItems,
           savingsGoals: goalItems,
           recurringEntries: recurringItems,
           preferences: preferenceItems,

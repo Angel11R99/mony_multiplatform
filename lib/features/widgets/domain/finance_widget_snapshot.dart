@@ -73,6 +73,7 @@ class FinanceWidgetSnapshot {
     required BudgetConfig? budget,
     required List<Category> categories,
     required List<Obligation> obligations,
+    ObligationOverview? obligationOverview,
     required List<SavingsGoalProgress> savingsGoals,
     required List<RecurringEntry> recurringEntries,
     required AppPreferences preferences,
@@ -141,26 +142,35 @@ class FinanceWidgetSnapshot {
     final activeObligations = <Obligation>[];
     var toPay = 0;
     var toCollect = 0;
-    for (final item in obligations) {
-      final status = item.statusAt(today);
-      if (status == ObligationStatus.settled ||
-          status == ObligationStatus.cancelled) {
-        continue;
+    if (obligationOverview case final overview?) {
+      activeObligations.addAll(overview.pending);
+      toPay = overview.payableRemainingInCents;
+      toCollect = overview.receivableRemainingInCents;
+    } else {
+      for (final item in obligations) {
+        final status = item.statusAt(today);
+        if (status == ObligationStatus.settled ||
+            status == ObligationStatus.cancelled) {
+          continue;
+        }
+        activeObligations.add(item);
+        if (item.direction == ObligationDirection.payable) {
+          toPay += item.remainingAmountInCents;
+        } else {
+          toCollect += item.remainingAmountInCents;
+        }
       }
-      activeObligations.add(item);
-      if (item.direction == ObligationDirection.payable) {
-        toPay += item.remainingAmountInCents;
-      } else {
-        toCollect += item.remainingAmountInCents;
-      }
+      activeObligations.sort((a, b) {
+        final left = a.dueDate;
+        final right = b.dueDate;
+        if (left == null) return right == null ? 0 : 1;
+        if (right == null) return -1;
+        final byDueDate = left.compareTo(right);
+        if (byDueDate != 0) return byDueDate;
+        final byUpdatedAt = b.updatedAt.compareTo(a.updatedAt);
+        return byUpdatedAt != 0 ? byUpdatedAt : a.id.compareTo(b.id);
+      });
     }
-    activeObligations.sort((a, b) {
-      final left = a.dueDate;
-      final right = b.dueDate;
-      if (left == null) return right == null ? 0 : 1;
-      if (right == null) return -1;
-      return left.compareTo(right);
-    });
 
     final goals = <SavingsGoalProgress>[];
     var savedInCents = 0;

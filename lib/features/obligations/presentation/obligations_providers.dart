@@ -13,6 +13,11 @@ final obligationsProvider = StreamProvider.autoDispose<List<Obligation>>(
   (ref) => ref.watch(obligationRepositoryProvider).watchAll(),
 );
 
+final obligationOverviewProvider =
+    StreamProvider.autoDispose<ObligationOverview>(
+      (ref) => ref.watch(obligationRepositoryProvider).watchOverview(),
+    );
+
 final obligationDetailsProvider = StreamProvider.autoDispose
     .family<ObligationDetails?, int>(
       (ref, id) => ref.watch(obligationRepositoryProvider).watchDetails(id),

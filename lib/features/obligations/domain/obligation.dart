@@ -111,4 +111,18 @@ class ObligationDetails {
   final List<ObligationPayment> payments;
 }
 
+/// Compact pending-obligation data for summaries that do not need the full
+/// obligation list.
+class ObligationOverview {
+  const ObligationOverview({
+    required this.pending,
+    required this.payableRemainingInCents,
+    required this.receivableRemainingInCents,
+  });
+
+  final List<Obligation> pending;
+  final int payableRemainingInCents;
+  final int receivableRemainingInCents;
+}
+
 DateTime _day(DateTime date) => DateTime(date.year, date.month, date.day);

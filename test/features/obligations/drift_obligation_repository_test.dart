@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mony_multiplatform/core/database/app_database.dart';
@@ -70,6 +72,83 @@ void main() {
       7500,
     );
   });
+
+  test(
+    'watches a compact overview with totals and five nearest items',
+    () async {
+      final dueId = await createPayable();
+      await repository.recordPayment(
+        obligationId: dueId,
+        amountInCents: 2500,
+        date: today,
+        paymentMethodId: 1,
+      );
+      final undatedId = await repository.create(
+        Obligation(
+          direction: ObligationDirection.receivable,
+          title: 'Préstamo sin fecha',
+          amountInCents: 5000,
+          categoryId: 1,
+          defaultPaymentMethodId: 1,
+          createdAt: today,
+          updatedAt: today,
+        ),
+      );
+      final cancelledId = await createPayable();
+      await repository.cancel(cancelledId);
+
+      final overview = await repository.watchOverview().first;
+      expect(overview.payableRemainingInCents, 7500);
+      expect(overview.receivableRemainingInCents, 5000);
+      expect(overview.pending.map((item) => item.id), [dueId, undatedId]);
+      expect(overview.pending.map((item) => item.remainingAmountInCents), [
+        7500,
+        5000,
+      ]);
+    },
+  );
+
+  test(
+    'overview stays empty when there are no outstanding obligations',
+    () async {
+      final overview = await repository.watchOverview().first;
+      expect(overview.pending, isEmpty);
+      expect(overview.payableRemainingInCents, 0);
+      expect(overview.receivableRemainingInCents, 0);
+    },
+  );
+
+  test(
+    'overview refreshes when a payment changes the remaining amount',
+    () async {
+      final id = await createPayable();
+      final firstValue = Completer<ObligationOverview>();
+      final nextValue = Completer<ObligationOverview>();
+      var eventCount = 0;
+      final subscription = repository.watchOverview().listen((value) {
+        eventCount++;
+        if (eventCount == 1) firstValue.complete(value);
+        if (eventCount == 2) nextValue.complete(value);
+      });
+      addTearDown(subscription.cancel);
+
+      final initial = await firstValue.future.timeout(
+        const Duration(seconds: 2),
+      );
+      expect(initial.payableRemainingInCents, 10000);
+      await repository.recordPayment(
+        obligationId: id,
+        amountInCents: 2500,
+        date: today,
+        paymentMethodId: 1,
+      );
+      final updated = await nextValue.future.timeout(
+        const Duration(seconds: 2),
+      );
+      expect(updated.payableRemainingInCents, 7500);
+      expect(updated.pending.single.remainingAmountInCents, 7500);
+    },
+  );
 
   test(
     'partial payments update balance and full settlement creates one movement per payment',
