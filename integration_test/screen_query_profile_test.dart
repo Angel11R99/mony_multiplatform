@@ -523,16 +523,23 @@ void main() {
     final transactionCountBeforeRestore = await tableCount('transactions');
     final obligationCountBeforeRestore = await tableCount('obligations');
     final paymentCountBeforeRestore = await tableCount('obligation_payments');
+    router.goNamed('backup');
+    await tester.pumpAndSettle();
     final encryptedBackup = EncryptedDatabaseBackup(database);
-    final backupFrameTimings = <FrameTiming>[];
-    void recordBackupFrameTimings(List<FrameTiming> frames) {
-      backupFrameTimings.addAll(frames);
+    final createFrameTimings = <FrameTiming>[];
+    final restoreFrameTimings = <FrameTiming>[];
+    void recordCreateFrameTimings(List<FrameTiming> frames) {
+      createFrameTimings.addAll(frames);
     }
 
-    binding.addTimingsCallback(recordBackupFrameTimings);
+    void recordRestoreFrameTimings(List<FrameTiming> frames) {
+      restoreFrameTimings.addAll(frames);
+    }
+
     final backupCreateWatch = Stopwatch()..start();
     late final Uint8List backupBytes;
     final backupRestoreWatch = Stopwatch();
+    binding.addTimingsCallback(recordCreateFrameTimings);
     try {
       backupBytes = await _pumpFramesWhileRunning(
         tester,
@@ -541,7 +548,14 @@ void main() {
         ),
       );
       backupCreateWatch.stop();
-      backupRestoreWatch.start();
+    } finally {
+      binding.removeTimingsCallback(recordCreateFrameTimings);
+    }
+    await tester.pump(const Duration(milliseconds: 16));
+    await Future<void>.delayed(Duration.zero);
+    backupRestoreWatch.start();
+    binding.addTimingsCallback(recordRestoreFrameTimings);
+    try {
       await _pumpFramesWhileRunning(tester, () async {
         await encryptedBackup.restore(
           backupBytes,
@@ -553,9 +567,10 @@ void main() {
     } finally {
       backupCreateWatch.stop();
       backupRestoreWatch.stop();
-      binding.removeTimingsCallback(recordBackupFrameTimings);
+      binding.removeTimingsCallback(recordRestoreFrameTimings);
     }
-    expect(backupFrameTimings, isNotEmpty);
+    expect(createFrameTimings, isNotEmpty);
+    expect(restoreFrameTimings, isNotEmpty);
     expect(await tableCount('transactions'), transactionCountBeforeRestore);
     expect(await tableCount('obligations'), obligationCountBeforeRestore);
     expect(await tableCount('obligation_payments'), paymentCountBeforeRestore);
@@ -572,7 +587,8 @@ void main() {
       'transactions=$transactionCountBeforeRestore; '
       'obligations=$obligationCountBeforeRestore; '
       'payments=$paymentCountBeforeRestore; '
-      'frameCadence=${_frameCadenceSummary(backupFrameTimings)}',
+      'createFrameCadence=${_frameCadenceSummary(createFrameTimings)}; '
+      'restoreFrameCadence=${_frameCadenceSummary(restoreFrameTimings)}',
     );
 
     // ignore: avoid_print

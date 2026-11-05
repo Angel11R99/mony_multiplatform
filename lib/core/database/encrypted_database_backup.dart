@@ -89,7 +89,7 @@ class EncryptedDatabaseBackup {
       return bytes;
     });
 
-    final cipher = AesGcm.with256bits();
+    final cipher = _backupCipher();
     final salt = AesGcm.with256bits(nonceLength: 16).newNonce();
     final key = await _deriveKey(passphrase, salt);
     final box = await cipher.encrypt(
@@ -154,7 +154,7 @@ class EncryptedDatabaseBackup {
       final mac = _decodeBase64(cipherData['mac'], length: 16);
       final encrypted = _decodeBase64(cipherData['ciphertext']);
       final key = await _deriveKey(passphrase, salt);
-      final clear = await AesGcm.with256bits().decrypt(
+      final clear = await _backupCipher().decrypt(
         SecretBox(encrypted, nonce: nonce, mac: Mac(mac)),
         secretKey: key,
         aad: utf8.encode(_aad),
@@ -265,6 +265,9 @@ class EncryptedDatabaseBackup {
       nonce: salt,
     );
   }
+
+  AesGcm _backupCipher() =>
+      kIsWeb ? AesGcm.with256bits() : BackgroundAesGcm.with256bits();
 
   static Map<String, dynamic> _decodeEnvelope(Uint8List bytes) {
     try {

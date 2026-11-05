@@ -143,4 +143,22 @@ void main() {
       throwsA(isA<DatabaseBackupException>()),
     );
   });
+
+  test('round trips a backup with a Unicode passphrase', () async {
+    const passphrase = 'Contraseña segura con café y té';
+    final original = await database.select(database.categories).get();
+    final encrypted = await backup.create(passphrase);
+    await (database.update(
+      database.categories,
+    )..where((row) => row.id.equals(original.first.id))).write(
+      const CategoriesCompanion(
+        name: Value('Changed'),
+        normalizedName: Value('changed'),
+      ),
+    );
+
+    await backup.restore(encrypted, passphrase);
+
+    expect(await database.select(database.categories).get(), original);
+  });
 }
