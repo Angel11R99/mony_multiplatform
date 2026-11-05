@@ -79,6 +79,8 @@ void main() {
     final budgetStart = today.subtract(const Duration(days: 13));
     final timings = <String, List<int>>{
       'period statistics': [],
+      'budget period summary': [],
+      'previous budget full history': [],
       'all time statistics': [],
       'previous all time SQL': [],
       'history first page': [],
@@ -95,6 +97,44 @@ void main() {
     }
 
     for (var sample = 0; sample < 6; sample++) {
+      TransactionPeriodSummary? budgetSummary;
+      timings['budget period summary']!.add(
+        await measure(() async {
+          budgetSummary = await transactionRepository
+              .watchPeriodSummary(start: budgetStart, endInclusive: today)
+              .first;
+          expect(budgetSummary!.expenseByCategory, isNotEmpty);
+        }),
+      );
+      timings['previous budget full history']!.add(
+        await measure(() async {
+          final rows = await transactionRepository.watchAll().first;
+          var income = 0;
+          var expense = 0;
+          final expensesByCategory = <int, int>{};
+          final budgetStartEpochDay = dateToEpochDay(budgetStart);
+          for (final row in rows) {
+            final rowEpochDay = dateToEpochDay(row.date);
+            if (rowEpochDay < budgetStartEpochDay ||
+                rowEpochDay > todayEpochDay) {
+              continue;
+            }
+            if (row.type == TransactionType.income) {
+              income += row.amountInCents;
+            } else if (row.type == TransactionType.expense) {
+              expense += row.amountInCents;
+              expensesByCategory.update(
+                row.categoryId,
+                (current) => current + row.amountInCents,
+                ifAbsent: () => row.amountInCents,
+              );
+            }
+          }
+          expect(income, budgetSummary!.incomeInCents);
+          expect(expense, budgetSummary!.expenseInCents);
+          expect(expensesByCategory, budgetSummary!.expenseByCategory);
+        }),
+      );
       timings['period statistics']!.add(
         await measure(() async {
           final result = await statisticsRepository
