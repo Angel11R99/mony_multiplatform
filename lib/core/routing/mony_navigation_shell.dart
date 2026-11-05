@@ -363,9 +363,12 @@ class _NavigationButton extends StatelessWidget {
                 ? TweenAnimationBuilder<double>(
                     tween: Tween(begin: 0, end: selected ? 1 : 0),
                     duration: selectedDuration,
-                    curve: Curves.elasticOut,
+                    curve: Curves.easeOutCubic,
                     builder: (context, value, child) => Transform.translate(
-                      offset: Offset(0, -10 * value),
+                      key: selected
+                          ? const ValueKey('sumi-selected-icon-lift')
+                          : null,
+                      offset: Offset(0, -2.5 * value),
                       child: Transform.scale(
                         key: selected
                             ? const ValueKey('sumi-selected-icon-scale')
@@ -374,7 +377,7 @@ class _NavigationButton extends StatelessWidget {
                         child: child,
                       ),
                     ),
-                    child: Icon(icon, color: foreground, size: 25),
+                    child: Icon(icon, color: foreground, size: 30),
                   )
                 : AnimatedContainer(
                     duration: duration,

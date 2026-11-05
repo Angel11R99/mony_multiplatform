@@ -569,7 +569,7 @@ class SumiOpenFrameBorder extends OutlinedBorder {
       SumiOpenFrameBorder(side: side.scale(t), variation: variation);
 }
 
-/// Dark, squared navigation lacquer with a custom calligraphic active stroke.
+/// Selected-item ink wash and calligraphic stroke for Sumi-e navigation.
 class SumiNavigationPainter extends CustomPainter {
   const SumiNavigationPainter({
     required this.colors,
@@ -583,59 +583,34 @@ class SumiNavigationPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    canvas.drawRect(rect, Paint()..color = colors.deepInk);
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, size.height * .36),
-      Paint()..color = colors.ink.withValues(alpha: .72),
-    );
-    final upper = Path()
-      ..moveTo(0, 1)
-      ..lineTo(size.width * .64, 1);
-    canvas.drawPath(
-      upper,
-      Paint()
-        ..color = colors.gold.withValues(alpha: .75)
-        ..strokeWidth = .8
-        ..strokeCap = StrokeCap.butt,
-    );
-    final leftEdge = Path()
-      ..moveTo(.5, 7)
-      ..lineTo(.5, size.height - 7);
-    canvas.drawPath(
-      leftEdge,
-      Paint()
-        ..color = colors.paper.withValues(alpha: .45)
-        ..strokeWidth = 1.3
-        ..strokeCap = StrokeCap.butt,
-    );
+    if (size.isEmpty || itemCount <= 0) return;
 
-    if (itemCount <= 0) return;
     final itemWidth = size.width / itemCount;
     final activeX = (activeIndex + .5) * itemWidth;
-    final washRadius = itemWidth < 46 ? itemWidth * .7 : 32.0;
-    final washCenter = Offset(activeX, size.height * .66);
-    canvas.drawCircle(
-      washCenter,
-      washRadius,
+    final washRect = Rect.fromCenter(
+      center: Offset(activeX, size.height * .57),
+      width: itemWidth * 1.6,
+      height: size.height * 1.1,
+    );
+    canvas.drawOval(
+      washRect,
       Paint()
         ..shader = RadialGradient(
           colors: [
-            colors.ink.withValues(alpha: .2),
-            colors.ink.withValues(alpha: .08),
+            colors.charcoal.withValues(alpha: .7),
+            colors.ink.withValues(alpha: .35),
             Colors.transparent,
           ],
-          stops: const [0, .48, 1],
-        ).createShader(Rect.fromCircle(center: washCenter, radius: washRadius))
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9),
+          stops: const [0, .52, 1],
+        ).createShader(washRect),
     );
 
-    final strokeHalfWidth = itemWidth < 54 ? itemWidth * .3 : 16.0;
+    final strokeHalfWidth = math.min(itemWidth * .3, 16.0);
     final stroke = Path()
       ..moveTo(activeX - strokeHalfWidth, size.height - 15)
       ..quadraticBezierTo(
         activeX,
-        size.height - 21,
+        size.height - 19,
         activeX + strokeHalfWidth,
         size.height - 15,
       );
@@ -648,18 +623,21 @@ class SumiNavigationPainter extends CustomPainter {
         ..style = PaintingStyle.stroke,
     );
 
-    final seal = Rect.fromCenter(
-      center: Offset(size.width - 14, 7),
-      width: 10,
-      height: 10,
-    );
-    canvas.drawRect(
-      seal,
-      Paint()..color = colors.vermilion.withValues(alpha: .9),
-    );
-    canvas.drawRect(
-      seal.deflate(3),
-      Paint()..color = colors.paper.withValues(alpha: .72),
+    final dryStroke = Path()
+      ..moveTo(activeX - strokeHalfWidth * .55, size.height - 10)
+      ..quadraticBezierTo(
+        activeX,
+        size.height - 13,
+        activeX + strokeHalfWidth * .62,
+        size.height - 10.5,
+      );
+    canvas.drawPath(
+      dryStroke,
+      Paint()
+        ..color = colors.paper.withValues(alpha: .35)
+        ..strokeWidth = .65
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke,
     );
   }
 

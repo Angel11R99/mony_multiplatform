@@ -62,9 +62,14 @@ void main() {
     expect(find.byTooltip('Historial'), findsNothing);
   });
 
-  testWidgets('keeps the Sumi seal clear and selected icon at 75 percent', (
+  testWidgets('keeps the Sumi selection legible and low-profile', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(480, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     final database = _newTestDatabase();
     final router = createAppRouter();
     final preferences = _MemoryPreferencesRepository()
@@ -85,6 +90,11 @@ void main() {
       find.byKey(const ValueKey('sumi-selected-icon-scale')),
     );
     expect(selectedScale.transform.storage[0], closeTo(.75, .001));
+    final selectedLift = tester.widget<Transform>(
+      find.byKey(const ValueKey('sumi-selected-icon-lift')),
+    );
+    expect(selectedLift.transform.storage[13], closeTo(-2.5, .001));
+    expect(tester.widget<Icon>(find.byIcon(Icons.receipt_long)).size, 30);
     expect(find.byIcon(Icons.receipt_long), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
