@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mony_multiplatform/core/database/app_database.dart';
 import 'package:mony_multiplatform/features/categories/data/drift_categories_repository.dart';
+import 'package:mony_multiplatform/features/recurring/data/drift_recurring_repository.dart';
 import 'package:mony_multiplatform/features/statistics/data/drift_statistics_repository.dart';
 import 'package:mony_multiplatform/features/statistics/domain/financial_statistics.dart';
 import 'package:mony_multiplatform/features/transactions/data/drift_transaction_repository.dart';
@@ -286,6 +287,35 @@ void main() {
       final sorted = entry.value.skip(1).toList()..sort();
       report[entry.key] = sorted[sorted.length ~/ 2];
     }
+    final recurringRepository = DriftRecurringRepository(database);
+    final recurrenceTimings = <int>[];
+    final recurrenceStart = todayEpochDay - 179;
+    for (var sample = 0; sample < 6; sample++) {
+      await database.batch((batch) {
+        batch.insertAll(database.recurringEntries, [
+          for (var series = 0; series < 50; series++)
+            RecurringEntriesCompanion.insert(
+              title: 'Profile daily $sample-$series',
+              amountInCents: 1000 + series,
+              type: 'expense',
+              categoryId: 6,
+              paymentMethodId: 1,
+              frequency: 'daily',
+              startDateEpochDay: recurrenceStart,
+              nextDateEpochDay: recurrenceStart,
+            ),
+        ]);
+      });
+      recurrenceTimings.add(
+        await measure(() async {
+          expect(await recurringRepository.processDue(now: today), 9000);
+        }),
+      );
+    }
+    final recurrenceSamples = recurrenceTimings.skip(1).toList()..sort();
+    report['50 recurring series x 180 days'] =
+        recurrenceSamples[recurrenceSamples.length ~/ 2];
+
     // ignore: avoid_print
     print(
       'Android SQLite profile: seed=${insertWatch.elapsedMilliseconds}ms; '
