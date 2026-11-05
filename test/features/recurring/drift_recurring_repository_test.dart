@@ -32,6 +32,20 @@ void main() {
     );
   }
 
+  test('loads only active series for reminder generation', () async {
+    final activeId = await repository.create(monthly());
+    final inactiveId = await repository.create(
+      monthly(start: DateTime(2026, 2, 1)),
+    );
+    await repository.setActive(inactiveId, false);
+
+    final entries = await repository.getActiveForReminders();
+
+    expect(entries.map((entry) => entry.id), [activeId]);
+    expect(entries.single.isActive, isTrue);
+    expect(entries.map((entry) => entry.id), isNot(contains(inactiveId)));
+  });
+
   test('catches up missed calendar occurrences exactly once', () async {
     final id = await repository.create(monthly());
     expect(await repository.processDue(now: DateTime(2026, 3, 31)), 3);

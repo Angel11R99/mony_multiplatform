@@ -32,6 +32,45 @@ void main() {
     ),
   );
 
+  test('loads only outstanding due obligations for reminders', () async {
+    final pendingId = await createPayable();
+    final partialId = await createPayable();
+    await repository.recordPayment(
+      obligationId: partialId,
+      amountInCents: 2500,
+      date: today,
+      paymentMethodId: 1,
+    );
+    final settledId = await createPayable(amount: 100);
+    await repository.recordPayment(
+      obligationId: settledId,
+      amountInCents: 100,
+      date: today,
+      paymentMethodId: 1,
+    );
+    final cancelledId = await createPayable();
+    await repository.cancel(cancelledId);
+    await repository.create(
+      Obligation(
+        direction: ObligationDirection.payable,
+        title: 'Sin vencimiento',
+        amountInCents: 1000,
+        categoryId: 8,
+        createdAt: today,
+        updatedAt: today,
+      ),
+    );
+
+    final candidates = await repository.getReminderCandidates();
+    expect(candidates.map((item) => item.id).toSet(), {pendingId, partialId});
+    expect(
+      candidates
+          .firstWhere((item) => item.id == partialId)
+          .remainingAmountInCents,
+      7500,
+    );
+  });
+
   test(
     'partial payments update balance and full settlement creates one movement per payment',
     () async {

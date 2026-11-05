@@ -2,6 +2,7 @@ import 'obligation.dart';
 
 abstract interface class ObligationRepository {
   Stream<List<Obligation>> watchAll();
+  Future<List<Obligation>> getReminderCandidates();
   Stream<ObligationDetails?> watchDetails(int obligationId);
   Future<ObligationDetails?> getDetails(int obligationId);
   Future<int> create(Obligation obligation);

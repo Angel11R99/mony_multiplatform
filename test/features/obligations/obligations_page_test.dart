@@ -43,6 +43,16 @@ class _ObligationRepositoryFake implements ObligationRepository {
   });
 
   @override
+  Future<List<Obligation>> getReminderCandidates() async => _obligations.values
+      .where(
+        (obligation) =>
+            !obligation.isCancelled &&
+            obligation.dueDate != null &&
+            obligation.remainingAmountInCents > 0,
+      )
+      .toList(growable: false);
+
+  @override
   Stream<ObligationDetails?> watchDetails(int obligationId) =>
       Stream.value(_details(obligationId));
 

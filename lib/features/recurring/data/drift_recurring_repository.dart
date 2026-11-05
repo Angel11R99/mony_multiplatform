@@ -20,6 +20,16 @@ class DriftRecurringRepository implements RecurringRepository {
           .map((rows) => rows.map(_fromRow).toList(growable: false));
 
   @override
+  Future<List<RecurringEntry>> getActiveForReminders() async {
+    final rows =
+        await (db.select(db.recurringEntries)
+              ..where((row) => row.isActive.equals(true))
+              ..orderBy([(row) => OrderingTerm.asc(row.nextDateEpochDay)]))
+            .get();
+    return rows.map(_fromRow).toList(growable: false);
+  }
+
+  @override
   Future<int> create(RecurringEntry entry) async {
     _validate(entry);
     await _validateReferences(entry);

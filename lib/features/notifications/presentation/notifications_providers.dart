@@ -15,7 +15,7 @@ final localReminderSchedulerProvider = Provider<LocalReminderScheduler>((ref) {
   final recurringEntries = ref.watch(recurringRepositoryProvider);
   return LocalReminderScheduler(
     client: ref.watch(notificationClientProvider),
-    loadObligations: () => obligations.watchAll().first,
-    loadRecurringEntries: () => recurringEntries.watchAll().first,
+    loadObligations: obligations.getReminderCandidates,
+    loadRecurringEntries: recurringEntries.getActiveForReminders,
   );
 });

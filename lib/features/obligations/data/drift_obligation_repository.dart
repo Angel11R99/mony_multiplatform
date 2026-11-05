@@ -31,6 +31,23 @@ class DriftObligationRepository implements ObligationRepository {
       );
 
   @override
+  Future<List<Obligation>> getReminderCandidates() async {
+    final rows = await _database.customSelect('''SELECT obligations.*,
+            COALESCE(SUM(payments.amount_in_cents), 0)
+              AS paid_amount_in_cents
+          FROM obligations
+          LEFT JOIN obligation_payments AS payments
+            ON payments.obligation_id = obligations.id
+          WHERE obligations.is_cancelled = 0
+            AND obligations.due_date_epoch_day IS NOT NULL
+          GROUP BY obligations.id
+          HAVING obligations.amount_in_cents >
+            COALESCE(SUM(payments.amount_in_cents), 0)
+          ORDER BY obligations.due_date_epoch_day ASC''').get();
+    return rows.map(_fromOverviewRow).toList(growable: false);
+  }
+
+  @override
   Stream<ObligationDetails?> watchDetails(int obligationId) =>
       Stream<ObligationDetails?>.multi((controller) {
         ObligationRow? obligation;
