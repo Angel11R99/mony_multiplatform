@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:ui' show FramePhase, FrameTiming;
 
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
@@ -522,17 +524,38 @@ void main() {
     final obligationCountBeforeRestore = await tableCount('obligations');
     final paymentCountBeforeRestore = await tableCount('obligation_payments');
     final encryptedBackup = EncryptedDatabaseBackup(database);
+    final backupFrameTimings = <FrameTiming>[];
+    void recordBackupFrameTimings(List<FrameTiming> frames) {
+      backupFrameTimings.addAll(frames);
+    }
+
+    binding.addTimingsCallback(recordBackupFrameTimings);
     final backupCreateWatch = Stopwatch()..start();
-    final backupBytes = await encryptedBackup.create(
-      'android performance profile passphrase 2026',
-    );
-    backupCreateWatch.stop();
-    final backupRestoreWatch = Stopwatch()..start();
-    await encryptedBackup.restore(
-      backupBytes,
-      'android performance profile passphrase 2026',
-    );
-    backupRestoreWatch.stop();
+    late final Uint8List backupBytes;
+    final backupRestoreWatch = Stopwatch();
+    try {
+      backupBytes = await _pumpFramesWhileRunning(
+        tester,
+        () => encryptedBackup.create(
+          'android performance profile passphrase 2026',
+        ),
+      );
+      backupCreateWatch.stop();
+      backupRestoreWatch.start();
+      await _pumpFramesWhileRunning(tester, () async {
+        await encryptedBackup.restore(
+          backupBytes,
+          'android performance profile passphrase 2026',
+        );
+        return true;
+      });
+      backupRestoreWatch.stop();
+    } finally {
+      backupCreateWatch.stop();
+      backupRestoreWatch.stop();
+      binding.removeTimingsCallback(recordBackupFrameTimings);
+    }
+    expect(backupFrameTimings, isNotEmpty);
     expect(await tableCount('transactions'), transactionCountBeforeRestore);
     expect(await tableCount('obligations'), obligationCountBeforeRestore);
     expect(await tableCount('obligation_payments'), paymentCountBeforeRestore);
@@ -548,7 +571,8 @@ void main() {
       'restore=${backupRestoreWatch.elapsedMilliseconds}ms; '
       'transactions=$transactionCountBeforeRestore; '
       'obligations=$obligationCountBeforeRestore; '
-      'payments=$paymentCountBeforeRestore',
+      'payments=$paymentCountBeforeRestore; '
+      'frameCadence=${_frameCadenceSummary(backupFrameTimings)}',
     );
 
     // ignore: avoid_print
@@ -557,6 +581,69 @@ void main() {
       '${report.entries.map((entry) => '${entry.key}=${entry.value}us').join('; ')}',
     );
   });
+}
+
+Future<T> _pumpFramesWhileRunning<T>(
+  WidgetTester tester,
+  Future<T> Function() operation,
+) async {
+  var completed = false;
+  late T value;
+  Object? operationError;
+  StackTrace? operationStackTrace;
+  unawaited(
+    Future<T>.sync(operation).then<void>(
+      (result) {
+        value = result;
+        completed = true;
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        operationError = error;
+        operationStackTrace = stackTrace;
+        completed = true;
+      },
+    ),
+  );
+  var pumpCount = 0;
+  while (!completed) {
+    await tester.pump(const Duration(milliseconds: 16));
+    await Future<void>.delayed(const Duration(milliseconds: 1));
+    if (++pumpCount > 5000) {
+      throw TimeoutException('La operación del backup no terminó en 80 s.');
+    }
+  }
+  if (operationError != null) {
+    Error.throwWithStackTrace(operationError!, operationStackTrace!);
+  }
+  return value;
+}
+
+Map<String, Object> _frameCadenceSummary(List<FrameTiming> timings) {
+  final frameStarts =
+      timings
+          .map(
+            (timing) => timing.timestampInMicroseconds(FramePhase.vsyncStart),
+          )
+          .toList()
+        ..sort();
+  if (frameStarts.length < 2) {
+    return {'frame_count': frameStarts.length, 'measured_gaps': 0};
+  }
+  final gaps = <int>[
+    for (var index = 1; index < frameStarts.length; index++)
+      frameStarts[index] - frameStarts[index - 1],
+  ];
+  final sortedGaps = gaps.toList()..sort();
+  final meanGap = gaps.reduce((a, b) => a + b) / gaps.length;
+  const frameBudgetMicros = 16667;
+  return {
+    'frame_count': frameStarts.length,
+    'mean_gap_ms': (meanGap / 1000).toStringAsFixed(2),
+    'p99_gap_ms': (sortedGaps[(sortedGaps.length * .99).floor()] / 1000)
+        .toStringAsFixed(2),
+    'worst_gap_ms': (sortedGaps.last / 1000).toStringAsFixed(2),
+    'gaps_over_16ms': gaps.where((gap) => gap > frameBudgetMicros).length,
+  };
 }
 
 class _MemoryPreferencesRepository implements PreferencesRepository {
