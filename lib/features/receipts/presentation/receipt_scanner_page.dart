@@ -28,6 +28,7 @@ class ReceiptScannerPage extends ConsumerStatefulWidget {
 }
 
 class _ReceiptScannerPageState extends ConsumerState<ReceiptScannerPage> {
+  bool _duplicateCheckFailed = false;
   final _formKey = GlobalKey<FormState>();
   final _picker = ImagePicker();
   final _merchant = TextEditingController();
@@ -138,12 +139,8 @@ class _ReceiptScannerPageState extends ConsumerState<ReceiptScannerPage> {
 
   Future<void> _save(PaymentMethod? defaultMethod) async {
     if (_saving || !(_formKey.currentState?.validate() ?? false)) return;
-    final movements = ref.read(transactionsProvider);
-    if (movements.isLoading) {
-      _showMessage('Espera a que termine la revisión del historial.');
-      return;
-    }
     final amount = MoneyFormatter.parseDopMinorUnits(_amount.text);
+    if (amount == null) return;
     final paymentMethodId = _paymentMethodId ?? defaultMethod?.id;
     final selectionError = TransactionValidator.validateSelection(
       categoryId: _categoryId,
@@ -154,51 +151,65 @@ class _ReceiptScannerPageState extends ConsumerState<ReceiptScannerPage> {
       return;
     }
     final date = DateTime(_date.year, _date.month, _date.day);
-    final duplicateCandidates = ReceiptParser.potentialDuplicates(
-      amountInCents: amount!,
-      date: date,
-      merchant: _merchant.text,
-      transactions: movements.value ?? const [],
-    );
-    if (duplicateCandidates.isNotEmpty) {
-      final confirmed = await _confirmPossibleDuplicate(duplicateCandidates);
-      if (confirmed != true || !mounted) return;
-    }
-
-    final itemSummary = _items.text
-        .split(RegExp(r'[\n,;]+'))
-        .map((item) => item.trim())
-        .where((item) => item.isNotEmpty)
-        .join(', ');
-    final description = [
-      _merchant.text.trim(),
-      if (itemSummary.isNotEmpty) 'Artículos: $itemSummary',
-    ].where((part) => part.isNotEmpty).join(' · ');
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      _duplicateCheckFailed = false;
+    });
     try {
-      await ref
-          .read(transactionRepositoryProvider)
-          .create(
-            FinanceTransaction(
-              amountInCents: amount,
-              type: TransactionType.expense,
-              categoryId: _categoryId!,
-              paymentMethodId: paymentMethodId!,
-              description: description,
-              date: date,
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            ),
-          );
+      List<FinanceTransaction> duplicateCandidates = const [];
+      try {
+        final candidates = await ref
+            .read(transactionRepositoryProvider)
+            .findDuplicateCandidates(amountInCents: amount, date: date);
+        duplicateCandidates = ReceiptParser.potentialDuplicates(
+          amountInCents: amount,
+          date: date,
+          merchant: _merchant.text,
+          transactions: candidates,
+        );
+      } catch (_) {
+        if (mounted) setState(() => _duplicateCheckFailed = true);
+      }
       if (!mounted) return;
-      MonyFeedback.success(context, 'Gasto del ticket guardado.');
-      context.goNamed('transactions');
-    } on InvalidTransactionException catch (error) {
-      _showMessage(error.message);
-    } catch (_) {
-      _showMessage(
-        'No se pudo guardar el gasto. Revisa tus selecciones e inténtalo de nuevo.',
-      );
+      if (duplicateCandidates.isNotEmpty) {
+        final confirmed = await _confirmPossibleDuplicate(duplicateCandidates);
+        if (confirmed != true || !mounted) return;
+      }
+
+      final itemSummary = _items.text
+          .split(RegExp(r'[\n,;]+'))
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .join(', ');
+      final description = [
+        _merchant.text.trim(),
+        if (itemSummary.isNotEmpty) 'Artículos: $itemSummary',
+      ].where((part) => part.isNotEmpty).join(' · ');
+      try {
+        await ref
+            .read(transactionRepositoryProvider)
+            .create(
+              FinanceTransaction(
+                amountInCents: amount,
+                type: TransactionType.expense,
+                categoryId: _categoryId!,
+                paymentMethodId: paymentMethodId!,
+                description: description,
+                date: date,
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              ),
+            );
+        if (!mounted) return;
+        MonyFeedback.success(context, 'Gasto del ticket guardado.');
+        context.goNamed('transactions');
+      } on InvalidTransactionException catch (error) {
+        _showMessage(error.message);
+      } catch (_) {
+        _showMessage(
+          'No se pudo guardar el gasto. Revisa tus selecciones e inténtalo de nuevo.',
+        );
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -258,7 +269,6 @@ class _ReceiptScannerPageState extends ConsumerState<ReceiptScannerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final preferences = ref.watch(transactionsProvider);
     final defaultMethod = ref.watch(defaultPaymentMethodProvider).value;
     final maxWidth = MediaQuery.sizeOf(context).width > 760
         ? 760.0
@@ -306,6 +316,9 @@ class _ReceiptScannerPageState extends ConsumerState<ReceiptScannerPage> {
                     child: Image.memory(
                       _imageBytes!,
                       height: 220,
+                      cacheHeight:
+                          (220 * MediaQuery.devicePixelRatioOf(context))
+                              .round(),
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stack) => const SizedBox(
                         height: 90,
@@ -415,7 +428,7 @@ class _ReceiptScannerPageState extends ConsumerState<ReceiptScannerPage> {
                   onChanged: (method) =>
                       setState(() => _paymentMethodId = method?.id),
                 ),
-                if (preferences.hasError)
+                if (_duplicateCheckFailed)
                   Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nav_bar/nav_bar.dart';
 
 import '../../features/preferences/domain/app_preferences.dart';
 import '../../features/preferences/presentation/preferences_controller.dart';
@@ -48,29 +47,6 @@ class MonyNavigationShell extends ConsumerWidget {
       for (final index in visibleIndices)
         _railDestination(index, japanese: japanese, accent: scheme.primary),
     ];
-    final sumieNavTheme = FuturisticTheme(
-      name: 'Japanese Sumi-e',
-      glowGradient: LinearGradient(
-        colors: [scheme.secondary.withValues(alpha: .15), Colors.transparent],
-      ),
-      accentColor: scheme.secondary,
-      baseColor: scheme.surfaceContainerLow,
-      particleColor: scheme.outline,
-      backgroundColor: scheme.surfaceContainerLow,
-      customColors: {
-        'paperColor': sumi?.deepInk ?? scheme.surfaceContainerLow,
-        'inkColor': scheme.primary,
-        'sealColor': scheme.secondary,
-        'impactColor': scheme.secondary,
-      },
-      effectToggles: const {
-        'showPaperTexture': false,
-        'showInkSplatter': false,
-        'showSeal': false,
-        'showImpact': false,
-      },
-    );
-
     if (wide) {
       return Scaffold(
         body: Row(
@@ -138,59 +114,55 @@ class MonyNavigationShell extends ConsumerWidget {
       );
     }
 
-    final items = <NavBarItem>[
-      for (final index in visibleIndices)
-        NavBarItem(
-          icon: _iconData[index],
-          customIcon: japanese
-              ? Transform.translate(
-                  offset: Offset(
-                    0,
-                    index == navigationShell.currentIndex ? 5 : 0,
-                  ),
-                  child: Icon(_iconData[index], color: scheme.onSurface),
-                )
-              : null,
-        ),
-    ];
-
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: SafeArea(
         top: false,
-        child: Stack(
-          children: [
-            if (japanese)
-              Positioned(
-                top: 10,
-                left: 20,
-                right: 20,
-                height: 80,
-                child: IgnorePointer(
-                  child: CustomPaint(
-                    painter: SumiNavigationPainter(
-                      colors: sumi ?? SumiThemeColors.defaults,
+        child: SizedBox(
+          height: japanese ? 108 : 88,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(
+              begin: selectedVisibleIndex.toDouble(),
+              end: selectedVisibleIndex.toDouble(),
+            ),
+            duration: japanese
+                ? MonyMotion.durationFor(
+                    context,
+                    const Duration(milliseconds: 600),
+                  )
+                : Duration.zero,
+            curve: Curves.easeInOutCubic,
+            builder: (context, animatedIndex, _) => Stack(
+              children: [
+                if (japanese)
+                  Positioned(
+                    top: 10,
+                    left: 20,
+                    right: 20,
+                    height: 80,
+                    child: IgnorePointer(
+                      child: CustomPaint(
+                        painter: SumiNavigationPainter(
+                          colors: sumi ?? SumiThemeColors.defaults,
+                          activeIndex: animatedIndex,
+                          itemCount: visibleIndices.length,
+                        ),
+                        child: const SizedBox.expand(),
+                      ),
                     ),
-                    child: const SizedBox.expand(),
+                  ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: _MonyBottomNavigationBar(
+                    itemIndices: visibleIndices,
+                    selectedIndex: navigationShell.currentIndex,
+                    japanese: japanese,
+                    onSelected: _selectBranch,
                   ),
                 ),
-              ),
-            Transform.translate(
-              offset: const Offset(0, 10),
-              child: FuturisticNavBar(
-                selectedIndex: selectedVisibleIndex,
-                onItemSelected: (index) => _selectBranch(visibleIndices[index]),
-                items: items,
-                style: japanese ? NavBarStyle.sumi : NavBarStyle.synapse,
-                theme: japanese ? sumieNavTheme : FuturisticTheme.cyberpunk(),
-                iconAnimationType: japanese
-                    ? IconAnimationType.fade
-                    : IconAnimationType.slide,
-                showGlow: !japanese,
-                showLiquid: !japanese,
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -288,6 +260,145 @@ class MonyNavigationShell extends ConsumerWidget {
       label: destination.label,
       padding: destination.padding,
       indicatorColor: Colors.transparent,
+    );
+  }
+}
+
+class _MonyBottomNavigationBar extends StatelessWidget {
+  const _MonyBottomNavigationBar({
+    required this.itemIndices,
+    required this.selectedIndex,
+    required this.japanese,
+    required this.onSelected,
+  });
+
+  final List<int> itemIndices;
+  final int selectedIndex;
+  final bool japanese;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final sumi = SumiThemeColors.maybeOf(context) ?? SumiThemeColors.defaults;
+    final duration = MonyMotion.durationFor(context, MonyMotion.quick);
+    return Container(
+      height: japanese ? 80 : 68,
+      margin: japanese
+          ? const EdgeInsets.only(left: 20, right: 20, bottom: 20)
+          : const EdgeInsets.fromLTRB(20, 4, 20, 8),
+      decoration: BoxDecoration(
+        color: japanese ? sumi.deepInk : scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(japanese ? 8 : 28),
+        border: japanese
+            ? null
+            : Border.all(color: scheme.outlineVariant.withValues(alpha: .5)),
+        boxShadow: japanese
+            ? null
+            : [
+                BoxShadow(
+                  color: scheme.shadow.withValues(alpha: .08),
+                  blurRadius: 18,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+      ),
+      child: Row(
+        children: [
+          for (final index in itemIndices)
+            Expanded(
+              child: _NavigationButton(
+                icon: MonyNavigationShell._iconData[index],
+                label: MonyNavigationShell._moduleLabels[index],
+                selected: index == selectedIndex,
+                japanese: japanese,
+                duration: duration,
+                onTap: () => onSelected(index),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NavigationButton extends StatelessWidget {
+  const _NavigationButton({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.japanese,
+    required this.duration,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final bool japanese;
+  final Duration duration;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final sumi = SumiThemeColors.maybeOf(context) ?? SumiThemeColors.defaults;
+    final selectedDuration = MonyMotion.durationFor(
+      context,
+      const Duration(milliseconds: 400),
+    );
+    final sumiUnselected = sumi.paper;
+    final foreground = japanese
+        ? (selected ? sumi.gold : sumiUnselected)
+        : (selected ? scheme.primary : scheme.onSurfaceVariant);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: Tooltip(
+        message: label,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Center(
+            child: japanese
+                ? TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: selected ? 1 : 0),
+                    duration: selectedDuration,
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, child) => Transform.translate(
+                      key: selected
+                          ? const ValueKey('sumi-selected-icon-lift')
+                          : null,
+                      offset: Offset(0, -.625 * value),
+                      child: Transform.scale(
+                        key: selected
+                            ? const ValueKey('sumi-selected-icon-scale')
+                            : null,
+                        scale: 1,
+                        child: child,
+                      ),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: foreground,
+                      size: selected ? 42 : 30,
+                    ),
+                  )
+                : AnimatedContainer(
+                    duration: duration,
+                    curve: MonyMotion.standardCurve,
+                    width: 48,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: selected ? scheme.secondaryContainer : null,
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: Icon(icon, color: foreground, size: 24),
+                  ),
+          ),
+        ),
+      ),
     );
   }
 }

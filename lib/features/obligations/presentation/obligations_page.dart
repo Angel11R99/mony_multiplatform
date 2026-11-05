@@ -29,6 +29,7 @@ class ObligationsPage extends ConsumerStatefulWidget {
 
 class _ObligationsPageState extends ConsumerState<ObligationsPage> {
   var _filter = 0;
+  var _visibleLimit = 40;
   _DueDateFilter _dueDateFilter = _DueDateFilter.all;
   DateTimeRange? _customDueRange;
 
@@ -50,26 +51,38 @@ class _ObligationsPageState extends ConsumerState<ObligationsPage> {
     }
   }
 
-  bool _matchesDueDate(DateTime date) {
-    final today = DateTime.now();
-    final day = DateTime(date.year, date.month, date.day);
-    return switch (_dueDateFilter) {
-      _DueDateFilter.all => true,
-      _DueDateFilter.week =>
-        !day.isBefore(DateTime(today.year, today.month, today.day)) &&
-            !day.isAfter(DateTime(today.year, today.month, today.day + 6)),
-      _DueDateFilter.month =>
-        date.year == today.year && date.month == today.month,
-      _DueDateFilter.custom =>
-        _customDueRange != null &&
-            !day.isBefore(_customDueRange!.start) &&
-            !day.isAfter(_customDueRange!.end),
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(obligationsProvider);
+    final today = DateTime.now();
+    final dateBounds = switch (_dueDateFilter) {
+      _DueDateFilter.all => (from: null, through: null),
+      _DueDateFilter.week => (
+        from: DateTime(today.year, today.month, today.day),
+        through: DateTime(today.year, today.month, today.day + 6),
+      ),
+      _DueDateFilter.month => (
+        from: DateTime(today.year, today.month),
+        through: DateTime(today.year, today.month + 1, 0),
+      ),
+      _DueDateFilter.custom => (
+        from: _customDueRange?.start,
+        through: _customDueRange?.end,
+      ),
+    };
+    final listFilter = switch (_filter) {
+      1 => ObligationListFilter.payable,
+      2 => ObligationListFilter.receivable,
+      3 => ObligationListFilter.history,
+      _ => ObligationListFilter.active,
+    };
+    final state = ref.watch(
+      obligationListProvider((
+        filter: listFilter,
+        dueFrom: dateBounds.from,
+        dueThrough: dateBounds.through,
+        limit: _visibleLimit,
+      )),
+    );
     final categories =
         ref.watch(categoriesProvider).value ?? const <Category>[];
     final methods =
@@ -101,36 +114,9 @@ class _ObligationsPageState extends ConsumerState<ObligationsPage> {
       body: state.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => _ObligationError(
-          onRetry: () => ref.invalidate(obligationsProvider),
+          onRetry: () => ref.invalidate(obligationListProvider),
         ),
-        data: (all) {
-          final today = DateTime.now();
-          final filtered = all
-              .where((obligation) {
-                final status = obligation.statusAt(today);
-                final matchesStatus = switch (_filter) {
-                  0 =>
-                    status != ObligationStatus.settled &&
-                        status != ObligationStatus.cancelled,
-                  1 =>
-                    obligation.direction == ObligationDirection.payable &&
-                        status != ObligationStatus.settled &&
-                        status != ObligationStatus.cancelled,
-                  2 =>
-                    obligation.direction == ObligationDirection.receivable &&
-                        status != ObligationStatus.settled &&
-                        status != ObligationStatus.cancelled,
-                  _ =>
-                    status == ObligationStatus.settled ||
-                        status == ObligationStatus.cancelled,
-                };
-                final dueDate = obligation.dueDate;
-                return matchesStatus &&
-                    (dueDate == null
-                        ? _dueDateFilter == _DueDateFilter.all
-                        : _matchesDueDate(dueDate));
-              })
-              .toList(growable: false);
+        data: (filtered) {
           return LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth > 850
@@ -158,7 +144,10 @@ class _ObligationsPageState extends ConsumerState<ObligationsPage> {
                                 if (value == _DueDateFilter.custom) {
                                   _chooseDueRange();
                                 } else {
-                                  setState(() => _dueDateFilter = value);
+                                  setState(() {
+                                    _dueDateFilter = value;
+                                    _visibleLimit = 40;
+                                  });
                                 }
                               },
                               itemBuilder: (context) => const [
@@ -201,32 +190,44 @@ class _ObligationsPageState extends ConsumerState<ObligationsPage> {
                       Expanded(
                         child: filtered.isEmpty
                             ? _ObligationsEmpty(filter: _filter)
-                            : ListView.separated(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  8,
-                                  16,
-                                  100,
-                                ),
-                                itemCount: filtered.length,
-                                separatorBuilder: (context, index) =>
-                                    const SizedBox(height: 10),
-                                itemBuilder: (context, index) {
-                                  final obligation = filtered[index];
-                                  return MonyEntrance(
-                                    delay: Duration(milliseconds: 30 * index),
-                                    child: _ObligationCard(
-                                      obligation: obligation,
-                                      currencyStyle: currencyStyle,
-                                      onTap: () => context.pushNamed(
-                                        'obligationDetail',
-                                        pathParameters: {
-                                          'id': '${obligation.id}',
-                                        },
-                                      ),
-                                    ),
-                                  );
+                            : NotificationListener<ScrollNotification>(
+                                onNotification: (notification) {
+                                  if (notification.metrics.extentAfter < 240 &&
+                                      filtered.length == _visibleLimit) {
+                                    setState(() => _visibleLimit += 40);
+                                  }
+                                  return false;
                                 },
+                                child: ListView.separated(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    8,
+                                    16,
+                                    100,
+                                  ),
+                                  itemCount: filtered.length,
+                                  separatorBuilder: (context, index) =>
+                                      const SizedBox(height: 10),
+                                  itemBuilder: (context, index) {
+                                    final obligation = filtered[index];
+                                    return MonyEntrance(
+                                      delay: Duration(
+                                        milliseconds:
+                                            30 * (index < 8 ? index : 8),
+                                      ),
+                                      child: _ObligationCard(
+                                        obligation: obligation,
+                                        currencyStyle: currencyStyle,
+                                        onTap: () => context.pushNamed(
+                                          'obligationDetail',
+                                          pathParameters: {
+                                            'id': '${obligation.id}',
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
                       ),
                     ],
@@ -245,7 +246,10 @@ class _ObligationsPageState extends ConsumerState<ObligationsPage> {
     child: ChoiceChip(
       label: Text(label),
       selected: _filter == index,
-      onSelected: (_) => setState(() => _filter = index),
+      onSelected: (_) => setState(() {
+        _filter = index;
+        _visibleLimit = 40;
+      }),
     ),
   );
 }

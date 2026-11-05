@@ -21,16 +21,154 @@ class DriftTransactionRepository implements TransactionRepository {
           .map((rows) => rows.map(_fromRow).toList(growable: false));
 
   @override
+  Stream<TransactionPeriodSummary> watchPeriodSummary({
+    required DateTime start,
+    required DateTime endInclusive,
+  }) => _database
+      .customSelect(
+        '''SELECT type, category_id,
+                      COALESCE(SUM(amount_in_cents), 0) AS amount_in_cents
+                 FROM transactions
+                WHERE date_epoch_day BETWEEN ? AND ?
+                GROUP BY type, category_id''',
+        variables: [
+          Variable.withInt(dateToEpochDay(start)),
+          Variable.withInt(dateToEpochDay(endInclusive)),
+        ],
+        readsFrom: {_database.transactions},
+      )
+      .watch()
+      .map((rows) {
+        var incomeInCents = 0;
+        var expenseInCents = 0;
+        final expenseByCategory = <int, int>{};
+        for (final row in rows) {
+          final amount = row.read<int>('amount_in_cents');
+          switch (row.read<String>('type')) {
+            case 'income':
+              incomeInCents += amount;
+            case 'expense':
+              expenseInCents += amount;
+              expenseByCategory[row.read<int>('category_id')] = amount;
+          }
+        }
+        return TransactionPeriodSummary(
+          incomeInCents: incomeInCents,
+          expenseInCents: expenseInCents,
+          expenseByCategory: Map.unmodifiable(expenseByCategory),
+        );
+      });
+
+  @override
   Stream<List<FinanceTransaction>> watchFiltered(
-    TransactionHistoryFilter filter,
-  ) {
+    TransactionHistoryFilter filter, {
+    int? limit,
+  }) {
     final transactions = _database.transactions;
     final categories = _database.categories;
     final methods = _database.paymentMethods;
+    final normalizedQuery = filter.query.trim().toLowerCase();
+    final predicates = _basicTransactionPredicates(filter, transactions);
+    final sortByCategory =
+        filter.sortOrder == TransactionSortOrder.categoryAscending ||
+        filter.sortOrder == TransactionSortOrder.categoryDescending;
+    if (normalizedQuery.isEmpty && !sortByCategory) {
+      final query = _database.select(transactions);
+      if (predicates.isNotEmpty) {
+        query.where((_) => predicates.reduce((a, b) => a & b));
+      }
+      query.orderBy(switch (filter.sortOrder) {
+        TransactionSortOrder.newest => [
+          (row) => OrderingTerm.desc(row.dateEpochDay),
+          (row) => OrderingTerm.desc(row.createdAt),
+          (row) => OrderingTerm.desc(row.id),
+        ],
+        TransactionSortOrder.oldest => [
+          (row) => OrderingTerm.asc(row.dateEpochDay),
+          (row) => OrderingTerm.asc(row.createdAt),
+          (row) => OrderingTerm.asc(row.id),
+        ],
+        TransactionSortOrder.amountHighToLow => [
+          (row) => OrderingTerm.desc(row.amountInCents),
+          (row) => OrderingTerm.desc(row.dateEpochDay),
+          (row) => OrderingTerm.desc(row.createdAt),
+          (row) => OrderingTerm.desc(row.id),
+        ],
+        TransactionSortOrder.amountLowToHigh => [
+          (row) => OrderingTerm.asc(row.amountInCents),
+          (row) => OrderingTerm.desc(row.dateEpochDay),
+          (row) => OrderingTerm.desc(row.createdAt),
+          (row) => OrderingTerm.desc(row.id),
+        ],
+        TransactionSortOrder.categoryAscending ||
+        TransactionSortOrder.categoryDescending => throw StateError(
+          'Category sorts require joined rows.',
+        ),
+      });
+      if (limit != null) query.limit(limit);
+      return query.watch().map(
+        (rows) => rows.map(_fromRow).toList(growable: false),
+      );
+    }
+
     final query = _database.select(transactions).join([
       innerJoin(categories, categories.id.equalsExp(transactions.categoryId)),
       innerJoin(methods, methods.id.equalsExp(transactions.paymentMethodId)),
     ]);
+    if (normalizedQuery.isNotEmpty) {
+      final escaped = normalizedQuery
+          .replaceAll(r'\', r'\\')
+          .replaceAll('%', r'\%')
+          .replaceAll('_', r'\_');
+      final pattern = '%$escaped%';
+      predicates.add(
+        transactions.description.like(pattern, escapeChar: r'\') |
+            categories.name.like(pattern, escapeChar: r'\') |
+            methods.name.like(pattern, escapeChar: r'\'),
+      );
+    }
+    if (predicates.isNotEmpty) query.where(predicates.reduce((a, b) => a & b));
+    final byNewest = [
+      OrderingTerm.desc(transactions.dateEpochDay),
+      OrderingTerm.desc(transactions.createdAt),
+      OrderingTerm.desc(transactions.id),
+    ];
+    query.orderBy(switch (filter.sortOrder) {
+      TransactionSortOrder.newest => byNewest,
+      TransactionSortOrder.oldest => [
+        OrderingTerm.asc(transactions.dateEpochDay),
+        OrderingTerm.asc(transactions.createdAt),
+        OrderingTerm.asc(transactions.id),
+      ],
+      TransactionSortOrder.amountHighToLow => [
+        OrderingTerm.desc(transactions.amountInCents),
+        ...byNewest,
+      ],
+      TransactionSortOrder.amountLowToHigh => [
+        OrderingTerm.asc(transactions.amountInCents),
+        ...byNewest,
+      ],
+      TransactionSortOrder.categoryAscending => [
+        OrderingTerm.asc(categories.name),
+        ...byNewest,
+      ],
+      TransactionSortOrder.categoryDescending => [
+        OrderingTerm.desc(categories.name),
+        ...byNewest,
+      ],
+    });
+    if (limit != null) query.limit(limit);
+    return query.watch().map(
+      (rows) => rows
+          .map((row) => _fromRow(row.readTable(transactions)))
+          .toList(growable: false),
+    );
+  }
+
+  List<Expression<bool>> _basicTransactionPredicates(
+    TransactionHistoryFilter filter,
+    $TransactionsTable transactions,
+  ) {
     final predicates = <Expression<bool>>[];
     if (filter.type != null) {
       predicates.add(transactions.type.equals(filter.type!.name));
@@ -76,54 +214,134 @@ class DriftTransactionRepository implements TransactionRepository {
         ),
       );
     }
+    return predicates;
+  }
+
+  @override
+  Stream<TransactionHistorySummary> watchFilteredSummary(
+    TransactionHistoryFilter filter,
+  ) {
+    final clauses = <String>[];
+    final variables = <Variable<Object>>[];
+    void add(String clause, Variable<Object> value) {
+      clauses.add(clause);
+      variables.add(value);
+    }
+
+    if (filter.type != null) {
+      add('t.type = ?', Variable.withString(filter.type!.name));
+    }
+    final categoryIds = filter.categoryIds.isNotEmpty
+        ? filter.categoryIds
+        : filter.categoryId == null
+        ? const <int>{}
+        : {filter.categoryId!};
+    if (categoryIds.isNotEmpty) {
+      clauses.add(
+        't.category_id IN (${List.filled(categoryIds.length, '?').join(', ')})',
+      );
+      variables.addAll(categoryIds.map(Variable.withInt));
+    }
+    if (filter.paymentMethodIds.isNotEmpty) {
+      clauses.add(
+        't.payment_method_id IN (${List.filled(filter.paymentMethodIds.length, '?').join(', ')})',
+      );
+      variables.addAll(filter.paymentMethodIds.map(Variable.withInt));
+    }
+    if (filter.minimumAmountInCents != null) {
+      add(
+        't.amount_in_cents >= ?',
+        Variable.withInt(filter.minimumAmountInCents!),
+      );
+    }
+    if (filter.maximumAmountInCents != null) {
+      add(
+        't.amount_in_cents <= ?',
+        Variable.withInt(filter.maximumAmountInCents!),
+      );
+    }
+    if (filter.startDate != null) {
+      add(
+        't.date_epoch_day >= ?',
+        Variable.withInt(dateToEpochDay(filter.startDate!)),
+      );
+    }
+    if (filter.endDate != null) {
+      add(
+        't.date_epoch_day <= ?',
+        Variable.withInt(dateToEpochDay(filter.endDate!)),
+      );
+    }
     final normalizedQuery = filter.query.trim().toLowerCase();
+    final searchJoins = normalizedQuery.isEmpty
+        ? ''
+        : '''INNER JOIN categories c ON c.id = t.category_id
+            INNER JOIN payment_methods m ON m.id = t.payment_method_id''';
+    final watchedTables = <TableInfo>{_database.transactions};
     if (normalizedQuery.isNotEmpty) {
+      watchedTables
+        ..add(_database.categories)
+        ..add(_database.paymentMethods);
       final escaped = normalizedQuery
           .replaceAll(r'\', r'\\')
           .replaceAll('%', r'\%')
           .replaceAll('_', r'\_');
+      const searchClause = '''(
+        COALESCE(t.description, '') LIKE ? ESCAPE char(92) OR
+        c.name LIKE ? ESCAPE char(92) OR
+        m.name LIKE ? ESCAPE char(92)
+      )''';
+      clauses.add(searchClause);
       final pattern = '%$escaped%';
-      predicates.add(
-        transactions.description.like(pattern, escapeChar: r'\') |
-            categories.name.like(pattern, escapeChar: r'\') |
-            methods.name.like(pattern, escapeChar: r'\'),
-      );
+      variables.addAll([
+        Variable.withString(pattern),
+        Variable.withString(pattern),
+        Variable.withString(pattern),
+      ]);
     }
-    if (predicates.isNotEmpty) query.where(predicates.reduce((a, b) => a & b));
-    final byNewest = [
-      OrderingTerm.desc(transactions.dateEpochDay),
-      OrderingTerm.desc(transactions.createdAt),
-      OrderingTerm.desc(transactions.id),
-    ];
-    query.orderBy(switch (filter.sortOrder) {
-      TransactionSortOrder.newest => byNewest,
-      TransactionSortOrder.oldest => [
-        OrderingTerm.asc(transactions.dateEpochDay),
-        OrderingTerm.asc(transactions.createdAt),
-        OrderingTerm.asc(transactions.id),
-      ],
-      TransactionSortOrder.amountHighToLow => [
-        OrderingTerm.desc(transactions.amountInCents),
-        ...byNewest,
-      ],
-      TransactionSortOrder.amountLowToHigh => [
-        OrderingTerm.asc(transactions.amountInCents),
-        ...byNewest,
-      ],
-      TransactionSortOrder.categoryAscending => [
-        OrderingTerm.asc(categories.name),
-        ...byNewest,
-      ],
-      TransactionSortOrder.categoryDescending => [
-        OrderingTerm.desc(categories.name),
-        ...byNewest,
-      ],
-    });
-    return query.watch().map(
-      (rows) => rows
-          .map((row) => _fromRow(row.readTable(transactions)))
-          .toList(growable: false),
-    );
+    final where = clauses.isEmpty ? '' : 'WHERE ${clauses.join(' AND ')}';
+    return _database
+        .customSelect(
+          '''SELECT COUNT(*) AS total_count,
+              COALESCE(SUM(CASE WHEN t.type = 'income'
+                THEN t.amount_in_cents ELSE 0 END), 0) AS income_in_cents,
+              COALESCE(SUM(CASE WHEN t.type = 'expense'
+                THEN t.amount_in_cents ELSE 0 END), 0) AS expense_in_cents
+            FROM transactions t
+            $searchJoins
+            $where''',
+          variables: variables,
+          readsFrom: watchedTables,
+        )
+        .watchSingle()
+        .map(
+          (row) => TransactionHistorySummary(
+            totalCount: row.read<int>('total_count'),
+            incomeInCents: row.read<int>('income_in_cents'),
+            expenseInCents: row.read<int>('expense_in_cents'),
+          ),
+        );
+  }
+
+  @override
+  Future<List<FinanceTransaction>> findDuplicateCandidates({
+    required int amountInCents,
+    required DateTime date,
+  }) async {
+    final rows =
+        await (_database.select(_database.transactions)
+              ..where(
+                (row) =>
+                    row.type.equals(TransactionType.expense.name) &
+                    row.amountInCents.equals(amountInCents) &
+                    row.dateEpochDay.equals(dateToEpochDay(date)),
+              )
+              ..orderBy([
+                (row) => OrderingTerm.desc(row.createdAt),
+                (row) => OrderingTerm.desc(row.id),
+              ]))
+            .get();
+    return rows.map(_fromRow).toList(growable: false);
   }
 
   @override

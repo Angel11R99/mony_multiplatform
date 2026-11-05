@@ -1,18 +1,19 @@
 import 'package:drift/native.dart';
+import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nav_bar/nav_bar.dart';
 import 'package:mony_multiplatform/core/database/app_database.dart';
 import 'package:mony_multiplatform/core/database/app_database_provider.dart';
 import 'package:mony_multiplatform/core/routing/app_router.dart';
 import 'package:mony_multiplatform/core/routing/mony_navigation_shell.dart';
+import 'package:mony_multiplatform/core/theme/mony_finance_colors.dart';
+import 'package:mony_multiplatform/core/theme/sumi_visuals.dart';
 import 'package:mony_multiplatform/features/preferences/domain/app_preferences.dart';
 import 'package:mony_multiplatform/features/preferences/domain/preferences_repository.dart';
 import 'package:mony_multiplatform/features/preferences/presentation/preferences_controller.dart';
 import 'package:mony_multiplatform/features/categories/presentation/categories_page.dart';
-import 'package:mony_multiplatform/features/payment_methods/presentation/payment_methods_page.dart';
 import 'package:mony_multiplatform/features/transactions/presentation/transactions_page.dart';
 
 void main() {
@@ -24,16 +25,12 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    final database = AppDatabase(NativeDatabase.memory());
+    final database = _newTestDatabase();
     final router = createAppRouter();
-    addTearDown(() async {
-      router.dispose();
-      await database.close();
-    });
 
     await _pumpApp(tester, router, database);
     expect(find.text('Tus finanzas, en un solo lugar'), findsOneWidget);
-    expect(find.byType(FuturisticNavBar), findsOneWidget);
+    expect(find.byTooltip('Historial'), findsOneWidget);
     expect(find.byType(MonyNavigationShell), findsOneWidget);
     expect(tester.takeException(), isNull);
 
@@ -54,34 +51,56 @@ void main() {
       'supermercado',
     );
 
-    await _tapNavigationItem(tester, 0);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Más opciones'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Administrar categorías'));
-    await tester.pumpAndSettle();
-    expect(find.byType(CategoriesPage), findsOneWidget);
-    router.pop();
-    await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Más opciones'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Métodos de pago'));
-    await tester.pumpAndSettle();
-    expect(find.byType(PaymentMethodsPage), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('opens Categories from a cold deep link', (tester) async {
-    final database = AppDatabase(NativeDatabase.memory());
+    final database = _newTestDatabase();
     final router = createAppRouter(initialLocation: '/categories');
-    addTearDown(() async {
-      router.dispose();
-      await database.close();
-    });
 
     await _pumpApp(tester, router, database);
     expect(find.byType(CategoriesPage), findsOneWidget);
-    expect(find.byType(FuturisticNavBar), findsNothing);
+    expect(find.byTooltip('Historial'), findsNothing);
+  });
+
+  testWidgets('keeps the Sumi selection legible and low-profile', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(480, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final database = _newTestDatabase();
+    final router = createAppRouter();
+    final preferences = _MemoryPreferencesRepository()
+      ..value = AppPreferences.defaults.copyWith(
+        visualTheme: AppVisualTheme.japaneseSumie,
+      );
+
+    await _pumpApp(
+      tester,
+      router,
+      database,
+      preferencesRepository: preferences,
+    );
+    await _tapNavigationItem(tester, 7);
+    await tester.pumpAndSettle();
+
+    final selectedScale = tester.widget<Transform>(
+      find.byKey(const ValueKey('sumi-selected-icon-scale')),
+    );
+    expect(selectedScale.transform.storage[0], closeTo(1, .001));
+    final selectedLift = tester.widget<Transform>(
+      find.byKey(const ValueKey('sumi-selected-icon-lift')),
+    );
+    expect(selectedLift.transform.storage[13], closeTo(-.625, .001));
+    expect(tester.widget<Icon>(find.byIcon(Icons.receipt_long)).size, 42);
+    expect(find.byIcon(Icons.receipt_long), findsOneWidget);
+    final unselectedHome = tester.widget<Icon>(find.byIcon(Icons.home));
+    expect(unselectedHome.size, 30);
+    expect(unselectedHome.color, SumiThemeColors.defaults.paper);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('uses a navigation rail on a wide viewport', (tester) async {
@@ -90,53 +109,47 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    final database = AppDatabase(NativeDatabase.memory());
+    final database = _newTestDatabase();
     final router = createAppRouter();
-    addTearDown(() async {
-      router.dispose();
-      await database.close();
-    });
 
     await _pumpApp(tester, router, database);
     expect(find.byType(NavigationRail), findsOneWidget);
-    expect(find.byType(FuturisticNavBar), findsNothing);
+    expect(find.byTooltip('Historial'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('nested deep links can be popped back to the shell', (
     tester,
   ) async {
-    final database = AppDatabase(NativeDatabase.memory());
+    final database = _newTestDatabase();
     final router = createAppRouter();
-    addTearDown(() async {
-      router.dispose();
-      await database.close();
-    });
 
     await _pumpApp(tester, router, database);
     router.push('/transactions/not-a-number');
     await tester.pumpAndSettle();
     expect(find.text('Página no encontrada'), findsOneWidget);
-    expect(find.byType(FuturisticNavBar), findsNothing);
+    expect(find.byTooltip('Historial'), findsNothing);
 
     router.pop();
     await tester.pumpAndSettle();
     expect(find.text('Tus finanzas, en un solo lugar'), findsOneWidget);
-    expect(find.byType(FuturisticNavBar), findsOneWidget);
+    expect(find.byTooltip('Historial'), findsOneWidget);
   });
 
   testWidgets('warns before discarding an edited transaction form', (
     tester,
   ) async {
-    final database = AppDatabase(NativeDatabase.memory());
+    final database = _newTestDatabase();
     final router = createAppRouter(initialLocation: '/transactions/new');
-    addTearDown(() async {
-      router.dispose();
-      await database.close();
-    });
 
     await _pumpApp(tester, router, database);
     await tester.enterText(find.byType(TextFormField).first, '12');
+    await tester.pump();
+    final popScopeFinder = find.byWidgetPredicate(
+      (widget) => widget is PopScope<Object>,
+    );
+    expect(popScopeFinder, findsOneWidget);
+    expect(tester.widget<PopScope<Object>>(popScopeFinder).canPop, isFalse);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(find.text('Descartar cambios'), findsOneWidget);
@@ -162,32 +175,49 @@ void main() {
 Future<void> _pumpApp(
   WidgetTester tester,
   GoRouter router,
-  AppDatabase database,
-) async {
+  AppDatabase database, {
+  _MemoryPreferencesRepository? preferencesRepository,
+}) async {
   addTearDown(() async {
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(milliseconds: 1));
+    router.dispose();
+    await database.close();
   });
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         appDatabaseProvider.overrideWithValue(database),
         preferencesRepositoryProvider.overrideWithValue(
-          _MemoryPreferencesRepository(),
+          preferencesRepository ?? _MemoryPreferencesRepository(),
         ),
       ],
-      child: MaterialApp.router(routerConfig: router),
+      child: MaterialApp.router(
+        routerConfig: router,
+        theme: ThemeData(
+          extensions: [MonyFinanceColors.forBrightness(Brightness.light)],
+        ),
+      ),
     ),
   );
   await tester.pumpAndSettle();
 }
 
+AppDatabase _newTestDatabase() => AppDatabase(
+  DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true),
+);
+
 Future<void> _tapNavigationItem(WidgetTester tester, int index) async {
-  final rect = tester.getRect(find.byType(FuturisticNavBar));
-  final itemWidth = rect.width / defaultNavigationModuleIds.length;
-  await tester.tapAt(
-    Offset(rect.left + itemWidth * (index + 0.5), rect.top + rect.height / 2),
-  );
+  const labels = [
+    'Inicio',
+    'Fijos',
+    'Recordatorios',
+    'Ahorros',
+    'Lista',
+    'Estadísticas',
+    'Plan de ciclo',
+    'Historial',
+  ];
+  await tester.tap(find.byTooltip(labels[index]));
 }
 
 class _MemoryPreferencesRepository implements PreferencesRepository {

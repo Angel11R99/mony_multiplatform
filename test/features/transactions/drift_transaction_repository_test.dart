@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mony_multiplatform/core/database/app_database.dart';
 import 'package:mony_multiplatform/features/transactions/data/drift_transaction_repository.dart';
 import 'package:mony_multiplatform/features/transactions/domain/transaction.dart';
+import 'package:mony_multiplatform/features/transactions/domain/transaction_history_filter.dart';
 import 'package:mony_multiplatform/features/transactions/domain/transaction_repository.dart';
 
 void main() {
@@ -65,6 +66,92 @@ void main() {
           saved.updatedAt == originalCreatedAt,
       isTrue,
     );
+  });
+
+  test('summarizes a period in SQLite by type and expense category', () async {
+    await repository.create(
+      movement(amountInCents: 1200, date: DateTime(2025, 3, 3)),
+    );
+    await repository.create(
+      movement(
+        amountInCents: 700,
+        date: DateTime(2025, 3, 12),
+        description: 'Segundo gasto',
+      ),
+    );
+    await repository.create(
+      movement(amountInCents: 900, categoryId: 7, date: DateTime(2025, 3, 14)),
+    );
+    await repository.create(
+      movement(
+        amountInCents: 400,
+        type: TransactionType.income,
+        categoryId: 1,
+        date: DateTime(2025, 3, 10),
+      ),
+    );
+    await repository.create(
+      movement(amountInCents: 5000, date: DateTime(2025, 4, 1)),
+    );
+
+    final summary = await repository
+        .watchPeriodSummary(
+          start: DateTime(2025, 3, 1),
+          endInclusive: DateTime(2025, 3, 31),
+        )
+        .first;
+
+    expect(summary.incomeInCents, 400);
+    expect(summary.expenseInCents, 2800);
+    expect(summary.expenseByCategory, {6: 1900, 7: 900});
+  });
+
+  test('uses joins only when history needs category or method names', () async {
+    final foodId = await repository.create(
+      movement(
+        amountInCents: 100,
+        categoryId: 6,
+        paymentMethodId: 1,
+        description: null,
+        date: DateTime(2025, 3, 9),
+      ),
+    );
+    final transportId = await repository.create(
+      movement(
+        amountInCents: 200,
+        categoryId: 7,
+        paymentMethodId: 2,
+        description: 'Taxi',
+        date: DateTime(2025, 3, 10),
+      ),
+    );
+
+    final newestPage = await repository
+        .watchFiltered(const TransactionHistoryFilter(), limit: 1)
+        .first;
+    expect(newestPage.single.id, transportId);
+    final categorySearch = await repository
+        .watchFiltered(const TransactionHistoryFilter(query: 'alimentación'))
+        .first;
+    expect(categorySearch.map((item) => item.id), [foodId]);
+    final methodSearch = await repository
+        .watchFiltered(const TransactionHistoryFilter(query: 'débito'))
+        .first;
+    expect(methodSearch.map((item) => item.id), [transportId]);
+    final sortedByCategory = await repository
+        .watchFiltered(
+          const TransactionHistoryFilter(
+            sortOrder: TransactionSortOrder.categoryAscending,
+          ),
+        )
+        .first;
+    expect(sortedByCategory.map((item) => item.id), [foodId, transportId]);
+
+    final searchSummary = await repository
+        .watchFilteredSummary(const TransactionHistoryFilter(query: 'débito'))
+        .first;
+    expect(searchSummary.totalCount, 1);
+    expect(searchSummary.expenseInCents, 200);
   });
 
   test(

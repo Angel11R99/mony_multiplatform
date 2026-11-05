@@ -139,36 +139,54 @@ class ShoppingAdjustment {
 }
 
 class ShoppingListDetails {
-  const ShoppingListDetails({
+  ShoppingListDetails({
     required this.list,
-    required this.items,
-    required this.adjustments,
-  });
+    required List<ShoppingListItem> items,
+    required List<ShoppingAdjustment> adjustments,
+  }) : items = List.unmodifiable(items),
+       adjustments = List.unmodifiable(adjustments) {
+    var estimatedSubtotal = BigInt.zero;
+    var purchasedSubtotal = BigInt.zero;
+    var finalizableSubtotal = BigInt.zero;
+    var adjustmentTotal = BigInt.zero;
+    var purchasedCount = 0;
+    final missingPrices = <ShoppingListItem>[];
+    for (final item in this.items) {
+      estimatedSubtotal += BigInt.from(
+        _lineTotal(item.quantity, item.estimatedUnitPriceInCents),
+      );
+      final actualLine = BigInt.from(
+        _lineTotal(item.quantity, item.actualUnitPriceInCents),
+      );
+      finalizableSubtotal += actualLine;
+      if (item.isPurchased) {
+        purchasedCount++;
+        purchasedSubtotal += actualLine;
+      }
+      if (item.actualUnitPriceInCents == null) missingPrices.add(item);
+    }
+    for (final adjustment in this.adjustments) {
+      final amount = BigInt.from(adjustment.amountInCents);
+      adjustmentTotal += adjustment.isPositive ? amount : -amount;
+    }
+    estimatedSubtotalInCents = _safeInt(estimatedSubtotal);
+    purchasedSubtotalInCents = _safeInt(purchasedSubtotal);
+    finalizableSubtotalInCents = _safeInt(finalizableSubtotal);
+    adjustmentTotalInCents = _safeInt(adjustmentTotal);
+    purchasedItemCount = purchasedCount;
+    missingActualPriceItems = List.unmodifiable(missingPrices);
+  }
+
   final ShoppingList list;
   final List<ShoppingListItem> items;
   final List<ShoppingAdjustment> adjustments;
 
-  int get estimatedSubtotalInCents => _safeSum(
-    items.map(
-      (item) => _lineTotal(item.quantity, item.estimatedUnitPriceInCents),
-    ),
-  );
-
-  int get purchasedSubtotalInCents => _safeSum(
-    items
-        .where((item) => item.isPurchased)
-        .map((item) => _lineTotal(item.quantity, item.actualUnitPriceInCents)),
-  );
-
-  int get finalizableSubtotalInCents => _safeSum(
-    items.map((item) => _lineTotal(item.quantity, item.actualUnitPriceInCents)),
-  );
-
-  int get adjustmentTotalInCents => _safeSum(
-    adjustments.map(
-      (item) => item.isPositive ? item.amountInCents : -item.amountInCents,
-    ),
-  );
+  late final int estimatedSubtotalInCents;
+  late final int purchasedSubtotalInCents;
+  late final int finalizableSubtotalInCents;
+  late final int adjustmentTotalInCents;
+  late final int purchasedItemCount;
+  late final List<ShoppingListItem> missingActualPriceItems;
 
   int get actualTotalInCents =>
       _safeAdd(purchasedSubtotalInCents, adjustmentTotalInCents);
@@ -177,11 +195,7 @@ class ShoppingListDetails {
   int? get remainingBudgetInCents => list.budgetInCents == null
       ? null
       : _safeAdd(list.budgetInCents!, -actualTotalInCents);
-  int get purchasedItemCount => items.where((item) => item.isPurchased).length;
   int get pendingItemCount => items.length - purchasedItemCount;
-  List<ShoppingListItem> get missingActualPriceItems => items
-      .where((item) => item.actualUnitPriceInCents == null)
-      .toList(growable: false);
 }
 
 class ShoppingListOverview {
@@ -204,13 +218,6 @@ int _safeMultiply(int a, int b) {
 }
 
 int _safeAdd(int a, int b) => _safeInt(BigInt.from(a) + BigInt.from(b));
-
-int _safeSum(Iterable<int> values) => _safeInt(
-  values.fold<BigInt>(
-    BigInt.zero,
-    (total, value) => total + BigInt.from(value),
-  ),
-);
 
 int _safeInt(BigInt value) {
   const maxSafeWebInteger = 9007199254740991;

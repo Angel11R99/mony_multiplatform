@@ -10,12 +10,12 @@ final shoppingListRepositoryProvider = Provider<ShoppingListRepository>(
 );
 
 final shoppingListOverviewsProvider =
-    StreamProvider<List<ShoppingListOverview>>(
+    StreamProvider.autoDispose<List<ShoppingListOverview>>(
       (ref) => ref.watch(shoppingListRepositoryProvider).watchOverviews(),
     );
 
-final shoppingListDetailsProvider =
-    StreamProvider.family<ShoppingListDetails?, int>(
+final shoppingListDetailsProvider = StreamProvider.autoDispose
+    .family<ShoppingListDetails?, int>(
       (ref, listId) =>
           ref.watch(shoppingListRepositoryProvider).watchDetails(listId),
     );

@@ -9,6 +9,30 @@ enum TransactionSortOrder {
   categoryDescending,
 }
 
+class TransactionHistorySummary {
+  const TransactionHistorySummary({
+    required this.totalCount,
+    required this.incomeInCents,
+    required this.expenseInCents,
+  });
+
+  final int totalCount;
+  final int incomeInCents;
+  final int expenseInCents;
+}
+
+class TransactionPeriodSummary {
+  const TransactionPeriodSummary({
+    this.incomeInCents = 0,
+    this.expenseInCents = 0,
+    this.expenseByCategory = const {},
+  });
+
+  final int incomeInCents;
+  final int expenseInCents;
+  final Map<int, int> expenseByCategory;
+}
+
 class TransactionHistoryFilter {
   const TransactionHistoryFilter({
     this.query = '',

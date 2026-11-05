@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../features/preferences/domain/app_preferences.dart';
 import 'mony_finance_colors.dart';
@@ -199,8 +198,8 @@ abstract final class MonyTheme {
         inputDecoratorIsFilled: true,
       ),
     );
-    final text = GoogleFonts.plusJakartaSansTextTheme(baseTheme.textTheme);
-    final readingText = GoogleFonts.interTextTheme(text);
+    final text = baseTheme.textTheme.apply(fontFamily: 'PlusJakartaSans');
+    final readingText = text.apply(fontFamily: 'Inter');
     final brushSubtle = SumiOpenFrameBorder(
       variation: .12,
       side: BorderSide(color: colorScheme.outlineVariant, width: 1.05),
@@ -232,37 +231,29 @@ abstract final class MonyTheme {
           ? Colors.transparent
           : colorScheme.surface,
       textTheme: readingText.copyWith(
-        headlineLarge:
-            GoogleFonts.plusJakartaSans(textStyle: text.headlineLarge).copyWith(
-              fontWeight: FontWeight.w700,
-              fontFamily: japanese || coquette ? 'serif' : null,
-              letterSpacing: japanese ? .15 : -1.1,
-              height: 1.08,
-            ),
-        headlineMedium:
-            GoogleFonts.plusJakartaSans(
-              textStyle: text.headlineMedium,
-            ).copyWith(
-              fontWeight: FontWeight.w700,
-              fontFamily: japanese || coquette ? 'serif' : null,
-              letterSpacing: japanese ? .1 : -0.7,
-              height: 1.12,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-        headlineSmall:
-            GoogleFonts.plusJakartaSans(textStyle: text.headlineSmall).copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.35,
-              fontFamily: coquette ? 'serif' : null,
-            ),
-        titleLarge: GoogleFonts.plusJakartaSans(textStyle: text.titleLarge)
-            .copyWith(
-              fontWeight: FontWeight.w700,
-              fontFamily: japanese || coquette ? 'serif' : null,
-            ),
-        titleMedium: GoogleFonts.plusJakartaSans(
-          textStyle: text.titleMedium,
-        ).copyWith(fontWeight: FontWeight.w600),
+        headlineLarge: text.headlineLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          fontFamily: japanese || coquette ? 'serif' : null,
+          letterSpacing: japanese ? .15 : -1.1,
+          height: 1.08,
+        ),
+        headlineMedium: text.headlineMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          fontFamily: japanese || coquette ? 'serif' : null,
+          letterSpacing: japanese ? .1 : -0.7,
+          height: 1.12,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+        headlineSmall: text.headlineSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.35,
+          fontFamily: coquette ? 'serif' : null,
+        ),
+        titleLarge: text.titleLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          fontFamily: japanese || coquette ? 'serif' : null,
+        ),
+        titleMedium: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         displayLarge: text.displayLarge?.copyWith(
           fontWeight: FontWeight.w700,
           fontFeatures: const [FontFeature.tabularFigures()],

@@ -57,8 +57,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Prepara tu próxima compra'), findsOneWidget);
-    await tester.tap(find.text('Nueva lista'));
+    expect(
+      find.text(
+        'Prepara la lista antes de salir y mantén el total estimado a la vista.',
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Crear lista de compra'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).first, 'Compra semanal');
     await tester.tap(find.text('Crear').last);

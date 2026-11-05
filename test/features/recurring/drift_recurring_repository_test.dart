@@ -32,6 +32,20 @@ void main() {
     );
   }
 
+  test('loads only active series for reminder generation', () async {
+    final activeId = await repository.create(monthly());
+    final inactiveId = await repository.create(
+      monthly(start: DateTime(2026, 2, 1)),
+    );
+    await repository.setActive(inactiveId, false);
+
+    final entries = await repository.getActiveForReminders();
+
+    expect(entries.map((entry) => entry.id), [activeId]);
+    expect(entries.single.isActive, isTrue);
+    expect(entries.map((entry) => entry.id), isNot(contains(inactiveId)));
+  });
+
   test('catches up missed calendar occurrences exactly once', () async {
     final id = await repository.create(monthly());
     expect(await repository.processDue(now: DateTime(2026, 3, 31)), 3);
@@ -60,6 +74,98 @@ void main() {
       throwsA(isA<InvalidTransactionException>()),
     );
   });
+
+  test(
+    'keeps catch-up dates isolated across series with overlapping ranges',
+    () async {
+      final firstStart = DateTime(2026, 1, 1);
+      final secondStart = DateTime(2026, 1, 2);
+      final firstId = await repository.create(
+        RecurringEntry(
+          title: 'Pago A',
+          amountInCents: 1000,
+          type: TransactionType.expense,
+          categoryId: 6,
+          paymentMethodId: 1,
+          frequency: RecurrenceFrequency.daily,
+          startDate: firstStart,
+          nextDate: firstStart,
+        ),
+      );
+      final secondId = await repository.create(
+        RecurringEntry(
+          title: 'Pago B',
+          amountInCents: 2000,
+          type: TransactionType.expense,
+          categoryId: 6,
+          paymentMethodId: 1,
+          frequency: RecurrenceFrequency.daily,
+          startDate: secondStart,
+          nextDate: secondStart,
+        ),
+      );
+      await db
+          .into(db.transactions)
+          .insert(
+            TransactionsCompanion.insert(
+              amountInCents: 1000,
+              type: 'expense',
+              categoryId: 6,
+              paymentMethodId: 1,
+              dateEpochDay: dateToEpochDay(DateTime(2026, 1, 2)),
+              fixedEntryId: Value(firstId),
+            ),
+          );
+
+      expect(await repository.processDue(now: DateTime(2026, 1, 3)), 4);
+      final rows = await db.select(db.transactions).get();
+      expect(rows.where((row) => row.fixedEntryId == firstId), hasLength(3));
+      expect(rows.where((row) => row.fixedEntryId == secondId), hasLength(2));
+    },
+  );
+
+  test(
+    'batches large daily catch-up and skips existing occurrence dates',
+    () async {
+      final start = DateTime(2025, 1, 1);
+      final id = await repository.create(
+        RecurringEntry(
+          title: 'Pago diario',
+          amountInCents: 500,
+          type: TransactionType.expense,
+          categoryId: 8,
+          paymentMethodId: 1,
+          frequency: RecurrenceFrequency.daily,
+          startDate: start,
+          nextDate: start,
+        ),
+      );
+      await db
+          .into(db.transactions)
+          .insert(
+            TransactionsCompanion.insert(
+              amountInCents: 500,
+              type: 'expense',
+              categoryId: 8,
+              paymentMethodId: 1,
+              description: const Value('Pago diario'),
+              dateEpochDay: dateToEpochDay(start),
+              fixedEntryId: Value(id),
+            ),
+          );
+
+      final through = start.add(const Duration(days: 600));
+      expect(await repository.processDue(now: through), 600);
+      final rows = await (db.select(
+        db.transactions,
+      )..where((row) => row.fixedEntryId.equals(id))).get();
+      expect(rows, hasLength(601));
+      expect(
+        (await repository.watchAll().first).single.nextDate,
+        through.add(const Duration(days: 1)),
+      );
+    },
+  );
 
   test('pause skips paused periods and end date stops the series', () async {
     final id = await repository.create(

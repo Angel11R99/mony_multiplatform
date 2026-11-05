@@ -8056,9 +8056,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'payment_methods_single_default',
     'CREATE UNIQUE INDEX payment_methods_single_default ON payment_methods (is_default) WHERE is_default = 1',
   );
-  late final Index transactionsDateIdx = Index(
-    'transactions_date_idx',
-    'CREATE INDEX transactions_date_idx ON transactions (date_epoch_day)',
+  late final Index transactionsDateCreatedIdx = Index(
+    'transactions_date_created_idx',
+    'CREATE INDEX transactions_date_created_idx ON transactions (date_epoch_day, created_at, id)',
   );
   late final Index transactionsCategoryIdx = Index(
     'transactions_category_idx',
@@ -8127,7 +8127,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     obligationPayments,
     recurringEntries,
     paymentMethodsSingleDefault,
-    transactionsDateIdx,
+    transactionsDateCreatedIdx,
     transactionsCategoryIdx,
     transactionsPaymentMethodIdx,
     transactionsFixedEntryIdx,

@@ -36,6 +36,13 @@ void main() {
       expect(light.warning, isNot(dark.warning));
     });
 
+    test('uses bundled fonts for reading text and display headings', () {
+      final theme = MonyTheme.light(AppPreferences.defaults);
+
+      expect(theme.textTheme.bodyMedium?.fontFamily, 'Inter');
+      expect(theme.textTheme.headlineLarge?.fontFamily, 'PlusJakartaSans');
+    });
+
     test('centralizes responsive and touch sizing tokens', () {
       expect(MonyBreakpoints.compact, lessThan(MonyBreakpoints.expanded));
       expect(MonySpace.x4, 16);

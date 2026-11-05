@@ -4,7 +4,10 @@ import '../../categories/data/categories_table.dart';
 import '../../payment_methods/data/payment_methods_table.dart';
 
 @DataClassName('FinanceTransactionRow')
-@TableIndex(name: 'transactions_date_idx', columns: {#dateEpochDay})
+@TableIndex(
+  name: 'transactions_date_created_idx',
+  columns: {#dateEpochDay, #createdAt, #id},
+)
 @TableIndex(name: 'transactions_category_idx', columns: {#categoryId})
 @TableIndex(
   name: 'transactions_payment_method_idx',

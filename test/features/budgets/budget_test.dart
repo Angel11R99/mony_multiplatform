@@ -111,6 +111,27 @@ void main() {
     );
   });
 
+  test('automation wakes at the next relevant date or close time', () {
+    final now = DateTime(2026, 8, 31, 20, 30);
+    final noBudget = nextBudgetAutomationCheckAt(null, now);
+    expect(noBudget, DateTime(2026, 9, 1));
+
+    final enabledBudget = _budget(
+      BudgetPeriod.monthly,
+      cycleStart: DateTime(2026, 8, 1),
+      autoClose: true,
+      closeMinute: 21 * 60,
+    );
+    expect(
+      nextBudgetAutomationCheckAt(enabledBudget, now),
+      DateTime(2026, 8, 31, 21),
+    );
+    expect(
+      nextBudgetAutomationCheckAt(enabledBudget, DateTime(2026, 9, 1, 8)),
+      DateTime(2026, 9, 1, 8),
+    );
+  });
+
   test('validates positive amounts and cycle definitions', () {
     expect(BudgetValidator.validateAmount(0), isNotNull);
     expect(BudgetValidator.validateAmount(1), isNull);

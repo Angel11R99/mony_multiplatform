@@ -1,8 +1,7 @@
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mony_multiplatform/core/database/app_database.dart';
+import 'package:toastification/toastification.dart';
 import 'package:mony_multiplatform/core/database/app_database_provider.dart';
 import 'package:mony_multiplatform/features/budgets/presentation/budgets_page.dart';
 import 'package:mony_multiplatform/features/preferences/domain/app_preferences.dart';
@@ -10,6 +9,7 @@ import 'package:mony_multiplatform/features/preferences/domain/preferences_repos
 import 'package:mony_multiplatform/features/preferences/presentation/preferences_controller.dart';
 import 'package:mony_multiplatform/features/transactions/data/drift_transaction_repository.dart';
 import 'package:mony_multiplatform/features/transactions/domain/transaction.dart';
+import '../../support/test_database.dart';
 
 class _MemoryPreferencesRepository implements PreferencesRepository {
   @override
@@ -23,7 +23,13 @@ void main() {
   testWidgets(
     'configures a period, assigns category limits and updates usage',
     (tester) async {
-      final database = AppDatabase(NativeDatabase.memory());
+      final database = createTestDatabase();
+      addTearDown(() async {
+        toastification.dismissAll(delayForAnimation: false);
+        await tester.pump();
+        await tester.pumpWidget(const SizedBox.shrink());
+        await database.close();
+      });
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -90,10 +96,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('RD\$0.00 de RD\$50.00'), findsOneWidget);
       expect(find.text('0%'), findsOneWidget);
-
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pumpAndSettle();
-      await database.close();
+      toastification.dismissAll(delayForAnimation: false);
+      await tester.pump(const Duration(milliseconds: 250));
     },
   );
 }

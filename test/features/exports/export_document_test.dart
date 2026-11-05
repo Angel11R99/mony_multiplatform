@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
 import 'package:excel_plus/excel_plus.dart';
@@ -81,6 +82,27 @@ void main() {
     },
   );
 
+  test(
+    'el documento de exportación se puede procesar en otro isolate',
+    () async {
+      final document = ExportDocument(
+        from: date,
+        to: date,
+        selection: const ExportSelection(
+          categories: false,
+          paymentMethods: false,
+        ),
+        transactions: transactions,
+        categories: categories,
+        paymentMethods: methods,
+      );
+
+      final bytes = await compute(_buildCsv, document);
+
+      expect(bytes, document.toCsv());
+    },
+  );
+
   test('el XLSX se genera como archivo Office Open XML', () {
     final document = ExportDocument(
       from: date,
@@ -126,3 +148,5 @@ void main() {
     expect(utf8.decode(bytes.take(5).toList()), '%PDF-');
   });
 }
+
+Uint8List _buildCsv(ExportDocument document) => document.toCsv();

@@ -104,6 +104,35 @@ void main() {
     },
   );
 
+  test('backs up and restores rows across a read batch boundary', () async {
+    final categories = await database.select(database.categories).get();
+    final expenseCategory = categories.firstWhere(
+      (item) => item.type == 'expense',
+    );
+    final paymentMethod =
+        (await database.select(database.paymentMethods).get()).first;
+    final rows = [
+      for (var index = 0; index < 501; index++)
+        TransactionsCompanion.insert(
+          amountInCents: index + 1,
+          type: 'expense',
+          categoryId: expenseCategory.id,
+          paymentMethodId: paymentMethod.id,
+          description: Value('Batch row $index'),
+          dateEpochDay: 20000 + index,
+        ),
+    ];
+    await database.batch(
+      (batch) => batch.insertAll(database.transactions, rows),
+    );
+
+    final encrypted = await backup.create('batch backup passphrase');
+    await database.delete(database.transactions).go();
+    await backup.restore(encrypted, 'batch backup passphrase');
+
+    expect(await database.select(database.transactions).get(), hasLength(501));
+  });
+
   test('requires a strong passphrase before creating or restoring', () async {
     await expectLater(
       backup.create('short'),
@@ -113,5 +142,23 @@ void main() {
       backup.restore(Uint8List(1), 'short'),
       throwsA(isA<DatabaseBackupException>()),
     );
+  });
+
+  test('round trips a backup with a Unicode passphrase', () async {
+    const passphrase = 'Contraseña segura con café y té';
+    final original = await database.select(database.categories).get();
+    final encrypted = await backup.create(passphrase);
+    await (database.update(
+      database.categories,
+    )..where((row) => row.id.equals(original.first.id))).write(
+      const CategoriesCompanion(
+        name: Value('Changed'),
+        normalizedName: Value('changed'),
+      ),
+    );
+
+    await backup.restore(encrypted, passphrase);
+
+    expect(await database.select(database.categories).get(), original);
   });
 }

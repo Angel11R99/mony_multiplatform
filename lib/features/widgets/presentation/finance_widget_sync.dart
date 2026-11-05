@@ -11,7 +11,11 @@ import '../domain/finance_widget_snapshot.dart';
 import 'widgets_providers.dart';
 
 class FinanceWidgetSync extends ConsumerStatefulWidget {
-  const FinanceWidgetSync({required this.child, required this.router, super.key});
+  const FinanceWidgetSync({
+    required this.child,
+    required this.router,
+    super.key,
+  });
 
   final Widget child;
   final GoRouter router;
@@ -28,17 +32,18 @@ class _FinanceWidgetSyncState extends ConsumerState<FinanceWidgetSync> {
   @override
   void initState() {
     super.initState();
+    if (kIsWeb ||
+        !const {
+          TargetPlatform.android,
+          TargetPlatform.iOS,
+        }.contains(defaultTargetPlatform)) {
+      return;
+    }
     ref.listenManual<AsyncValue<FinanceWidgetSnapshot>>(
       financeWidgetSnapshotProvider,
       (previous, next) => _publishWhenReady(next),
       fireImmediately: true,
     );
-    if (kIsWeb ||
-        !const {TargetPlatform.android, TargetPlatform.iOS}.contains(
-          defaultTargetPlatform,
-        )) {
-      return;
-    }
     _tapSubscription = HomeWidget.widgetClicked.listen(_openWidgetDestination);
     unawaited(_openInitialWidgetDestination());
   }

@@ -127,177 +127,220 @@ class _ShoppingListContent extends ConsumerWidget {
         alignment: Alignment.topCenter,
         child: SizedBox(
           width: maxWidth,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 110),
-            children: [
-              _ListStatusHeader(details: details, currencyStyle: currencyStyle),
-              if (completed) ...[
-                const SizedBox(height: 10),
-                Card.filled(
-                  child: ListTile(
-                    leading: Icon(
-                      method?.icon == 'credit_card'
-                          ? Icons.credit_card
-                          : Icons.check_circle_outline,
+          child: CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
+                sliver: SliverList.list(
+                  children: [
+                    _ListStatusHeader(
+                      details: details,
+                      currencyStyle: currencyStyle,
                     ),
-                    title: Text(
-                      method == null
-                          ? 'Compra finalizada'
-                          : 'Pagado con ${method.name}',
+                    if (completed) ...[
+                      const SizedBox(height: 10),
+                      Card.filled(
+                        child: ListTile(
+                          leading: Icon(
+                            method?.icon == 'credit_card'
+                                ? Icons.credit_card
+                                : Icons.check_circle_outline,
+                          ),
+                          title: Text(
+                            method == null
+                                ? 'Compra finalizada'
+                                : 'Pagado con ${method.name}',
+                          ),
+                          subtitle: Text(
+                            category == null
+                                ? _dateLabel(list.purchaseDate)
+                                : '${category.name} · ${_dateLabel(list.purchaseDate)}',
+                          ),
+                          trailing: IconButton(
+                            tooltip: 'Reabrir compra',
+                            icon: const Icon(Icons.lock_open_outlined),
+                            onPressed: () => _reopen(context, ref, list.id),
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Productos',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        if (!completed)
+                          TextButton.icon(
+                            onPressed: () =>
+                                _editItem(context, ref, list.id, currencyStyle),
+                            icon: const Icon(Icons.add),
+                            label: const Text('Agregar'),
+                          ),
+                      ],
                     ),
-                    subtitle: Text(
-                      category == null
-                          ? _dateLabel(list.purchaseDate)
-                          : '${category.name} · ${_dateLabel(list.purchaseDate)}',
-                    ),
-                    trailing: IconButton(
-                      tooltip: 'Reabrir compra',
-                      icon: const Icon(Icons.lock_open_outlined),
-                      onPressed: () => _reopen(context, ref, list.id),
-                    ),
-                  ),
+                    const SizedBox(height: 4),
+                    if (details.items.isEmpty)
+                      _EmptyShoppingContent(
+                        icon: Icons.shopping_basket_outlined,
+                        title: 'La lista está vacía',
+                        message: 'Agrega los productos que quieres comprar.',
+                      ),
+                  ],
                 ),
-              ],
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Productos',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  if (!completed)
-                    TextButton.icon(
-                      onPressed: () =>
-                          _editItem(context, ref, list.id, currencyStyle),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Agregar'),
-                    ),
-                ],
               ),
-              const SizedBox(height: 4),
-              if (details.items.isEmpty)
-                _EmptyShoppingContent(
-                  icon: Icons.shopping_basket_outlined,
-                  title: 'La lista está vacía',
-                  message: 'Agrega los productos que quieres comprar.',
-                )
-              else
-                for (final item in details.items)
-                  _ShoppingItemTile(
-                    item: item,
-                    currencyStyle: currencyStyle,
-                    readOnly: completed,
-                    onPurchased: () => _saveItem(
-                      context,
-                      ref,
-                      item.copyWith(
-                        isPurchased: !item.isPurchased,
-                        updatedAt: DateTime.now(),
-                      ),
-                    ),
-                    onQuantity: (delta) => _saveItem(
-                      context,
-                      ref,
-                      item.copyWith(
-                        quantity: (item.quantity + delta).clamp(1, 1000000),
-                        updatedAt: DateTime.now(),
-                      ),
-                    ),
-                    onEdit: () => _editItem(
-                      context,
-                      ref,
-                      list.id,
-                      currencyStyle,
-                      existing: item,
-                    ),
-                    onDelete: () => _deleteItem(context, ref, list.id, item.id),
-                  ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Descuentos y recargos',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  if (!completed)
-                    IconButton(
-                      tooltip: 'Agregar descuento o recargo',
-                      onPressed: () =>
-                          _editAdjustment(context, ref, list.id, currencyStyle),
-                      icon: const Icon(Icons.add_circle_outline),
-                    ),
-                ],
-              ),
-              if (details.adjustments.isEmpty)
-                Text(
-                  'Agrega cupones, descuentos, impuestos o recargos.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                )
-              else
-                for (final adjustment in details.adjustments)
-                  _AdjustmentTile(
-                    adjustment: adjustment,
-                    currencyStyle: currencyStyle,
-                    readOnly: completed,
-                    onEdit: () => _editAdjustment(
-                      context,
-                      ref,
-                      list.id,
-                      currencyStyle,
-                      existing: adjustment,
-                    ),
-                    onDelete: () =>
-                        _deleteAdjustment(context, ref, adjustment.id),
-                  ),
-              const SizedBox(height: 18),
-              _TotalsCard(details: details, currencyStyle: currencyStyle),
-              const SizedBox(height: 16),
-              if (!completed && list.status == ShoppingListStatus.pending)
-                OutlinedButton.icon(
-                  onPressed: () => _startShopping(context, ref, list),
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text('Empezar a comprar'),
-                ),
-              if (!completed)
-                FilledButton.icon(
-                  onPressed: details.items.isEmpty
-                      ? null
-                      : () => _finalize(
+              if (details.items.isNotEmpty)
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  sliver: SliverList.builder(
+                    itemCount: details.items.length,
+                    itemBuilder: (context, index) {
+                      final item = details.items[index];
+                      return _ShoppingItemTile(
+                        item: item,
+                        currencyStyle: currencyStyle,
+                        readOnly: completed,
+                        onPurchased: () => _saveItem(
                           context,
                           ref,
-                          details,
-                          categories,
-                          methods,
+                          item.copyWith(
+                            isPurchased: !item.isPurchased,
+                            updatedAt: DateTime.now(),
+                          ),
                         ),
-                  icon: const Icon(Icons.receipt_long_outlined),
-                  label: const Text('Finalizar compra'),
-                ),
-              if (completed && list.payableId != null)
-                Card(
-                  color: Theme.of(context).colorScheme.tertiaryContainer,
-                  child: ListTile(
-                    leading: Icon(Icons.schedule),
-                    title: const Text('Compra a crédito pendiente'),
-                    subtitle: const Text(
-                      'Consulta el saldo y registra abonos en pagos pendientes.',
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () => context.pushNamed(
-                      'obligationDetail',
-                      pathParameters: {'id': '${list.payableId}'},
-                    ),
+                        onQuantity: (delta) => _saveItem(
+                          context,
+                          ref,
+                          item.copyWith(
+                            quantity: (item.quantity + delta).clamp(1, 1000000),
+                            updatedAt: DateTime.now(),
+                          ),
+                        ),
+                        onEdit: () => _editItem(
+                          context,
+                          ref,
+                          list.id,
+                          currencyStyle,
+                          existing: item,
+                        ),
+                        onDelete: () =>
+                            _deleteItem(context, ref, list.id, item.id),
+                      );
+                    },
                   ),
                 ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(18, 20, 18, 0),
+                sliver: SliverList.list(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Descuentos y recargos',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        if (!completed)
+                          IconButton(
+                            tooltip: 'Agregar descuento o recargo',
+                            onPressed: () => _editAdjustment(
+                              context,
+                              ref,
+                              list.id,
+                              currencyStyle,
+                            ),
+                            icon: const Icon(Icons.add_circle_outline),
+                          ),
+                      ],
+                    ),
+                    if (details.adjustments.isEmpty)
+                      Text(
+                        'Agrega cupones, descuentos, impuestos o recargos.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (details.adjustments.isNotEmpty)
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  sliver: SliverList.builder(
+                    itemCount: details.adjustments.length,
+                    itemBuilder: (context, index) {
+                      final adjustment = details.adjustments[index];
+                      return _AdjustmentTile(
+                        adjustment: adjustment,
+                        currencyStyle: currencyStyle,
+                        readOnly: completed,
+                        onEdit: () => _editAdjustment(
+                          context,
+                          ref,
+                          list.id,
+                          currencyStyle,
+                          existing: adjustment,
+                        ),
+                        onDelete: () =>
+                            _deleteAdjustment(context, ref, adjustment.id),
+                      );
+                    },
+                  ),
+                ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 110),
+                sliver: SliverList.list(
+                  children: [
+                    _TotalsCard(details: details, currencyStyle: currencyStyle),
+                    const SizedBox(height: 16),
+                    if (!completed && list.status == ShoppingListStatus.pending)
+                      OutlinedButton.icon(
+                        onPressed: () => _startShopping(context, ref, list),
+                        icon: const Icon(Icons.play_arrow),
+                        label: const Text('Empezar a comprar'),
+                      ),
+                    if (!completed)
+                      FilledButton.icon(
+                        onPressed: details.items.isEmpty
+                            ? null
+                            : () => _finalize(
+                                context,
+                                ref,
+                                details,
+                                categories,
+                                methods,
+                              ),
+                        icon: const Icon(Icons.receipt_long_outlined),
+                        label: const Text('Finalizar compra'),
+                      ),
+                    if (completed && list.payableId != null)
+                      Card(
+                        color: Theme.of(context).colorScheme.tertiaryContainer,
+                        child: ListTile(
+                          leading: const Icon(Icons.schedule),
+                          title: const Text('Compra a crédito pendiente'),
+                          subtitle: const Text(
+                            'Consulta el saldo y registra abonos en pagos pendientes.',
+                          ),
+                          trailing: const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                          ),
+                          onTap: () => context.pushNamed(
+                            'obligationDetail',
+                            pathParameters: {'id': '${list.payableId}'},
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

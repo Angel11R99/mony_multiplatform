@@ -1,16 +1,17 @@
 import 'dart:async';
 
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mony_multiplatform/core/database/app_database.dart';
+import 'package:toastification/toastification.dart';
 import 'package:mony_multiplatform/core/database/app_database_provider.dart';
 import 'package:mony_multiplatform/core/routing/app_router.dart';
+import 'package:mony_multiplatform/core/theme/mony_finance_colors.dart';
 import 'package:mony_multiplatform/features/categories/domain/categories_repository.dart';
 import 'package:mony_multiplatform/features/categories/domain/category.dart';
 import 'package:mony_multiplatform/features/categories/presentation/categories_page.dart';
 import 'package:mony_multiplatform/features/categories/presentation/categories_providers.dart';
+import '../../support/test_database.dart';
 
 void main() {
   late _FakeCategoriesRepository repository;
@@ -22,14 +23,16 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [categoriesRepositoryProvider.overrideWithValue(repository)],
-        child: const MaterialApp(home: CategoriesPage()),
+        child: ToastificationWrapper(
+          child: const MaterialApp(home: CategoriesPage()),
+        ),
       ),
     );
     await tester.pumpAndSettle();
     addTearDown(() async {
-      await tester.pumpWidget(const SizedBox.shrink());
+      toastification.dismissAll(delayForAnimation: false);
       await tester.pump();
-      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpWidget(const SizedBox.shrink());
     });
   }
 
@@ -44,6 +47,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Salario'), findsOneWidget);
     expect(find.text('Alimentación'), findsNothing);
+    await _dismissToasts(tester);
   });
 
   testWidgets('archives a category without removing its historical record', (
@@ -61,6 +65,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Alimentación'), findsOneWidget);
     expect(find.text('Archivada'), findsOneWidget);
+    await _dismissToasts(tester);
   });
 
   testWidgets('creates a custom category with a trimmed name', (tester) async {
@@ -73,6 +78,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Mascotas'), findsOneWidget);
     expect(find.text('Categoría creada correctamente.'), findsOneWidget);
+    await _dismissToasts(tester);
   });
 
   testWidgets('edits a category and keeps it in the active catalog', (
@@ -90,6 +96,7 @@ void main() {
     expect(find.text('Movilidad'), findsOneWidget);
     expect(find.text('Transporte'), findsNothing);
     expect(find.text('Categoría actualizada.'), findsOneWidget);
+    await _dismissToasts(tester);
   });
 
   testWidgets('blocks archiving the last active income category', (
@@ -108,28 +115,40 @@ void main() {
       find.text('Debe existir al menos una categoría de ingresos activa'),
       findsOneWidget,
     );
+    await _dismissToasts(tester);
   });
 
   testWidgets('opens category management from the home route', (tester) async {
-    final database = AppDatabase(NativeDatabase.memory());
+    final database = createTestDatabase();
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(database),
           categoriesRepositoryProvider.overrideWithValue(repository),
         ],
-        child: MaterialApp.router(routerConfig: createAppRouter()),
+        child: ToastificationWrapper(
+          child: MaterialApp.router(
+            routerConfig: createAppRouter(),
+            theme: ThemeData(
+              extensions: [MonyFinanceColors.forBrightness(Brightness.light)],
+            ),
+          ),
+        ),
       ),
     );
     await tester.pumpAndSettle();
     addTearDown(database.close);
 
-    await tester.tap(find.byIcon(Icons.category_outlined));
+    await tester.tap(find.byTooltip('Ajustes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Administrar categorías'));
     await tester.pumpAndSettle();
     expect(find.byType(CategoriesPage), findsOneWidget);
     expect(find.text('Alimentación'), findsOneWidget);
+    await _dismissToasts(tester);
+    toastification.dismissAll(delayForAnimation: false);
+    await tester.pump();
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 1));
   });
 }
 
@@ -224,6 +243,11 @@ class _FakeCategoriesRepository implements CategoriesRepository {
   void _emit() => _changes.add(List.unmodifiable(_categories));
 
   Future<void> dispose() => _changes.close();
+}
+
+Future<void> _dismissToasts(WidgetTester tester) async {
+  toastification.dismissAll(delayForAnimation: false);
+  await tester.pump(const Duration(milliseconds: 250));
 }
 
 Category _category(int id, String name, CategoryType type, String icon) =>

@@ -13,6 +13,6 @@ final budgetConfigProvider = StreamProvider<BudgetConfig?>(
   (ref) => ref.watch(budgetRepositoryProvider).watchConfig(),
 );
 
-final budgetHistoryProvider = StreamProvider<List<BudgetCycle>>(
+final budgetHistoryProvider = StreamProvider.autoDispose<List<BudgetCycle>>(
   (ref) => ref.watch(budgetRepositoryProvider).watchHistory(),
 );

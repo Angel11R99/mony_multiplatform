@@ -569,43 +569,81 @@ class SumiOpenFrameBorder extends OutlinedBorder {
       SumiOpenFrameBorder(side: side.scale(t), variation: variation);
 }
 
-/// Dark, squared navigation lacquer with a custom calligraphic active stroke.
+/// Selected-item ink wash and calligraphic stroke for Sumi-e navigation.
 class SumiNavigationPainter extends CustomPainter {
-  const SumiNavigationPainter({required this.colors});
+  const SumiNavigationPainter({
+    required this.colors,
+    required this.activeIndex,
+    required this.itemCount,
+  });
 
   final SumiThemeColors colors;
+  final double activeIndex;
+  final int itemCount;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    canvas.drawRect(rect, Paint()..color = colors.deepInk);
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, size.height * .36),
-      Paint()..color = colors.ink.withValues(alpha: .72),
+    if (size.isEmpty || itemCount <= 0) return;
+
+    final itemWidth = size.width / itemCount;
+    final activeX = (activeIndex + .5) * itemWidth;
+    final washRect = Rect.fromCenter(
+      center: Offset(activeX, size.height * .57),
+      width: itemWidth * 1.6,
+      height: size.height * 1.1,
     );
-    final upper = Path()
-      ..moveTo(0, 1)
-      ..lineTo(size.width * .64, 1);
-    canvas.drawPath(
-      upper,
+    canvas.drawOval(
+      washRect,
       Paint()
-        ..color = colors.gold.withValues(alpha: .75)
-        ..strokeWidth = .8
-        ..strokeCap = StrokeCap.butt,
+        ..shader = RadialGradient(
+          colors: [
+            colors.charcoal.withValues(alpha: .7),
+            colors.ink.withValues(alpha: .35),
+            Colors.transparent,
+          ],
+          stops: const [0, .52, 1],
+        ).createShader(washRect),
     );
-    final leftEdge = Path()
-      ..moveTo(.5, 7)
-      ..lineTo(.5, size.height - 7);
+
+    final strokeHalfWidth = math.min(itemWidth * .3, 16.0);
+    final stroke = Path()
+      ..moveTo(activeX - strokeHalfWidth, size.height - 15)
+      ..quadraticBezierTo(
+        activeX,
+        size.height - 19,
+        activeX + strokeHalfWidth,
+        size.height - 15,
+      );
     canvas.drawPath(
-      leftEdge,
+      stroke,
       Paint()
-        ..color = colors.paper.withValues(alpha: .45)
-        ..strokeWidth = 1.3
-        ..strokeCap = StrokeCap.butt,
+        ..color = colors.gold.withValues(alpha: .96)
+        ..strokeWidth = 2.5
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke,
+    );
+
+    final dryStroke = Path()
+      ..moveTo(activeX - strokeHalfWidth * .55, size.height - 10)
+      ..quadraticBezierTo(
+        activeX,
+        size.height - 13,
+        activeX + strokeHalfWidth * .62,
+        size.height - 10.5,
+      );
+    canvas.drawPath(
+      dryStroke,
+      Paint()
+        ..color = colors.paper.withValues(alpha: .35)
+        ..strokeWidth = .65
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke,
     );
   }
 
   @override
   bool shouldRepaint(covariant SumiNavigationPainter oldDelegate) =>
-      colors != oldDelegate.colors;
+      colors != oldDelegate.colors ||
+      activeIndex != oldDelegate.activeIndex ||
+      itemCount != oldDelegate.itemCount;
 }

@@ -19,7 +19,7 @@ class ReminderAutomation extends ConsumerStatefulWidget {
 
 class _ReminderAutomationState extends ConsumerState<ReminderAutomation>
     with WidgetsBindingObserver {
-  Timer? _timer;
+  Timer? _retryTimer;
   bool _syncing = false;
   bool _syncRequested = false;
 
@@ -27,7 +27,6 @@ class _ReminderAutomationState extends ConsumerState<ReminderAutomation>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _timer = Timer.periodic(const Duration(minutes: 5), (_) => _sync());
     WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
   }
 
@@ -42,19 +41,22 @@ class _ReminderAutomationState extends ConsumerState<ReminderAutomation>
       _syncRequested = true;
       return;
     }
+    _retryTimer?.cancel();
+    _retryTimer = null;
     _syncing = true;
     do {
       _syncRequested = false;
       try {
         final preferences = await ref.read(appPreferencesProvider.future);
         await ref
-            .read(recurringRepositoryProvider)
-            .processDue(now: DateTime.now());
-        await ref
             .read(localReminderSchedulerProvider)
             .reconcile(enabled: preferences.notificationsEnabled);
       } catch (_) {
-        // A later timer tick, database update, or app resume retries the sync.
+        _retryTimer?.cancel();
+        _retryTimer = Timer(const Duration(minutes: 5), () {
+          _retryTimer = null;
+          _sync();
+        });
       }
     } while (_syncRequested && mounted);
     _syncing = false;
@@ -62,22 +64,26 @@ class _ReminderAutomationState extends ConsumerState<ReminderAutomation>
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(obligationsProvider, (previous, next) {
-      if (next.hasValue) _sync();
-    });
-    ref.listen(recurringEntriesProvider, (previous, next) {
-      if (next.hasValue) _sync();
-    });
+    final remindersEnabled =
+        ref.watch(appPreferencesProvider).value?.notificationsEnabled ?? false;
     ref.listen(appPreferencesProvider, (previous, next) {
       if (next.hasValue) _sync();
     });
+    if (remindersEnabled) {
+      ref.listen(obligationReminderCandidatesProvider, (previous, next) {
+        if (next.hasValue) _sync();
+      });
+      ref.listen(recurringEntriesProvider, (previous, next) {
+        if (next.hasValue) _sync();
+      });
+    }
     return widget.child;
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _timer?.cancel();
+    _retryTimer?.cancel();
     super.dispose();
   }
 }

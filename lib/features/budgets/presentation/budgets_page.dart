@@ -13,7 +13,7 @@ import '../../categories/domain/category.dart';
 import '../../categories/presentation/categories_providers.dart';
 import '../../preferences/domain/app_preferences.dart';
 import '../../preferences/presentation/preferences_controller.dart';
-import '../../transactions/domain/transaction.dart';
+import '../../transactions/domain/transaction_history_filter.dart';
 import '../../transactions/presentation/transactions_providers.dart';
 import '../domain/budget.dart';
 import '../domain/budget_repository.dart';
@@ -483,7 +483,12 @@ class _BudgetsPageState extends ConsumerState<BudgetsPage> {
   Widget build(BuildContext context) {
     final config = ref.watch(budgetConfigProvider);
     final categories = ref.watch(categoriesProvider);
-    final transactions = ref.watch(transactionsProvider);
+    final period = budgetPeriodForView(config.value, _view, DateTime.now());
+    final transactionRequest = transactionPeriodSummaryProvider((
+      start: period.start,
+      endInclusive: period.endInclusive,
+    ));
+    final transactions = ref.watch(transactionRequest);
     final currencyStyle =
         ref.watch(appPreferencesProvider).value?.currencyFormatStyle ??
         AppPreferences.defaults.currencyFormatStyle;
@@ -521,12 +526,13 @@ class _BudgetsPageState extends ConsumerState<BudgetsPage> {
             loading: () =>
                 const LoadingPlaceholder(message: 'Cargando movimientos'),
             error: (error, stack) => _BudgetsError(
-              onRetry: () => ref.invalidate(transactionsProvider),
+              onRetry: () => ref.invalidate(transactionRequest),
             ),
-            data: (allTransactions) => _buildContent(
+            data: (periodSummary) => _buildContent(
               budget: budget,
               categories: allCategories,
-              transactions: allTransactions,
+              periodSummary: periodSummary,
+              period: period,
               currencyStyle: currencyStyle,
             ),
           ),
@@ -538,21 +544,16 @@ class _BudgetsPageState extends ConsumerState<BudgetsPage> {
   Widget _buildContent({
     required BudgetConfig? budget,
     required List<Category> categories,
-    required List<FinanceTransaction> transactions,
+    required TransactionPeriodSummary periodSummary,
+    required DateRange period,
     required CurrencyFormatStyle currencyStyle,
   }) {
     final now = DateTime.now();
     final currentPeriod = activeBudgetPeriod(budget, now);
-    final period = budgetPeriodForView(budget, _view, now);
-    final summary = summarizeBudgetPeriod(
-      period,
-      transactions.map(
-        (item) => (
-          amountInCents: item.amountInCents,
-          type: item.type.name,
-          date: item.date,
-        ),
-      ),
+    final summary = BudgetPeriodSummary(
+      period: period,
+      incomeInCents: periodSummary.incomeInCents,
+      expenseInCents: periodSummary.expenseInCents,
     );
     final expenseCategories = categories
         .where(
@@ -561,17 +562,7 @@ class _BudgetsPageState extends ConsumerState<BudgetsPage> {
               (category.isActive || category.budgetLimitInCents != null),
         )
         .toList(growable: false);
-    final spendsByCategory = <int, int>{};
-    for (final transaction in transactions) {
-      if (transaction.type == TransactionType.expense &&
-          period.contains(transaction.date)) {
-        spendsByCategory.update(
-          transaction.categoryId,
-          (total) => total + transaction.amountInCents,
-          ifAbsent: () => transaction.amountInCents,
-        );
-      }
-    }
+    final spendsByCategory = periodSummary.expenseByCategory;
     final dateFormat =
         '${_formatDate(period.start)} – ${_formatDate(period.endInclusive)}';
     final usage = budget == null
@@ -586,168 +577,196 @@ class _BudgetsPageState extends ConsumerState<BudgetsPage> {
           alignment: Alignment.topCenter,
           child: SizedBox(
             width: width,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 112),
-              children: [
-                Text(
-                  'Planifica tu período y revisa cuánto has usado.',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                SegmentedButton<BudgetPeriodView>(
-                  segments: const [
-                    ButtonSegment(
-                      value: BudgetPeriodView.current,
-                      label: Text('Actual'),
-                    ),
-                    ButtonSegment(
-                      value: BudgetPeriodView.next,
-                      label: Text('Próximo'),
-                    ),
-                  ],
-                  selected: {_view},
-                  onSelectionChanged: (selection) =>
-                      setState(() => _view = selection.first),
-                ),
-                const SizedBox(height: 8),
-                Text(dateFormat, style: Theme.of(context).textTheme.bodyMedium),
-                const SizedBox(height: 14),
-                if (budget == null)
-                  _UnconfiguredBudget(onConfigure: () => _editBudget(null))
-                else
-                  _BudgetSummaryCard(
-                    budget: budget,
-                    summary: summary,
-                    usagePercent: usage,
-                    currencyStyle: currencyStyle,
-                  ),
-                if (budget != null) ...[
-                  const SizedBox(height: 12),
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.calendar_month_outlined),
-                      title: const Text('Días del ciclo'),
-                      subtitle: Text(
-                        '${budget.cycleSchedules.length} ${budget.cycleSchedules.length == 1 ? 'ciclo' : 'ciclos'} · apertura y cierre inclusivos',
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  sliver: SliverList.list(
+                    children: [
+                      Text(
+                        'Planifica tu período y revisa cuánto has usado.',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
-                      trailing: TextButton(
-                        onPressed: () => _editCycleSchedules(budget),
-                        child: const Text('Editar'),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Card(
-                    child: Column(
-                      children: [
-                        SwitchListTile.adaptive(
-                          value: budget.autoCloseEnabled,
-                          onChanged: _saving
-                              ? null
-                              : (value) => _toggleAutoClose(budget, value),
-                          title: const Text('Cierre automático'),
-                          subtitle: Text(
-                            budget.autoCloseEnabled
-                                ? 'Se cerrará al terminar el período, cuando la app esté activa.'
-                                : 'Puedes cerrar el período manualmente cuando llegue su fecha final.',
+                      const SizedBox(height: 14),
+                      SegmentedButton<BudgetPeriodView>(
+                        segments: const [
+                          ButtonSegment(
+                            value: BudgetPeriodView.current,
+                            label: Text('Actual'),
                           ),
-                        ),
-                        if (budget.autoCloseEnabled)
-                          ListTile(
-                            leading: const Icon(Icons.schedule),
-                            title: const Text('Hora de cierre'),
-                            subtitle: const Text(
-                              'El cierre se ejecuta al usar la app si estuvo en segundo plano.',
-                            ),
-                            trailing: TextButton(
-                              onPressed: () => _pickCloseTime(budget),
-                              child: Text(
-                                _formatTime(budget.autoCloseMinuteOfDay),
-                              ),
-                            ),
-                          )
-                        else
-                          ListTile(
-                            leading: Icon(
-                              canClose
-                                  ? Icons.lock_open_outlined
-                                  : Icons.lock_outline,
-                            ),
-                            title: Text(
-                              canClose
-                                  ? 'Ciclo listo para cerrar'
-                                  : 'Cierre manual',
-                            ),
-                            subtitle: Text(
-                              canClose
-                                  ? 'Guarda este ciclo y comienza uno nuevo.'
-                                  : 'Disponible al finalizar el período ${_formatDate(currentPeriod.endInclusive)}.',
-                            ),
-                            trailing: FilledButton.tonal(
-                              onPressed: canClose && !_closing
-                                  ? () => _closeCycle(budget, now)
-                                  : null,
-                              child: Text(_closing ? 'Cerrando…' : 'Cerrar'),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                LayoutBuilder(
-                  builder: (context, headingConstraints) {
-                    final title = Text(
-                      'Asignaciones por categoría',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    );
-                    final action = TextButton.icon(
-                      onPressed: () => context.pushNamed('settingsCategories'),
-                      icon: const Icon(Icons.tune, size: 18),
-                      label: const Text('Categorías'),
-                    );
-                    if (headingConstraints.maxWidth < 460) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          title,
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: action,
+                          ButtonSegment(
+                            value: BudgetPeriodView.next,
+                            label: Text('Próximo'),
                           ),
                         ],
-                      );
-                    }
-                    return Row(
-                      children: [
-                        Expanded(child: title),
-                        action,
+                        selected: {_view},
+                        onSelectionChanged: (selection) =>
+                            setState(() => _view = selection.first),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        dateFormat,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 14),
+                      if (budget == null)
+                        _UnconfiguredBudget(
+                          onConfigure: () => _editBudget(null),
+                        )
+                      else
+                        _BudgetSummaryCard(
+                          budget: budget,
+                          summary: summary,
+                          usagePercent: usage,
+                          currencyStyle: currencyStyle,
+                        ),
+                      if (budget != null) ...[
+                        const SizedBox(height: 12),
+                        Card(
+                          child: ListTile(
+                            leading: const Icon(Icons.calendar_month_outlined),
+                            title: const Text('Días del ciclo'),
+                            subtitle: Text(
+                              '${budget.cycleSchedules.length} ${budget.cycleSchedules.length == 1 ? 'ciclo' : 'ciclos'} · apertura y cierre inclusivos',
+                            ),
+                            trailing: TextButton(
+                              onPressed: () => _editCycleSchedules(budget),
+                              child: const Text('Editar'),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Card(
+                          child: Column(
+                            children: [
+                              SwitchListTile.adaptive(
+                                value: budget.autoCloseEnabled,
+                                onChanged: _saving
+                                    ? null
+                                    : (value) =>
+                                          _toggleAutoClose(budget, value),
+                                title: const Text('Cierre automático'),
+                                subtitle: Text(
+                                  budget.autoCloseEnabled
+                                      ? 'Se cerrará al terminar el período, cuando la app esté activa.'
+                                      : 'Puedes cerrar el período manualmente cuando llegue su fecha final.',
+                                ),
+                              ),
+                              if (budget.autoCloseEnabled)
+                                ListTile(
+                                  leading: const Icon(Icons.schedule),
+                                  title: const Text('Hora de cierre'),
+                                  subtitle: const Text(
+                                    'El cierre se ejecuta al usar la app si estuvo en segundo plano.',
+                                  ),
+                                  trailing: TextButton(
+                                    onPressed: () => _pickCloseTime(budget),
+                                    child: Text(
+                                      _formatTime(budget.autoCloseMinuteOfDay),
+                                    ),
+                                  ),
+                                )
+                              else
+                                ListTile(
+                                  leading: Icon(
+                                    canClose
+                                        ? Icons.lock_open_outlined
+                                        : Icons.lock_outline,
+                                  ),
+                                  title: Text(
+                                    canClose
+                                        ? 'Ciclo listo para cerrar'
+                                        : 'Cierre manual',
+                                  ),
+                                  subtitle: Text(
+                                    canClose
+                                        ? 'Guarda este ciclo y comienza uno nuevo.'
+                                        : 'Disponible al finalizar el período ${_formatDate(currentPeriod.endInclusive)}.',
+                                  ),
+                                  trailing: FilledButton.tonal(
+                                    onPressed: canClose && !_closing
+                                        ? () => _closeCycle(budget, now)
+                                        : null,
+                                    child: Text(
+                                      _closing ? 'Cerrando…' : 'Cerrar',
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ],
-                    );
-                  },
+                      const SizedBox(height: 24),
+                      LayoutBuilder(
+                        builder: (context, headingConstraints) {
+                          final title = Text(
+                            'Asignaciones por categoría',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          );
+                          final action = TextButton.icon(
+                            onPressed: () =>
+                                context.pushNamed('settingsCategories'),
+                            icon: const Icon(Icons.tune, size: 18),
+                            label: const Text('Categorías'),
+                          );
+                          if (headingConstraints.maxWidth < 460) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                title,
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: action,
+                                ),
+                              ],
+                            );
+                          }
+                          return Row(
+                            children: [
+                              Expanded(child: title),
+                              action,
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 8),
                 if (expenseCategories.isEmpty)
-                  const _EmptyCategories()
+                  const SliverPadding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    sliver: SliverToBoxAdapter(child: _EmptyCategories()),
+                  )
                 else
-                  ...expenseCategories.map(
-                    (category) => _CategoryBudgetTile(
-                      category: category,
-                      spentInCents: spendsByCategory[category.id] ?? 0,
-                      period: period,
-                      currencyStyle: currencyStyle,
-                      onEdit: () => _editCategoryLimit(category),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    sliver: SliverList.builder(
+                      itemCount: expenseCategories.length,
+                      itemBuilder: (context, index) {
+                        final category = expenseCategories[index];
+                        return _CategoryBudgetTile(
+                          category: category,
+                          spentInCents: spendsByCategory[category.id] ?? 0,
+                          period: period,
+                          currencyStyle: currencyStyle,
+                          onEdit: () => _editCategoryLimit(category),
+                        );
+                      },
                     ),
                   ),
-                const SizedBox(height: 12),
-                Text(
-                  'El consumo se calcula por fecha del movimiento. Los gastos de ahorro también forman parte del presupuesto del período.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 112),
+                  sliver: SliverToBoxAdapter(
+                    child: Text(
+                      'El consumo se calcula por fecha del movimiento. Los gastos de ahorro también forman parte del presupuesto del período.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
                 ),
               ],

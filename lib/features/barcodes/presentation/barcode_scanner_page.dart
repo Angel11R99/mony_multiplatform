@@ -353,6 +353,10 @@ class _ProductCard extends StatelessWidget {
                 product.imageUrl!,
                 width: 76,
                 height: 76,
+                cacheWidth: (76 * MediaQuery.devicePixelRatioOf(context))
+                    .round(),
+                cacheHeight: (76 * MediaQuery.devicePixelRatioOf(context))
+                    .round(),
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stack) =>
                     const SizedBox.shrink(),

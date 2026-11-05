@@ -120,46 +120,194 @@ FinancialStatistics calculateFinancialStatistics({
   required Iterable<FinanceTransaction> transactions,
   required Map<int, Category> categories,
   required StatisticsPeriod period,
+}) => calculateFinancialStatisticsForPeriods(
+  transactions: transactions,
+  categories: categories,
+  currentPeriod: period,
+).$1;
+
+/// Calculates two comparable periods in one pass over the transaction source.
+(FinancialStatistics current, FinancialStatistics? previous)
+calculateFinancialStatisticsForPeriods({
+  required Iterable<FinanceTransaction> transactions,
+  required Map<int, Category> categories,
+  required StatisticsPeriod currentPeriod,
+  StatisticsPeriod? previousPeriod,
 }) {
+  final current = _FinancialStatisticsAccumulator();
+  final previous = previousPeriod == null
+      ? null
+      : _FinancialStatisticsAccumulator();
+  for (final transaction in transactions) {
+    if (currentPeriod.contains(transaction.date)) current.add(transaction);
+    if (previousPeriod?.contains(transaction.date) ?? false) {
+      previous!.add(transaction);
+    }
+  }
+  return (current.build(categories), previous?.build(categories));
+}
+
+class _FinancialStatisticsAccumulator {
   var income = 0;
   var expense = 0;
   var expenseCount = 0;
   var count = 0;
   final expenseByCategory = <int, int>{};
-  for (final transaction in transactions) {
-    if (!period.contains(transaction.date)) continue;
+
+  void add(FinanceTransaction transaction) {
     count++;
     if (transaction.type == TransactionType.income) {
       income += transaction.amountInCents;
-    } else {
-      expense += transaction.amountInCents;
-      expenseCount++;
-      expenseByCategory.update(
+      return;
+    }
+    expense += transaction.amountInCents;
+    expenseCount++;
+    expenseByCategory.update(
+      transaction.categoryId,
+      (amount) => amount + transaction.amountInCents,
+      ifAbsent: () => transaction.amountInCents,
+    );
+  }
+
+  FinancialStatistics build(Map<int, Category> categories) {
+    final breakdown =
+        expenseByCategory.entries
+            .map(
+              (entry) => categories[entry.key] == null
+                  ? null
+                  : CategoryStatistics(
+                      category: categories[entry.key]!,
+                      amountInCents: entry.value,
+                    ),
+            )
+            .whereType<CategoryStatistics>()
+            .toList()
+          ..sort((a, b) => b.amountInCents.compareTo(a.amountInCents));
+    return FinancialStatistics(
+      incomeInCents: income,
+      expenseInCents: expense,
+      transactionCount: count,
+      averageExpenseInCents: expenseCount == 0 ? 0 : expense ~/ expenseCount,
+      expenseByCategory: breakdown,
+    );
+  }
+}
+
+class FinancialStatisticsOverview {
+  const FinancialStatisticsOverview({
+    required this.current,
+    required this.previous,
+    required this.limitInsights,
+    required this.evolution,
+  });
+
+  final FinancialStatistics current;
+  final FinancialStatistics? previous;
+  final List<BudgetLimitInsight> limitInsights;
+  final List<MonthlyStatistics> evolution;
+}
+
+FinancialStatisticsOverview calculateFinancialStatisticsOverview({
+  required Iterable<FinanceTransaction> transactions,
+  required Map<int, Category> categories,
+  required StatisticsPeriod currentPeriod,
+  required StatisticsPeriod? previousPeriod,
+  required StatisticsPeriod budgetPeriod,
+  required DateTime through,
+  required Iterable<Category> limitCategories,
+  int? categoryId,
+}) {
+  final current = _FinancialStatisticsAccumulator();
+  final previous = previousPeriod == null
+      ? null
+      : _FinancialStatisticsAccumulator();
+  final spentByCategory = <int, int>{};
+  final monthly = _monthlyBuckets(through: through, period: currentPeriod);
+
+  for (final transaction in transactions) {
+    if (categoryId != null && transaction.categoryId != categoryId) continue;
+    final isInCurrentPeriod = currentPeriod.contains(transaction.date);
+    if (isInCurrentPeriod) current.add(transaction);
+    if (previousPeriod?.contains(transaction.date) ?? false) {
+      previous!.add(transaction);
+    }
+    if (transaction.type == TransactionType.expense &&
+        budgetPeriod.contains(transaction.date)) {
+      spentByCategory.update(
         transaction.categoryId,
-        (amount) => amount + transaction.amountInCents,
+        (value) => value + transaction.amountInCents,
         ifAbsent: () => transaction.amountInCents,
       );
     }
+    if (isInCurrentPeriod && !transaction.date.isAfter(monthly.effectiveEnd)) {
+      final monthTotal = monthly.totals[_statisticsMonthKey(transaction.date)];
+      if (monthTotal != null) {
+        monthTotal[transaction.type == TransactionType.income ? 0 : 1] +=
+            transaction.amountInCents;
+      }
+    }
   }
-  final breakdown =
-      expenseByCategory.entries
-          .map(
-            (entry) => categories[entry.key] == null
-                ? null
-                : CategoryStatistics(
-                    category: categories[entry.key]!,
-                    amountInCents: entry.value,
-                  ),
+
+  final limits =
+      limitCategories
+          .where(
+            (category) =>
+                category.type == CategoryType.expense &&
+                category.budgetLimitInCents != null &&
+                category.budgetLimitInCents! > 0,
           )
-          .whereType<CategoryStatistics>()
+          .map(
+            (category) => BudgetLimitInsight(
+              category: category,
+              limitInCents: category.budgetLimitInCents!,
+              spentInCents: spentByCategory[category.id] ?? 0,
+            ),
+          )
           .toList()
-        ..sort((a, b) => b.amountInCents.compareTo(a.amountInCents));
-  return FinancialStatistics(
-    incomeInCents: income,
-    expenseInCents: expense,
-    transactionCount: count,
-    averageExpenseInCents: expenseCount == 0 ? 0 : expense ~/ expenseCount,
-    expenseByCategory: breakdown,
+        ..sort((a, b) => b.usagePercent.compareTo(a.usagePercent));
+
+  final evolution = List<MonthlyStatistics>.generate(monthly.count, (index) {
+    final month = DateTime(monthly.first.year, monthly.first.month + index);
+    final totals = monthly.totals[_statisticsMonthKey(month)]!;
+    return MonthlyStatistics(
+      month: month,
+      incomeInCents: totals[0],
+      expenseInCents: totals[1],
+    );
+  }, growable: false);
+
+  return FinancialStatisticsOverview(
+    current: current.build(categories),
+    previous: previous?.build(categories),
+    limitInsights: List.unmodifiable(limits),
+    evolution: evolution,
+  );
+}
+
+({DateTime effectiveEnd, DateTime first, int count, Map<int, List<int>> totals})
+_monthlyBuckets({required DateTime through, required StatisticsPeriod period}) {
+  final effectiveEnd =
+      period.endInclusive != null && period.endInclusive!.isBefore(through)
+      ? period.endInclusive!
+      : through;
+  final selectedStart = period.start;
+  final totalMonths = selectedStart == null
+      ? 6
+      : (effectiveEnd.year - selectedStart.year) * 12 +
+            effectiveEnd.month -
+            selectedStart.month +
+            1;
+  final count = totalMonths.clamp(1, 12);
+  final first = DateTime(effectiveEnd.year, effectiveEnd.month - count + 1);
+  final totals = <int, List<int>>{
+    for (var index = 0; index < count; index++)
+      _statisticsMonthKey(DateTime(first.year, first.month + index)): [0, 0],
+  };
+  return (
+    effectiveEnd: effectiveEnd,
+    first: first,
+    count: count,
+    totals: totals,
   );
 }
 
@@ -271,6 +419,8 @@ List<BudgetLimitInsight> budgetLimitInsights({
 
 int? percentageChange(int current, int previous) =>
     previous <= 0 ? null : ((current - previous) * 100) ~/ previous;
+
+int _statisticsMonthKey(DateTime date) => date.year * 12 + date.month;
 
 StatisticsPeriod _period(DateRange range) =>
     StatisticsPeriod(start: range.start, endInclusive: range.endInclusive);

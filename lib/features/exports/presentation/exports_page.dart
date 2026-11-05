@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show compute;
 
 import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import '../../categories/presentation/categories_providers.dart';
 import '../../payment_methods/domain/payment_method.dart';
 import '../../payment_methods/presentation/payment_methods_providers.dart';
 import '../../transactions/domain/transaction.dart';
+import '../../transactions/domain/transaction_history_filter.dart';
 import '../../transactions/presentation/transactions_providers.dart';
 import '../../budgets/domain/budget.dart';
 import '../../budgets/presentation/budgets_providers.dart';
@@ -160,25 +162,50 @@ class _ExportsPageState extends ConsumerState<ExportsPage> {
   }
 
   Future<Uint8List> _bytes(ExportDocument document) => switch (_format) {
-    ExportFormat.csv => Future.value(document.toCsv()),
-    ExportFormat.xlsx => Future.value(document.toXlsx()),
+    ExportFormat.csv => compute(_generateCsv, document),
+    ExportFormat.xlsx => compute(_generateXlsx, document),
     ExportFormat.pdf =>
       rootBundle
           .load('assets/fonts/Roboto-Regular.ttf')
-          .then((font) => document.toPdf(fontBytes: font.buffer.asUint8List())),
+          .then(
+            (font) =>
+                compute(_generatePdf, (document, font.buffer.asUint8List())),
+          ),
   };
 
   @override
   Widget build(BuildContext context) {
-    final transactions = ref.watch(transactionsProvider);
-    final categories = ref.watch(categoriesProvider);
-    final methods = ref.watch(paymentMethodsProvider);
-    final budget = ref.watch(budgetConfigProvider);
-    final budgetHistory = ref.watch(budgetHistoryProvider);
-    final savingsGoals = ref.watch(savingsGoalsProvider);
-    final obligations = ref.watch(obligationsProvider);
-    final shoppingLists = ref.watch(shoppingListOverviewsProvider);
-    final recurringEntries = ref.watch(recurringEntriesProvider);
+    final transactionFilter = TransactionHistoryFilter(
+      startDate: _from,
+      endDate: _to,
+    );
+    final transactions = _transactions
+        ? ref.watch(filteredTransactionsProvider((transactionFilter, null)))
+        : const AsyncData<List<FinanceTransaction>>([]);
+    final categories = _categories
+        ? ref.watch(categoriesProvider)
+        : const AsyncData<List<Category>>([]);
+    final methods = _paymentMethods
+        ? ref.watch(paymentMethodsProvider)
+        : const AsyncData<List<PaymentMethod>>([]);
+    final budget = _budgets
+        ? ref.watch(budgetConfigProvider)
+        : const AsyncData<BudgetConfig?>(null);
+    final budgetHistory = _budgets
+        ? ref.watch(budgetHistoryProvider)
+        : const AsyncData<List<BudgetCycle>>([]);
+    final savingsGoals = _savingsGoals
+        ? ref.watch(savingsGoalsProvider)
+        : const AsyncData<List<SavingsGoalProgress>>([]);
+    final obligations = _obligations
+        ? ref.watch(obligationsProvider)
+        : const AsyncData<List<Obligation>>([]);
+    final shoppingLists = _shoppingLists
+        ? ref.watch(shoppingListOverviewsProvider)
+        : const AsyncData<List<ShoppingListOverview>>([]);
+    final recurringEntries = _recurringEntries
+        ? ref.watch(recurringEntriesProvider)
+        : const AsyncData<List<RecurringEntry>>([]);
     final all = [
       transactions,
       categories,
@@ -382,6 +409,13 @@ class _ExportsPageState extends ConsumerState<ExportsPage> {
     );
   }
 }
+
+Uint8List _generateCsv(ExportDocument document) => document.toCsv();
+
+Uint8List _generateXlsx(ExportDocument document) => document.toXlsx();
+
+Future<Uint8List> _generatePdf((ExportDocument, Uint8List) input) =>
+    input.$1.toPdf(fontBytes: input.$2);
 
 class _DateOption extends StatelessWidget {
   const _DateOption({

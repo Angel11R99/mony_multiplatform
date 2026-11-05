@@ -21,7 +21,7 @@ class DriftObligationRepository implements ObligationRepository {
           FROM obligations
           ORDER BY is_cancelled ASC,
             CASE WHEN due_date_epoch_day IS NULL THEN 1 ELSE 0 END,
-            due_date_epoch_day ASC, updated_at DESC''',
+            due_date_epoch_day ASC, updated_at DESC, id ASC''',
         readsFrom: {_database.obligations, _database.obligationPayments},
       )
       .watch()
@@ -29,6 +29,167 @@ class DriftObligationRepository implements ObligationRepository {
         (rows) =>
             rows.map((row) => _fromOverviewRow(row)).toList(growable: false),
       );
+
+  @override
+  Stream<List<Obligation>> watchList({
+    required ObligationListFilter filter,
+    DateTime? dueFrom,
+    DateTime? dueThrough,
+    required int limit,
+  }) {
+    if (limit < 1) {
+      throw ArgumentError.value(limit, 'limit', 'Must be positive');
+    }
+    if ((dueFrom == null) != (dueThrough == null)) {
+      throw ArgumentError('Both due date bounds must be provided together.');
+    }
+
+    final conditions = <String>[];
+    switch (filter) {
+      case ObligationListFilter.active:
+        conditions.add('obligations.is_cancelled = 0');
+        conditions.add(
+          'obligations.amount_in_cents > COALESCE(paid.paid_amount_in_cents, 0)',
+        );
+      case ObligationListFilter.payable:
+        conditions.add("obligations.direction = 'payable'");
+        conditions.add('obligations.is_cancelled = 0');
+        conditions.add(
+          'obligations.amount_in_cents > COALESCE(paid.paid_amount_in_cents, 0)',
+        );
+      case ObligationListFilter.receivable:
+        conditions.add("obligations.direction = 'receivable'");
+        conditions.add('obligations.is_cancelled = 0');
+        conditions.add(
+          'obligations.amount_in_cents > COALESCE(paid.paid_amount_in_cents, 0)',
+        );
+      case ObligationListFilter.history:
+        conditions.add(
+          '(obligations.is_cancelled = 1 OR obligations.amount_in_cents <= COALESCE(paid.paid_amount_in_cents, 0))',
+        );
+    }
+    if (dueFrom != null) {
+      conditions.add('obligations.due_date_epoch_day BETWEEN ? AND ?');
+    }
+    final variables = <Variable>[];
+    if (dueFrom != null && dueThrough != null) {
+      variables
+        ..add(Variable.withInt(dateToEpochDay(dueFrom)))
+        ..add(Variable.withInt(dateToEpochDay(dueThrough)));
+    }
+    variables.add(Variable.withInt(limit));
+
+    return _database
+        .customSelect(
+          '''WITH paid AS (
+               SELECT obligation_id, SUM(amount_in_cents) AS paid_amount_in_cents
+                 FROM obligation_payments
+                GROUP BY obligation_id
+             )
+             SELECT obligations.*,
+                    COALESCE(paid.paid_amount_in_cents, 0)
+                      AS paid_amount_in_cents
+               FROM obligations
+               LEFT JOIN paid ON paid.obligation_id = obligations.id
+              WHERE ${conditions.join(' AND ')}
+              ORDER BY obligations.is_cancelled ASC,
+                CASE WHEN obligations.due_date_epoch_day IS NULL THEN 1 ELSE 0 END,
+                obligations.due_date_epoch_day ASC,
+                obligations.updated_at DESC, obligations.id ASC
+              LIMIT ?''',
+          variables: variables,
+          readsFrom: {_database.obligations, _database.obligationPayments},
+        )
+        .watch()
+        .map((rows) => rows.map(_fromOverviewRow).toList(growable: false));
+  }
+
+  @override
+  Stream<ObligationOverview> watchOverview() => _database
+      .customSelect(
+        '''WITH paid AS (
+             SELECT obligation_id, SUM(amount_in_cents) AS paid_amount_in_cents
+               FROM obligation_payments
+              GROUP BY obligation_id
+           ), open_obligations AS (
+             SELECT obligations.*,
+                    COALESCE(paid.paid_amount_in_cents, 0)
+                      AS paid_amount_in_cents
+               FROM obligations
+               LEFT JOIN paid ON paid.obligation_id = obligations.id
+              WHERE obligations.is_cancelled = 0
+                AND obligations.amount_in_cents >
+                    COALESCE(paid.paid_amount_in_cents, 0)
+           ), totals AS (
+             SELECT COALESCE(SUM(CASE WHEN direction = 'payable'
+                        THEN amount_in_cents - paid_amount_in_cents ELSE 0 END), 0)
+                        AS payable_remaining_in_cents,
+                    COALESCE(SUM(CASE WHEN direction = 'receivable'
+                        THEN amount_in_cents - paid_amount_in_cents ELSE 0 END), 0)
+                        AS receivable_remaining_in_cents
+               FROM open_obligations
+           ), pending AS (
+             SELECT * FROM open_obligations
+              ORDER BY CASE WHEN due_date_epoch_day IS NULL THEN 1 ELSE 0 END,
+                       due_date_epoch_day ASC, updated_at DESC, id ASC
+              LIMIT 5
+           )
+           SELECT totals.payable_remaining_in_cents,
+                  totals.receivable_remaining_in_cents,
+                  pending.*
+             FROM totals LEFT JOIN pending ON 1 = 1
+            ORDER BY CASE WHEN pending.due_date_epoch_day IS NULL THEN 1 ELSE 0 END,
+                     pending.due_date_epoch_day ASC, pending.updated_at DESC,
+                     pending.id ASC''',
+        readsFrom: {_database.obligations, _database.obligationPayments},
+      )
+      .watch()
+      .map((rows) {
+        final first = rows.first;
+        final pending = <Obligation>[];
+        for (final row in rows) {
+          if (row.read<int?>('id') != null) {
+            pending.add(_fromOverviewRow(row));
+          }
+        }
+        return ObligationOverview(
+          pending: List.unmodifiable(pending),
+          payableRemainingInCents: first.read<int>(
+            'payable_remaining_in_cents',
+          ),
+          receivableRemainingInCents: first.read<int>(
+            'receivable_remaining_in_cents',
+          ),
+        );
+      });
+
+  @override
+  Stream<List<Obligation>> watchReminderCandidates() =>
+      _reminderCandidatesQuery().watch().map(
+        (rows) => rows.map(_fromOverviewRow).toList(growable: false),
+      );
+
+  @override
+  Future<List<Obligation>> getReminderCandidates() async =>
+      (await _reminderCandidatesQuery().get())
+          .map(_fromOverviewRow)
+          .toList(growable: false);
+
+  Selectable<QueryRow> _reminderCandidatesQuery() => _database.customSelect(
+    '''SELECT obligations.*,
+            COALESCE(SUM(payments.amount_in_cents), 0)
+              AS paid_amount_in_cents
+          FROM obligations
+          LEFT JOIN obligation_payments AS payments
+            ON payments.obligation_id = obligations.id
+          WHERE obligations.is_cancelled = 0
+            AND obligations.due_date_epoch_day IS NOT NULL
+          GROUP BY obligations.id
+          HAVING obligations.amount_in_cents >
+            COALESCE(SUM(payments.amount_in_cents), 0)
+          ORDER BY obligations.due_date_epoch_day ASC''',
+    readsFrom: {_database.obligations, _database.obligationPayments},
+  );
 
   @override
   Stream<ObligationDetails?> watchDetails(int obligationId) =>
