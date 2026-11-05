@@ -4,6 +4,7 @@ Fecha: 2026-11-05
 
 ## Cambios aplicados
 
+- La lista de obligaciones aplica en SQLite el estado, la dirección y el rango de vencimiento, y entrega bloques de 40 filas que crecen al desplazarse. La pantalla ya no convierte toda la tabla en modelos ni crea una segunda lista filtrada; conserva el orden y los cuatro filtros actuales. El refresco de recordatorios observa solo obligaciones abiertas con vencimiento, en lugar del catálogo completo; las exportaciones conservan su proveedor completo cuando se solicitan todos los datos.
 - El historial ahora pide a Drift solo las primeras `N + 1` filas ordenadas. La fila adicional permite mostrar “Cargar más” sin descargar todo el resultado filtrado a Dart. Los filtros, orden y búsqueda siguen aplicándose en SQLite.
 - El encabezado del historial obtiene el conteo y los totales de ingresos/gastos con una agregación SQLite reactiva; conserva los valores exactos aunque la lista muestre solo una página.
 - La tabla de movimientos usa un índice compuesto por fecha, creación e ID para cubrir el orden principal del historial. La migración v10 reemplaza el índice simple de fecha; el orden descendente puede recorrerse directamente en el B-tree y reduce la necesidad de ordenar las filas coincidentes en memoria temporal de SQLite.

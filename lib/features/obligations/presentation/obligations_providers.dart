@@ -13,6 +13,31 @@ final obligationsProvider = StreamProvider.autoDispose<List<Obligation>>(
   (ref) => ref.watch(obligationRepositoryProvider).watchAll(),
 );
 
+final obligationReminderCandidatesProvider =
+    StreamProvider.autoDispose<List<Obligation>>(
+      (ref) =>
+          ref.watch(obligationRepositoryProvider).watchReminderCandidates(),
+    );
+
+typedef ObligationListRequest = ({
+  ObligationListFilter filter,
+  DateTime? dueFrom,
+  DateTime? dueThrough,
+  int limit,
+});
+
+final obligationListProvider = StreamProvider.autoDispose
+    .family<List<Obligation>, ObligationListRequest>(
+      (ref, request) => ref
+          .watch(obligationRepositoryProvider)
+          .watchList(
+            filter: request.filter,
+            dueFrom: request.dueFrom,
+            dueThrough: request.dueThrough,
+            limit: request.limit,
+          ),
+    );
+
 final obligationOverviewProvider =
     StreamProvider.autoDispose<ObligationOverview>(
       (ref) => ref.watch(obligationRepositoryProvider).watchOverview(),

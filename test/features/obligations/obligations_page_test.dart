@@ -43,6 +43,64 @@ class _ObligationRepositoryFake implements ObligationRepository {
   });
 
   @override
+  Stream<List<Obligation>> watchReminderCandidates() => watchAll().map(
+    (items) => items
+        .where(
+          (item) =>
+              !item.isCancelled &&
+              item.dueDate != null &&
+              item.remainingAmountInCents > 0,
+        )
+        .toList(growable: false),
+  );
+
+  @override
+  Stream<List<Obligation>> watchList({
+    required ObligationListFilter filter,
+    DateTime? dueFrom,
+    DateTime? dueThrough,
+    required int limit,
+  }) => watchAll().map((items) {
+    final filtered = items.where((item) {
+      final active = !item.isCancelled && item.remainingAmountInCents > 0;
+      final matchesFilter = switch (filter) {
+        ObligationListFilter.active => active,
+        ObligationListFilter.payable =>
+          active && item.direction == ObligationDirection.payable,
+        ObligationListFilter.receivable =>
+          active && item.direction == ObligationDirection.receivable,
+        ObligationListFilter.history => !active,
+      };
+      final due = item.dueDate;
+      final matchesDate =
+          dueFrom == null ||
+          (due != null &&
+              !DateTime(
+                due.year,
+                due.month,
+                due.day,
+              ).isBefore(DateTime(dueFrom.year, dueFrom.month, dueFrom.day)) &&
+              !DateTime(due.year, due.month, due.day).isAfter(
+                DateTime(dueThrough!.year, dueThrough.month, dueThrough.day),
+              ));
+      return matchesFilter && matchesDate;
+    }).toList();
+    filtered.sort((a, b) {
+      final dueA = a.dueDate;
+      final dueB = b.dueDate;
+      if (dueA == null && dueB != null) return 1;
+      if (dueB == null && dueA != null) return -1;
+      if (dueA != null && dueB != null) {
+        final dueOrder = dueA.compareTo(dueB);
+        if (dueOrder != 0) return dueOrder;
+      }
+      final updatedOrder = b.updatedAt.compareTo(a.updatedAt);
+      return updatedOrder != 0 ? updatedOrder : a.id.compareTo(b.id);
+    });
+    return filtered.take(limit).toList(growable: false);
+  });
+
+  @override
   Stream<ObligationOverview> watchOverview() => watchAll().map((items) {
     final pending = items
         .where((item) => !item.isCancelled && item.remainingAmountInCents > 0)

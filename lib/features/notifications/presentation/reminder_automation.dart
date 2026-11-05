@@ -70,7 +70,7 @@ class _ReminderAutomationState extends ConsumerState<ReminderAutomation>
       if (next.hasValue) _sync();
     });
     if (remindersEnabled) {
-      ref.listen(obligationsProvider, (previous, next) {
+      ref.listen(obligationReminderCandidatesProvider, (previous, next) {
         if (next.hasValue) _sync();
       });
       ref.listen(recurringEntriesProvider, (previous, next) {

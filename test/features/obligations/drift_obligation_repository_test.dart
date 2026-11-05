@@ -74,6 +74,41 @@ void main() {
   });
 
   test(
+    'filters the obligation list in SQLite and applies its page limit',
+    () async {
+      final firstId = await createPayable();
+      final settledId = await createPayable(amount: 100);
+      await repository.recordPayment(
+        obligationId: settledId,
+        amountInCents: 100,
+        date: today,
+        paymentMethodId: 1,
+      );
+      final cancelledId = await createPayable();
+      await repository.cancel(cancelledId);
+
+      final active = await repository
+          .watchList(filter: ObligationListFilter.active, limit: 1)
+          .first;
+      final history = await repository
+          .watchList(filter: ObligationListFilter.history, limit: 10)
+          .first;
+      final dueThisWeek = await repository
+          .watchList(
+            filter: ObligationListFilter.active,
+            dueFrom: today,
+            dueThrough: today.add(const Duration(days: 6)),
+            limit: 10,
+          )
+          .first;
+
+      expect(active.map((item) => item.id), [firstId]);
+      expect(history.map((item) => item.id).toSet(), {settledId, cancelledId});
+      expect(dueThisWeek.map((item) => item.id), [firstId]);
+    },
+  );
+
+  test(
     'watches a compact overview with totals and five nearest items',
     () async {
       final dueId = await createPayable();
