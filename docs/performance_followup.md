@@ -32,4 +32,4 @@ Este archivo conserva trabajo que requiere otra sesión o un entorno distinto. L
 
 ## Cierre
 
-- [x] Actualizar [performance_review.md](performance_review.md) con la suite completa (203 pruebas), builds tras las fuentes locales, el límite conocido de captura ADB y el lote de recurrencias atrasadas. Añadir nuevos resultados cuando se completen los perfiles pendientes.
+- [x] Actualizar [performance_review.md](performance_review.md) con resultados recientes. La suite completa actual pasó 206 pruebas y `flutter analyze --no-pub` no reportó problemas; también quedaron documentados el lote de recurrencias, el perfil de copias, la captura corregida del navbar y la auditoría de dependencias.

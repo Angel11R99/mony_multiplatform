@@ -83,8 +83,10 @@ Fecha: 2026-11-05
 - Sonda temporal en isolates limpios del host para la inicialización de fechas: `intl.initializeDateFormatting()` tardó 6.740 µs (120 locales) y `flutter_localizations` 5.142 µs (98 locales). No se atribuye esa diferencia al primer cuadro ni a un dispositivo; no se modificó el bootstrap.
 - iOS/macOS no se pudieron compilar desde el host Windows; requieren un host macOS y Xcode.
 - No hay dispositivo físico conectado; las métricas Android provienen únicamente del emulador Android disponible en este host.
+- Verificación actual tras la auditoría de dependencias: `flutter test --no-pub` pasó 206 pruebas, `flutter analyze --no-pub` quedó limpio y `flutter build apk --profile --no-pub --split-per-abi` generó APK de 62,5 MB (armeabi-v7a), 69,0 MB (arm64-v8a) y 72,1 MB (x86_64). La compilación confirma el paquete de iconos Cupertino, reducido por tree shaking a 848 bytes; no se retiraron dependencias necesarias.
 
 ## Alcance de la revisión
 
 - Se recorrieron `lib/` en búsquedas de listas desplazables, imágenes, streams, temporizadores y búsquedas repetidas por fila; las listas extensas visibles usan constructores o paginación, mientras que pantallas de configuración y formularios con contenido acotado mantienen desplazamiento simple.
 - No se introdujeron animaciones infinitas ni dependencias nuevas; las animaciones de navegación se detienen al terminar la selección. Las automatizaciones usan temporizadores de una sola ejecución y reintentos acotados tras error.
+- La auditoría de dependencias encontró que `cupertino_icons` no tiene imports directos desde `lib/`, pero se conserva: al retirarla Flutter avisó que faltaba la familia de fuente Cupertino referenciada por widgets adaptativos de `cupertino_ui`/`macos_ui`. En la compilación Android por ABI, el tree shaker reduce su archivo de 257.628 a 848 bytes; el ahorro es mínimo y se evita arriesgar glifos ausentes en diálogos/plataformas Apple.
