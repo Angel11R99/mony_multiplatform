@@ -15,15 +15,16 @@ Este archivo conserva trabajo que requiere otra sesión o un entorno distinto. L
 - [x] **Recordatorios — perfil comparativo en el host.** SQLite in-memory de Windows con 10.000 obligaciones, 5.000 pagos y 7.000 candidatos equivalentes: `watchAll().first` tardó 156/160/158 ms (mediana 158 ms); la consulta específica tardó 120/119/125 ms (mediana 120 ms), ~24% menos.
 - [x] **Recordatorios — perfil Android AVD.** Con 10.000 obligaciones y 5.000 abonos, la consulta específica tardó 31,64 ms frente a 843,31 ms al materializar todas las obligaciones y filtrar en Dart (~96% menos); ambas rutas dieron los mismos 7.000 candidatos. Mediana de cinco muestras tras calentamiento; falta repetir en hardware físico.
 - [x] **Perfil baseline de creación de copia cifrada.** En Windows con `NativeDatabase.memory`, 47.400 movimientos con descripciones de 800 caracteres produjeron un payload de 46 MiB y un archivo cifrado de 61 MiB. La creación tardó 6.274 ms; RSS pasó de 342 MiB a un pico muestreado de 544 MiB (+202 MiB), con muestreo cada 20 ms. Es un perfil sintético del host, no representa Android; el pico puede subestimar asignaciones transitorias entre muestras.
-- [ ] **Copias y exportaciones — completar perfil.** La creación ya lee las tablas en páginas de 500 filas y genera el envelope UTF-8 sin crear primero otro string JSON. En una ejecución por versión del perfil de Windows, el aumento de RSS bajó de 202 a 166 MiB (~18%); el tiempo pasó de 6.274 a 6.425 ms. Aún deben medirse restauración y dispositivo, y evaluarse las representaciones completas que todavía requiere el cifrado v1.
+- [x] **Copia cifrada — round-trip Android AVD.** Con 104.001 movimientos, 10.000 obligaciones y 5.000 abonos: 37,4 MiB; creación 12.547 ms y restauración 10.682 ms. Conteos y claves foráneas se conservaron. El muestreo del proceso durante 120 s registró picos de 468,7 MiB PSS y 553,1 MiB RSS cada ~1,2 s; cubre todo el harness y puede perder máximos transitorios. Una corrida en AVD.
+- [ ] **Copias y exportaciones — completar perfil físico y memoria aislada.** En Windows el aumento de RSS bajó de 202 a 166 MiB (~18%) al paginar la lectura; el tiempo pasó de 6.274 a 6.425 ms. En AVD, el pico RSS/PSS no se atribuyó a la etapa exacta y la muestra puede perder picos breves. Repetir restauración y perfil de memoria con hardware físico.
 - [ ] **Dispositivo físico.** Repetir fluidez y consumo de memoria en una sesión prolongada de Android; no hay dispositivo conectado en el entorno actual.
 - [ ] Generar el Android App Bundle release con firma local y comparar el tamaño de descarga por dispositivo. La compilación de perfil separada más reciente produjo APK de 62,4 MB (armeabi-v7a), 68,9 MB (arm64-v8a) y 71,9 MB (x86_64); contiene runtimes de perfil y bibliotecas nativas de OCR/código de barras, por lo que no predice el tamaño de distribución.
 
 ## Orden sugerido para retomar
 
-1. Preparar datos de prueba reproducibles para Presupuesto y medir cuadros durante desplazamiento en las tres pantallas principales.
-2. Repetir el perfil de Historial/Estadísticas en hardware Android físico y revisar la consulta de Estadísticas Todo con varias ejecuciones.
-3. Medir el flujo de copias y exportaciones cerca del límite de tamaño.
+1. Repetir en Android físico los perfiles de desplazamiento, consultas y catch-up, y medir RSS/heap en las etapas de mayor carga.
+2. Revisar Estadísticas Todo con varias ejecuciones y perfilar copias/exportaciones cerca del límite de tamaño.
+3. Verificar visualmente en el AVD el cuadrito rojo del navbar japonés que aún muestra la captura del usuario.
 4. Completar el tamaño de distribución release y resolver las compilaciones específicas de plataforma; registrar los resultados en [performance_review.md](performance_review.md).
 
 ## Entornos de compilación pendientes
