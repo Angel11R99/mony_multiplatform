@@ -44,6 +44,7 @@ Fecha: 2026-11-05
 ## Hallazgos que requieren trabajo adicional
 
 - La comparación sintética de historial no sustituye una medición con datos reales ni cubre todas las consultas agregadas de estadísticas; conviene perfilar esas pantallas con una base poblada en dispositivo.
+- Se midió la inicialización previa a `runApp`: `intl.initializeDateFormatting()` registró 120 locales en 6,74 ms y los datos de fecha de `flutter_localizations` registraron 98 en 5,14 ms, en isolates limpios del host. La diferencia es pequeña y no representa tiempo de primer cuadro; se conserva el orden actual hasta medir el arranque real en dispositivo.
 - Exportaciones y copias cifradas deben serializar conjuntos completos por diseño. El perfil sintético de 46 MiB en Windows pasó de 6.274 ms/+202 MiB RSS a 6.425 ms/+166 MiB después del cambio de paginación/UTF-8 (~18% menos memoria observada). Es una ejecución por versión, no un perfil de dispositivo; el muestreo de 20 ms puede omitir picos breves. El cifrado v1 todavía mantiene el payload y el ciphertext completos, y no se midió la restauración.
 - No se midieron tiempos sostenidos de cuadro ni memoria en dispositivos físicos; el emulador no sustituye esos perfiles.
 - Flutter advierte que `cryptography_flutter`, `file_saver` y `home_widget` aún aplican Kotlin Gradle Plugin propio; futuras versiones de Flutter dejarán de compilar esa configuración si los plugins no migran.
@@ -79,6 +80,7 @@ Fecha: 2026-11-05
 - Tras optimizar las consultas de recordatorios, `flutter build apk --profile --split-per-abi` generó APK de 62,4 MB (armeabi-v7a), 68,9 MB (arm64-v8a) y 71,9 MB (x86_64); `flutter build web --release` también completó y pasó el dry run Wasm. Los avisos KGP de los plugins citados persistieron.
 - Sonda comparativa del catch-up con 50 series diarias × 180 ocurrencias (9.000 filas), SQLite in-memory en Windows: el baseline secuencial tardó 328/336 ms y el lote actual 315/309 ms en dos ejecuciones (medias de 332 ms y 312 ms, ~6% menos). Ambos caminos crearon 9.000 movimientos. Es una señal pequeña y exploratoria del host, no una medición de Android ni una prueba de memoria.
 - Perfil temporal de creación de copia cifrada con 47.400 movimientos y descripciones sintéticas de 800 caracteres en SQLite in-memory Windows: baseline payload 46 MiB, archivo 61 MiB, 6.274 ms y aumento RSS muestreado de 202 MiB; tras paginar lecturas en lotes de 500 y generar el envelope UTF-8 directamente, 6.425 ms y +166 MiB. Una ejecución por versión; el test temporal se retiró. No se midió restauración ni Android.
+- Sonda temporal en isolates limpios del host para la inicialización de fechas: `intl.initializeDateFormatting()` tardó 6.740 µs (120 locales) y `flutter_localizations` 5.142 µs (98 locales). No se atribuye esa diferencia al primer cuadro ni a un dispositivo; no se modificó el bootstrap.
 - iOS/macOS no se pudieron compilar desde el host Windows; requieren un host macOS y Xcode.
 - No hay dispositivo físico conectado; las métricas Android provienen únicamente del emulador Android disponible en este host.
 
